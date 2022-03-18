@@ -1,0 +1,114 @@
+---
+title: 'Fitbit Members in United: Exploration'
+author: "Seth Grossinger"
+date: "August 22, 2018"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+<!-- ## R Markdown -->
+
+<!-- This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>. -->
+
+<!-- When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this: -->
+
+
+```{r, include=FALSE}
+#initialize objects. That's probably a terrible explanation of what I'm doing here, but R.
+library(ggplot2)
+library(gridExtra)
+library(scales)
+library(dplyr)
+library(knitr)
+```
+
+I recently did a member analysis for Steve and Mark, and I wanted to better understand which members to potentially include. I had some preconceived thoughts about utilization patterns for FI vs ASO vs other members, but I wanted to check my assumptions before I just went with my gut. I sought the truth.
+
+This summary of what I looked at and found was adapted from a larger report I wrote about the characteristics of  United commercial members we know have Fitbits.
+
+## Preliminary work
+Initially I was just interested in some broad comparisons--I could always drill down more if I found something interesting. I took a single year of claims for adult members and looked at 
+
++ Age/Gender
++ Utilzation
+    + average count of Inpatient hospital admissions
+    + average count of ER visits that did not result in an admission
+    + PMPM allowable amounts, totals and Medical/Rx breakdowns
+    + Charlson score
+    + Charlson indicators. 
+    
+I did _not_ include RAF/HCCs. We can drill in further in the future, but the Charlson scores were much easier (at least computationally) to compute. Either serves as an imperfect proxy for health status. In addition, the sample sizes we're working with are large, so I could afford to paint with a broad brush and use simple rules. I used  
+
++ Adults = born before 1999
++ all members continuously enrolled in the same plan during 2017
++ data from MiniHPDM
++ Charlson scores and indicators built requiring only a single diagnosis during 2017, with no filters based on visit type, place of service, provider or the like. 
+
+As an example of how to interpret these scores, 'Diabetes' for a member wouldn't indicate that the member meets clinical criteria for diabetes, just that she had at least one diagnosis in 2017 related to diabetes. If the 'Diabetes' rate in a group of members is 6.8%, that just means it's likely that more people in the group have diabetes than in a different group with a 5.9% rate.
+
+#### Members I included
+Different categories of insurance have different utilization patterns. There may be groups or categories for which our data is better than others, and I wanted to make sure to pick members for whom I had at least some confidence in the completeness (and comparability) of our data. 
+
+To start, I grouped members by their group's company (United Healthcare/Uniprise) and financing arrangment (ASO/FI/...) as indicated in our membership files.
+
+```{r, echo=FALSE}
+MyData.InsuranceSegment <- read.table("\\\\nasv0403\\ssdpnas_users02\\Users\\sgrossinger\\AdHoc\\FitBitMatchData\\DataInsuranceSegment_DAVersion.txt", header=TRUE, sep='\t')
+
+kable(MyData.InsuranceSegment)
+```
+
+For Fully Insured we typically restrict to UHC/FI. It seems like both Uniprise and UHC are potentially usable for both ASO and FI. I've seen misleading figures for UHC-ASO in the past, but to be sure I took a look at the 10 largest customer segments within each grouping.
+
+
+```{r, echo=FALSE}
+MyData.InsuranceSegmentGroup <- read.table("\\\\nasv0403\\ssdpnas_users02\\Users\\sgrossinger\\AdHoc\\FitBitMatchData\\DataInsuranceSegmentGroup.txt", header=TRUE, sep='\t')
+MyData.InsuranceSegmentGroup$Insurance <- as.character(MyData.InsuranceSegmentGroup$Insurance)
+
+ISToReport <- c("MbrCnt", "Age", "Female", "IP.Admit", "ER.Visit", "PMPM", "Charlson")
+ISGToReport <- c("Rnk", "CUST_SEG_NM", "MbrCnt", "Age", "Female", "IP.Admit", "ER.Visit", "PMPM", "Charlson")
+
+```
+
+
+#### UHC FI
+There are a few groups that look like they have abnormally low utilization, but no group accounts for a large share of overall membership of 2.5MM and in aggregate the numbers look reasonable. This is the segment we typically focus in our commercial analyses.
+```{r, echo=FALSE}
+kable(MyData.InsuranceSegment[MyData.InsuranceSegment$Company == "UHC" & MyData.InsuranceSegment$Fund == "FI ", ISToReport], row.names=FALSE)
+
+kable(MyData.InsuranceSegmentGroup[MyData.InsuranceSegmentGroup$Insurance == "UHC-FI", ISGToReport], row.names=FALSE)
+```
+
+
+#### UHC ASO
+Contrary to my expectation, overall utilization for this group looks reasonable. However, several of the largest groups (Royal Caribbean, BD-BDIL, Lloyd's of London) are foreign insurance companies (or cruise lines) that cover their members when travelling in the US through a reciprocal agreement. These groups each account for over 1% of overall members and have clearly different utilization. I excluded them from this analysis, though it'd be good to try to understand this group and whether there's a way to make a finer-grain decision about who to include in the future.
+```{r, echo=FALSE}
+kable(MyData.InsuranceSegment[MyData.InsuranceSegment$Company == "UHC" & MyData.InsuranceSegment$Fund == "ASO", ISToReport], row.names=FALSE)
+
+kable(MyData.InsuranceSegmentGroup[MyData.InsuranceSegmentGroup$Insurance == "UHC-ASO", ISGToReport], row.names=FALSE)
+```
+
+#### Uniprise ASO
+These comprise the large national companies you'd think of as likely ASO clients. Interestingly, while the overall utilization for this group appears reasonable the largest group by far, AT&T Care Plus, accounts for a full 8% of the membership and is a clear outlier. This [appears](https://careplus.att.com/) to be a supplemental policy and should probably be excluded in the future. (And the next largest group also appears to be an outlier.)
+```{r, echo=FALSE}
+kable(MyData.InsuranceSegment[MyData.InsuranceSegment$Company == "UNIPRISE " & MyData.InsuranceSegment$Fund == "ASO", ISToReport], row.names=FALSE)
+
+kable(MyData.InsuranceSegmentGroup[MyData.InsuranceSegmentGroup$Insurance == "UNIPRISE-ASO", ISGToReport], row.names=FALSE)
+```
+
+#### Uniprise FI
+We've typically excluded these companies in the past from our commercial analyses. I'm not sure what these represent. The members are relatively old, which could account for the high utilization/Charlson scores. This is largely driven by the largest customer segment, with over 1/3 of the total members.  There are relatively few members overall, especially in relation to the companies they represent. For example, there are 7,000 members from Starbucks and 16,000 from HP Enterprise, small percentages of their overall workforces. I excluded them for now, but this is another group of customers it would be good to better understand in the future.
+```{r, echo=FALSE}
+kable(MyData.InsuranceSegment[MyData.InsuranceSegment$Company == "UNIPRISE " & MyData.InsuranceSegment$Fund == "FI ", ISToReport], row.names=FALSE)
+
+kable(MyData.InsuranceSegmentGroup[MyData.InsuranceSegmentGroup$Insurance == "UNIPRISE-FI", ISGToReport], row.names=FALSE)
+```
+
+
+

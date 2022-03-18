@@ -1,0 +1,507 @@
+---
+title: 'Fitbit Members in United: Exploration'
+author: "Seth Grossinger"
+date: "August 8, 2018"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+<!-- ## R Markdown -->
+
+<!-- This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>. -->
+
+<!-- When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this: -->
+
+
+<!-- ```{r cars} -->
+<!-- summary(cars) -->
+<!-- ``` -->
+
+```{r, include=FALSE}
+#initialize objects. That's probably a terrible explanation of what I'm doing here, but R.
+library(ggplot2)
+library(gridExtra)
+library(scales)
+library(dplyr)
+library(knitr)
+```
+
+## Preliminary work
+
+Before we look at the characteristics of members with Fitbits I would like to better understand which members to potentially include. Initially we're interested in broad comparisons, and if we find something interesting we can further drill down. I'm looking at a single year of claims for adults members and looking at 
+
++ Age/Gender
++ Utilzation
+    + average count of Inpatient hospital admissions
+    + average count of ER visits that did not result in an admission
+    + PMPM allowable amounts, totals and Medical/Rx breakdowns
+    + Charlson score
+    + Charlson indicators. 
+    
+I am _not_ currently including RAF/HCCs. We can drill in further in the future, but the Charlson scores I'm using are much easier (at least computationally) to compute. Either serves as an imperfect proxy for health status, so for now we'll save RAF/HCCs for future exploration. In addition, the sample sizes we're working with are large, so I can afford to paint with a broad brush and use simple rules. For example, I'm using 
+
++ Adults = born before 1999
++ all members continuously enrolled in the same plan during 2017
++ Charlson scores and indicators built requiring only a single diagnosis during 2017, with no filters based on visit type, place of service, provider or the like. 
+
+As an example of how to interpret these scores, 'Diabetes' for a member wouldn't indicate that the member meets clinical criteria for diabetes, just that she had at least one diagnosis in 2017 related to diabetes. If the 'Diabetes' rate in a group of members is 6.8%, that just means it's likely that more people in the group have diabetes than in a different group with a 5.9% rate.
+
+#### Members I'll include
+Different categories of insurance have different utilization patterns. Also, again to keep things simple I'm using MiniHPDM as our data source. There may be groups or categories for which our data is better than others, so I want to make sure I pick members for whom I have at least some confidence in the completeness (and comparability) of our data.
+
+To start, I grouped members by their group's company (United Healthcare/Uniprise) and financing arrangment (ASO/FI/...) as indicated in our membership files.
+
+```{r, echo=FALSE}
+MyData.InsuranceSegment <- read.table("C:\\Savvy\\Scratch\\Fitbit\\InsuranceSegment.txt", header=TRUE, sep='\t')
+
+kable(MyData.InsuranceSegment)
+```
+
+For Fully Insured we typically restrict to UHC/FI. It seems like both Uniprise and UHC are potentially usable for both ASO and FI. I've seen misleading figures for UHC-ASO in the past, but to be sure I took a look at the 10 largest customer segments within each grouping.
+
+
+```{r, echo=FALSE}
+MyData.InsuranceSegmentGroup <- read.table("C:\\Savvy\\Scratch\\Fitbit\\InsuranceSegmentGroup.txt", header=TRUE, sep='\t')
+MyData.InsuranceSegmentGroup$Insurance <- as.character(MyData.InsuranceSegmentGroup$Insurance)
+
+ISToReport <- c("MbrCnt", "Age", "Female", "IP.Admit", "ER.Visit", "PMPM", "Charlson")
+ISGToReport <- c("Rnk", "CUST_SEG_NM", "MbrCnt", "Age", "Female", "IP.Admit", "ER.Visit", "PMPM", "Charlson")
+
+```
+
+
+#### UHC FI
+There are a few groups that look like they have abnormally low utilization, but no group accounts for a large share of overall membership of 2.5MM and in aggregate the numbers look reasonable. This is the segment we typically focus in our commercial analyses.
+```{r, echo=FALSE}
+kable(MyData.InsuranceSegment[MyData.InsuranceSegment$Company == "UHC" & MyData.InsuranceSegment$Fund == "FI ", ISToReport], row.names=FALSE)
+
+kable(MyData.InsuranceSegmentGroup[MyData.InsuranceSegmentGroup$Insurance == "UHC-FI", ISGToReport], row.names=FALSE)
+```
+
+
+#### UHC ASO
+Contrary to my expectation, overall utilization for this group looks reasonable. However, several of the largest groups (Royal Caribbean, BD-BDIL, Lloyd's of London) are foreign insurance companies (or cruise lines) that cover their members when travelling in the US through a reciprocal agreement. These groups each account for over 1% of overall members and have clearly different utilization. I'll exclude them from this analysis, though it'd be good to try to understand this group and whether there's a way to make a finer-grain decision about who to include in the future.
+```{r, echo=FALSE}
+kable(MyData.InsuranceSegment[MyData.InsuranceSegment$Company == "UHC" & MyData.InsuranceSegment$Fund == "ASO", ISToReport], row.names=FALSE)
+
+kable(MyData.InsuranceSegmentGroup[MyData.InsuranceSegmentGroup$Insurance == "UHC-ASO", ISGToReport], row.names=FALSE)
+```
+
+#### Uniprise ASO
+These comprise the large national companies you'd think of as likely ASO clients. Interestingly, while the overall utilization for this group appears reasonable the largest group by far, AT&T Care Plus, accounts for a full 8% of the membership and is a clear outlier. This [appears](https://careplus.att.com/) to be a supplemental policy and should probably be excluded in the future. (And the next largest group also appears to be an outlier.)
+```{r, echo=FALSE}
+kable(MyData.InsuranceSegment[MyData.InsuranceSegment$Company == "UNIPRISE " & MyData.InsuranceSegment$Fund == "ASO", ISToReport], row.names=FALSE)
+
+kable(MyData.InsuranceSegmentGroup[MyData.InsuranceSegmentGroup$Insurance == "UNIPRISE-ASO", ISGToReport], row.names=FALSE)
+```
+
+#### Uniprise FI
+We've typically excluded these companies in the past from our commercial analyses. I'm not sure what these represent. The members are relatively old, which could account for the high utilization/Charlson scores. This is largely driven by the largest customer segment, with over 1/3 of the total members.  There are relatively few members overall, especially in relation to the companies they represent. For example, there are 7,000 members from Starbucks and 16,000 from HP Enterprise, small percentages of their overall workforces. We'll exclude them for now, but this is another group of customers it would be good to better understand in the future.
+```{r, echo=FALSE}
+kable(MyData.InsuranceSegment[MyData.InsuranceSegment$Company == "UNIPRISE " & MyData.InsuranceSegment$Fund == "FI ", ISToReport], row.names=FALSE)
+
+kable(MyData.InsuranceSegmentGroup[MyData.InsuranceSegmentGroup$Insurance == "UNIPRISE-FI", ISGToReport], row.names=FALSE)
+```
+
+
+
+## Initial Fitbit member exploration
+We matched email addresses of Unitedhealth commercial members with Fitbit members. 
+
+As an initial question, whose email addresses do we have? I know that claims vary by age, by gender, and by funding arrangment (fully-insured vs self-funded/ASO). Since we're potentially matching only members whose email addresses we have, let's make sure they're similar to the overall membership before proceed to a comparison of Fitbit members.
+
+```{r, echo=FALSE}
+MyData <- read.table("C:\\Savvy\\Scratch\\Fitbit\\FitbitMasterStats_NoOther.txt", header=TRUE, sep='\t')
+
+#report email havers by insurance, by gender. 
+MyData.Email <- MyData[MyData$Insurance    != "NULL" & 
+                             MyData$HaveEmail  != "NULL" & 
+                             MyData$HaveFitbit == "NULL" & 
+                             MyData$Gdr_Cd     != "NULL" & 
+                             MyData$AgeBand    != "NULL" ,]
+
+ggplot() + 
+  geom_bar(data=MyData.Email, aes(y = MbrCnt / 1000, x = HaveEmail, fill = AgeBand), 
+           stat = "identity", position = position_stack(reverse = TRUE)) +
+  facet_grid( ~ Insurance + Gdr_Cd)  + 
+  labs(x = "We have their email address", y = "Member Count (000s)", title = "Members whose email addresses we have", fill = "Age Band")
+
+```
+
+Overall, it seems like we're slightly more likely to have email addresses for women in FI and for men in ASO, but I'm not sure what that tells us. However, when we look at utilization a problem becomes evident.
+
+```{r, echo=FALSE}
+MyData.Cond <- read.table("C:\\Savvy\\Scratch\\Fitbit\\FitbitMasterStats_ConditionPivot.txt", header=TRUE, sep='\t')
+
+#report email havers by insurance, by gender. 
+MyData.Cond.FI <- MyData.Cond[MyData.Cond$Insurance == "UHC-FI",]
+MyData.Cond.ASO <- MyData.Cond[MyData.Cond$Insurance == "Uni-ASO",]
+
+#FI
+ggplot() + 
+  geom_bar(data=MyData.Cond.FI, aes(y = Rate, x = Condition, fill = factor(HaveEmail)), stat = "identity", position = "dodge") +
+  scale_y_continuous(label=percent_format()) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = "", y = "Member Share", title = "Members with diagnoses related to conditions in 2017: Fully Insured", fill = "Have Email")
+
+#ASO
+ggplot() + 
+  geom_bar(data=MyData.Cond.ASO, aes(y = Rate, x = Condition, fill = factor(HaveEmail)), stat = "identity", position = "dodge") +
+  scale_y_continuous(label=percent_format()) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = "", y = "Member Share", title = "Members with diagnoses related to conditions in 2017: ASO", fill = "Have Email")
+
+
+```
+
+The pattern is the same for FI and ASO: members whose email addresses we know are significantly (in a practical if not statistical sense--I haven't performed any statistical tests) more likely to have had a diagnosis related to virtually every condition. We see this in utilization statistics as well.
+
+
+```{r, echo=FALSE}
+MyData.EmailSummary <- MyData[MyData$Insurance    != "NULL" & 
+                                 #MyData$HaveEmail  != "NULL" & 
+                                 MyData$HaveFitbit == "NULL" & 
+                                 MyData$Gdr_Cd     == "NULL" & 
+                                 MyData$AgeBand    == "NULL", 
+                              c("Insurance", "HaveEmail", "MbrCnt", "Age", "Female", "IP.Admit", "ER.Visit", "PMPM", "Med", "Rx", "Charlson", "Diabetes", "HTN", "Depression")]
+
+MyData.EmailSummary$HaveEmail <- as.character(MyData.EmailSummary$HaveEmail)
+MyData.EmailSummary$HaveEmail[MyData.EmailSummary$HaveEmail == "NULL"] <- as.character("Z")
+MyData.EmailSummary <- MyData.EmailSummary[order(MyData.EmailSummary$Insurance, MyData.EmailSummary$HaveEmail), ]
+MyData.EmailSummary$HaveEmail[MyData.EmailSummary$HaveEmail == "Z"] <- as.character("Total")
+
+MyData.EmailSummary$MbrCnt <- comma(MyData.EmailSummary$MbrCnt)
+MyData.EmailSummary$Age <- round(MyData.EmailSummary$Age, 1)
+
+MyData.EmailSummary$Female <- paste(round(100 * MyData.EmailSummary$Female, 1), "%", sep="")
+MyData.EmailSummary$Diabetes <- paste(round(100 * MyData.EmailSummary$Diabetes, 1), "%", sep="")
+MyData.EmailSummary$HTN <- paste(round(100 * MyData.EmailSummary$HTN, 1), "%", sep="")
+MyData.EmailSummary$Depression <- paste(round(100 * MyData.EmailSummary$Depression, 1), "%", sep="")
+
+MyData.EmailSummary$PMPM <- paste("$", as.integer(round(MyData.EmailSummary$PMPM, 0)), sep="")
+MyData.EmailSummary$Med <- paste("$", as.integer(round(MyData.EmailSummary$Med, 0)), sep="")
+MyData.EmailSummary$Rx <- paste("$", as.integer(round(MyData.EmailSummary$Rx, 0)), sep="")
+
+MyData.EmailSummary$IP.Admit <- round(MyData.EmailSummary$IP.Admit, 3)
+MyData.EmailSummary$ER.Visit <- round(MyData.EmailSummary$ER.Visit, 3)
+MyData.EmailSummary$Charlson <- round(MyData.EmailSummary$Charlson, 2)
+
+#kable(MyData.HaveEmailSummary, row.names=FALSE)
+kable(MyData.EmailSummary[MyData.EmailSummary$Insurance == "UHC-FI", ], row.names=FALSE)
+kable(MyData.EmailSummary[MyData.EmailSummary$Insurance == "Uni-ASO", ], row.names=FALSE)
+
+```
+
+I don't know the sources of our email addresses, but it makes intuitive sense. If you're healthy and have no claims or need to find a provider we're probably less likely to know your email address. If you have many claims to manage and need to find many different providers there's probably a good chance we have your email address.
+
+Given all of that, though, it's clear that we shouldn't compare members who have Fitbits with all other members. Since we would only potentially know if a member has a Fitbit if we know the member's email address, we should compare members who have Fitbits only to other members whose email addresses we have. So let's go ahead and do that.
+
+## Explore members with (and without) Fitbits
+
+For members whose email addresses we have, how do members with Fitbits compare to those without?
+
+```{r, echo=FALSE}
+MyData.Fitbit <- MyData[MyData$Insurance   != "NULL" & 
+                             MyData$HaveEmail  == "Yes" & 
+                             MyData$HaveFitbit == "NULL" & 
+                             MyData$Gdr_Cd     != "NULL" & 
+                             MyData$AgeBand    != "NULL" ,]
+
+ggplot() + 
+  geom_bar(data=MyData.Fitbit, aes(y = HasFitbit, x = AgeBand, fill = AgeBand), 
+           stat = "identity", position = position_stack(reverse = TRUE)) +
+  facet_grid( ~ Insurance + Gdr_Cd)  + 
+  scale_y_continuous(label=percent_format()) +
+  labs(x = "", y = "", title = "Share of members with a Fitbit", fill = "Age Band")
+
+```
+
+Overall, women, especially younger women, are more likely to have Fitbits than men. We'll look at utilization differences between members with Fitbits and members without across three dimensions.
+
+### By Insurance
+
+```{r, echo=FALSE}
+#data worK:
+MyData.FitbitSummary.Insurance <- MyData[MyData$Insurance    != "NULL" & 
+                                 MyData$HaveEmail  == "Yes" & 
+                                 #MyData$HaveFitbit == "NULL" & 
+                                 MyData$Gdr_Cd     == "NULL" & 
+                                 MyData$AgeBand    == "NULL", 
+                              c("Insurance", "HaveFitbit", "MbrCnt", "Age", "Female", "IP.Admit", "ER.Visit", "PMPM", "Med", "Rx", "Charlson", "Diabetes", "HTN", "Depression")]
+
+MyData.Cond.Insurance <- read.table("C:\\Savvy\\Scratch\\Fitbit\\FitbitMasterStats_ConditionPivot_Insurance.txt", header=TRUE, sep='\t')
+
+MyData.FitbitSummary.Insurance$HaveFitbit <- as.character(MyData.FitbitSummary.Insurance$HaveFitbit)
+MyData.FitbitSummary.Insurance$HaveFitbit[MyData.FitbitSummary.Insurance$HaveFitbit == "NULL"] <- as.character("Z")
+MyData.FitbitSummary.Insurance <- MyData.FitbitSummary.Insurance[order(MyData.FitbitSummary.Insurance$Insurance, MyData.FitbitSummary.Insurance$HaveFitbit), ]
+MyData.FitbitSummary.Insurance$HaveFitbit[MyData.FitbitSummary.Insurance$HaveFitbit == "Z"] <- as.character("Total")
+
+MyData.FitbitSummary.Insurance$MbrCnt <- comma(MyData.FitbitSummary.Insurance$MbrCnt)
+MyData.FitbitSummary.Insurance$Age <- round(MyData.FitbitSummary.Insurance$Age, 1)
+
+MyData.FitbitSummary.Insurance$Female <- paste(round(100 * MyData.FitbitSummary.Insurance$Female, 1), "%", sep="")
+MyData.FitbitSummary.Insurance$Diabetes <- paste(round(100 * MyData.FitbitSummary.Insurance$Diabetes, 1), "%", sep="")
+MyData.FitbitSummary.Insurance$HTN <- paste(round(100 * MyData.FitbitSummary.Insurance$HTN, 1), "%", sep="")
+MyData.FitbitSummary.Insurance$Depression <- paste(round(100 * MyData.FitbitSummary.Insurance$Depression, 1), "%", sep="")
+
+MyData.FitbitSummary.Insurance$PMPM <- paste("$", as.integer(round(MyData.FitbitSummary.Insurance$PMPM, 0)), sep="")
+MyData.FitbitSummary.Insurance$Med <- paste("$", as.integer(round(MyData.FitbitSummary.Insurance$Med, 0)), sep="")
+MyData.FitbitSummary.Insurance$Rx <- paste("$", as.integer(round(MyData.FitbitSummary.Insurance$Rx, 0)), sep="")
+
+MyData.FitbitSummary.Insurance$IP.Admit <- round(MyData.FitbitSummary.Insurance$IP.Admit, 3)
+MyData.FitbitSummary.Insurance$ER.Visit <- round(MyData.FitbitSummary.Insurance$ER.Visit, 3)
+MyData.FitbitSummary.Insurance$Charlson <- round(MyData.FitbitSummary.Insurance$Charlson, 2)
+```
+
+Across both types members with Fitbits have slightly higher costs but lower utilization and rates of diagnoses related to most diseases. Rates of depression are slightly higher, though that could be related to the higher rates of females with Fitbits.
+
+#### Fully Insured
+```{r, echo=FALSE}
+#kable(MyData.HaveEmailSummary, row.names=FALSE)
+kable(MyData.FitbitSummary.Insurance[MyData.FitbitSummary.Insurance$Insurance == "UHC-FI", ], row.names=FALSE)
+
+ggplot() + 
+  geom_bar(data=MyData.Cond.Insurance[MyData.Cond.Insurance$Insurance == "UHC-FI",], 
+           aes(y = Rate, x = Condition, fill = factor(HaveFitbit)), stat = "identity", position = "dodge") +
+  scale_y_continuous(label=percent_format()) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = "", y = "Member Share", title = "Members with diagnoses related to conditions in 2017: Fully Insured", fill = "Have Fitbit")
+```
+
+#### ASO
+```{r, echo=FALSE}
+kable(MyData.FitbitSummary.Insurance[MyData.FitbitSummary.Insurance$Insurance == "Uni-ASO", ], row.names=FALSE)
+
+ggplot() + 
+  geom_bar(data=MyData.Cond.Insurance[MyData.Cond.Insurance$Insurance == "Uni-ASO",], 
+           aes(y = Rate, x = Condition, fill = factor(HaveFitbit)), stat = "identity", position = "dodge") +
+  scale_y_continuous(label=percent_format()) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = "", y = "Member Share", title = "Members with diagnoses related to conditions in 2017: ASO", fill = "Have Fitbit")
+
+```
+
+
+
+
+
+
+
+
+
+### By Gender
+
+```{r, echo=FALSE}
+#data worK:
+MyData.FitbitSummary.Gdr <- MyData[MyData$Insurance    == "NULL" & 
+                                 MyData$HaveEmail  == "Yes" & 
+                                 #MyData$HaveFitbit == "NULL" & 
+                                 MyData$Gdr_Cd     != "NULL" & 
+                                 MyData$AgeBand    == "NULL", 
+                              c("Gdr_Cd", "HaveFitbit", "MbrCnt", "Age", "Female", "IP.Admit", "ER.Visit", "PMPM", "Med", "Rx", "Charlson", "Diabetes", "HTN", "Depression")]
+
+MyData.Cond.Gdr <- read.table("C:\\Savvy\\Scratch\\Fitbit\\FitbitMasterStats_ConditionPivot_Gdr_Cd.txt", header=TRUE, sep='\t')
+
+MyData.FitbitSummary.Gdr$HaveFitbit <- as.character(MyData.FitbitSummary.Gdr$HaveFitbit)
+MyData.FitbitSummary.Gdr$HaveFitbit[MyData.FitbitSummary.Gdr$HaveFitbit == "NULL"] <- as.character("Z")
+MyData.FitbitSummary.Gdr <- MyData.FitbitSummary.Gdr[order(MyData.FitbitSummary.Gdr$Gdr_Cd, MyData.FitbitSummary.Gdr$HaveFitbit), ]
+MyData.FitbitSummary.Gdr$HaveFitbit[MyData.FitbitSummary.Gdr$HaveFitbit == "Z"] <- as.character("Total")
+
+MyData.FitbitSummary.Gdr$MbrCnt <- comma(MyData.FitbitSummary.Gdr$MbrCnt)
+MyData.FitbitSummary.Gdr$Age <- round(MyData.FitbitSummary.Gdr$Age, 1)
+
+MyData.FitbitSummary.Gdr$Female <- paste(round(100 * MyData.FitbitSummary.Gdr$Female, 1), "%", sep="")
+MyData.FitbitSummary.Gdr$Diabetes <- paste(round(100 * MyData.FitbitSummary.Gdr$Diabetes, 1), "%", sep="")
+MyData.FitbitSummary.Gdr$HTN <- paste(round(100 * MyData.FitbitSummary.Gdr$HTN, 1), "%", sep="")
+MyData.FitbitSummary.Gdr$Depression <- paste(round(100 * MyData.FitbitSummary.Gdr$Depression, 1), "%", sep="")
+
+MyData.FitbitSummary.Gdr$PMPM <- paste("$", as.integer(round(MyData.FitbitSummary.Gdr$PMPM, 0)), sep="")
+MyData.FitbitSummary.Gdr$Med <- paste("$", as.integer(round(MyData.FitbitSummary.Gdr$Med, 0)), sep="")
+MyData.FitbitSummary.Gdr$Rx <- paste("$", as.integer(round(MyData.FitbitSummary.Gdr$Rx, 0)), sep="")
+
+MyData.FitbitSummary.Gdr$IP.Admit <- round(MyData.FitbitSummary.Gdr$IP.Admit, 3)
+MyData.FitbitSummary.Gdr$ER.Visit <- round(MyData.FitbitSummary.Gdr$ER.Visit, 3)
+MyData.FitbitSummary.Gdr$Charlson <- round(MyData.FitbitSummary.Gdr$Charlson, 2)
+```
+
+Women with Fitbits appear slightly healthier than women without Fitbits. Interestingly, depression rates appear very similar across the groups.
+
+#### Female
+```{r, echo=FALSE}
+#kable(MyData.HaveEmailSummary, row.names=FALSE)
+kable(MyData.FitbitSummary.Gdr[MyData.FitbitSummary.Gdr$Gdr_Cd == "F", ], row.names=FALSE)
+
+ggplot() + 
+  geom_bar(data=MyData.Cond.Gdr[MyData.Cond.Gdr$Gdr_Cd == "F",], 
+           aes(y = Rate, x = Condition, fill = factor(HaveFitbit)), stat = "identity", position = "dodge") +
+  scale_y_continuous(label=percent_format()) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = "", y = "Member Share", title = "Members with diagnoses related to conditions in 2017: Female", fill = "Have Fitbit")
+```
+
+Men with Fitbits have slightly higher medical costs than those without, though they may have slightly lower incidences of Inpatient and ER utilization. Rates of hypertension and angina appear to be higher in those with Fitbits.
+
+#### Male
+```{r, echo=FALSE}
+kable(MyData.FitbitSummary.Gdr[MyData.FitbitSummary.Gdr$Gdr_Cd == "M", ], row.names=FALSE)
+
+ggplot() + 
+  geom_bar(data=MyData.Cond.Gdr[MyData.Cond.Gdr$Gdr_Cd == "M",], 
+           aes(y = Rate, x = Condition, fill = factor(HaveFitbit)), stat = "identity", position = "dodge") +
+  scale_y_continuous(label=percent_format()) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = "", y = "Member Share", title = "Members with diagnoses related to conditions in 2017: ASO", fill = "Have Fitbit")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### By Age Band
+
+```{r, echo=FALSE}
+#data worK:
+MyData.FitbitSummary.Age <- MyData[MyData$Insurance    == "NULL" & 
+                                 MyData$HaveEmail  == "Yes" & 
+                                 #MyData$HaveFitbit == "NULL" & 
+                                 MyData$Gdr_Cd     == "NULL" & 
+                                 MyData$AgeBand    != "NULL", 
+                              c("AgeBand", "HaveFitbit", "MbrCnt", "Age", "Female", "IP.Admit", "ER.Visit", "PMPM", "Med", "Rx", "Charlson", "Diabetes", "HTN", "Depression")]
+
+MyData.Cond.Age <- read.table("C:\\Savvy\\Scratch\\Fitbit\\FitbitMasterStats_ConditionPivot_AgeBand.txt", header=TRUE, sep='\t')
+
+MyData.FitbitSummary.Age$HaveFitbit <- as.character(MyData.FitbitSummary.Age$HaveFitbit)
+MyData.FitbitSummary.Age$HaveFitbit[MyData.FitbitSummary.Age$HaveFitbit == "NULL"] <- as.character("Z")
+MyData.FitbitSummary.Age <- MyData.FitbitSummary.Age[order(MyData.FitbitSummary.Age$AgeBand, MyData.FitbitSummary.Age$HaveFitbit), ]
+MyData.FitbitSummary.Age$HaveFitbit[MyData.FitbitSummary.Age$HaveFitbit == "Z"] <- as.character("Total")
+
+MyData.FitbitSummary.Age$MbrCnt <- comma(MyData.FitbitSummary.Age$MbrCnt)
+MyData.FitbitSummary.Age$Age <- round(MyData.FitbitSummary.Age$Age, 1)
+
+MyData.FitbitSummary.Age$Female <- paste(round(100 * MyData.FitbitSummary.Age$Female, 1), "%", sep="")
+MyData.FitbitSummary.Age$Diabetes <- paste(round(100 * MyData.FitbitSummary.Age$Diabetes, 1), "%", sep="")
+MyData.FitbitSummary.Age$HTN <- paste(round(100 * MyData.FitbitSummary.Age$HTN, 1), "%", sep="")
+MyData.FitbitSummary.Age$Depression <- paste(round(100 * MyData.FitbitSummary.Age$Depression, 1), "%", sep="")
+
+MyData.FitbitSummary.Age$PMPM <- paste("$", as.integer(round(MyData.FitbitSummary.Age$PMPM, 0)), sep="")
+MyData.FitbitSummary.Age$Med <- paste("$", as.integer(round(MyData.FitbitSummary.Age$Med, 0)), sep="")
+MyData.FitbitSummary.Age$Rx <- paste("$", as.integer(round(MyData.FitbitSummary.Age$Rx, 0)), sep="")
+
+MyData.FitbitSummary.Age$IP.Admit <- round(MyData.FitbitSummary.Age$IP.Admit, 3)
+MyData.FitbitSummary.Age$ER.Visit <- round(MyData.FitbitSummary.Age$ER.Visit, 3)
+MyData.FitbitSummary.Age$Charlson <- round(MyData.FitbitSummary.Age$Charlson, 2)
+```
+
+Young adults with Fitbits have higher costs and Inpatient admission rates than those without Fitbits, though their ER visit rate is lower and their overall health (as measured by incidence of Charlson-related diagnoses) is the same. It's possible that this is due to the gender effect--62% of those with Fitbits are women, while only 48% of those without Fitbits are women. The depression diagnosis rate may bear this out, though in general the rates of Charlson condition-related diagnoses are quite low compared to older age groups.
+
+#### 18-44
+```{r, echo=FALSE}
+#kable(MyData.HaveEmailSummary, row.names=FALSE)
+kable(MyData.FitbitSummary.Age[MyData.FitbitSummary.Age$AgeBand == "18-44", ], row.names=FALSE)
+
+ggplot() + 
+  geom_bar(data=MyData.Cond.Age[MyData.Cond.Age$AgeBand == "18-44",], 
+           aes(y = Rate, x = Condition, fill = factor(HaveFitbit)), stat = "identity", position = "dodge") +
+  scale_y_continuous(label=percent_format()) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = "", y = "Member Share", title = "Members with diagnoses related to conditions in 2017: 18-44", fill = "Have Fitbit")
+```
+
+Middle adults with Fitbits have a similar gender mix to younger adults, though not quite as extreme. Those middle adults with Fitbits appear to be slightly healthier than those without.
+
+#### 45-64
+```{r, echo=FALSE}
+#kable(MyData.HaveEmailSummary, row.names=FALSE)
+kable(MyData.FitbitSummary.Age[MyData.FitbitSummary.Age$AgeBand == "45-64", ], row.names=FALSE)
+
+ggplot() + 
+  geom_bar(data=MyData.Cond.Age[MyData.Cond.Age$AgeBand == "45-64",], 
+           aes(y = Rate, x = Condition, fill = factor(HaveFitbit)), stat = "identity", position = "dodge") +
+  scale_y_continuous(label=percent_format()) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = "", y = "Member Share", title = "Members with diagnoses related to conditions in 2017: 45-64", fill = "Have Fitbit")
+```
+
+The gender mix is even more balanced among older adults, where 50% of those with Fitbits are women compared to 45% of those without. Again, those with Fitbits appear to have slightly lower rates of Inpatient/ER usage and Charlson-related diagnoses but slightly higher costs.
+
+#### 65+
+```{r, echo=FALSE}
+#kable(MyData.HaveEmailSummary, row.names=FALSE)
+kable(MyData.FitbitSummary.Age[MyData.FitbitSummary.Age$AgeBand == "65+", ], row.names=FALSE)
+
+ggplot() + 
+  geom_bar(data=MyData.Cond.Age[MyData.Cond.Age$AgeBand == "65+",], 
+           aes(y = Rate, x = Condition, fill = factor(HaveFitbit)), stat = "identity", position = "dodge") +
+  scale_y_continuous(label=percent_format()) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = "", y = "Member Share", title = "Members with diagnoses related to conditions in 2017: 65+", fill = "Have Fitbit")
+```
+
+
+### Further exploration possibilities
+Assuming we get no further information from Fitbit, it still might be worthwhile to further explore some of the following""
+
++ Better-control for gender effects
++ HCC/RAF utilization
++ Search for drivers of higher costs for what appear to be healthier people
++ Explore tenure effects
+    + are we more likely to have emails for more recently enrolled members? How does that impact our utilization analyses
++ Explore geographic/regional differences. How do utilization and Fitbit membership compare in, say, Florida vs Wisconsin?
+
+
+
+
+<!-- <!-- ## Including Plots --> -->
+
+<!-- <!-- You can also embed plots, for example: --> -->
+
+<!-- <!-- ```{r pressure, echo=FALSE} --> -->
+<!-- <!-- plot(pressure) --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot. --> -->
+
+

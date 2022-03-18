@@ -1,0 +1,8 @@
+Complete the following tasks using only data found in dermsl_prod, then complete the tasks using only data found in Dermsl_reporting.
+	
+	
+	1. Create a data set with the Average steps per day for each Rulegroup for the months of July, August and September.
+	2. Calculate the percentage of possible earnings achieved for each month for each rule group.
+	3. Create a histogram showing the distribution of members by the percentage of the total possible goals that they have earned for the past three months.
+	4. Create another histogram showing the distribution of groups by the percentage of the total possible goals that they have earned for the past three months.
+	

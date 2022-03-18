@@ -1,0 +1,490 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Fitbit Members in United: Exploration},
+            pdfauthor={Seth Grossinger},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{longtable,booktabs}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{Fitbit Members in United: Exploration}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Seth Grossinger}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{August 3, 2018}
+
+
+\begin{document}
+\maketitle
+
+\subsection{Preliminary work}\label{preliminary-work}
+
+Before we look at the characteristics of members with Fitbits I would
+like to better understand which members to potentially include.
+Initially we're interested in broad comparisons, and if we find
+something interesting we can further drill down. I'm looking at a single
+year of claims for adults members and looking at
+
+\begin{itemize}
+\tightlist
+\item
+  Age/Gender
+\item
+  Utilzation
+
+  \begin{itemize}
+  \tightlist
+  \item
+    average count of Inpatient hospital admissions
+  \item
+    average count of ER visits that did not result in an admission
+  \item
+    PMPM allowable amounts, totals and Medical/Rx breakdowns
+  \item
+    Charlson score
+  \item
+    Charlson indicators.
+  \end{itemize}
+\end{itemize}
+
+I am \emph{not} currently including RAF/HCCs. We can drill in further in
+the future, but the Charlson scores I'm using are much easier (at least
+computationally) to compute. Either serves as an imperfect proxy for
+health status, so for now we'll save RAF/HCCs for future exploration. In
+addition, the sample sizes we're working with are large, so I can afford
+to paint with a broad brush and use simple rules. For example, I'm using
++ Adults = born before 1999 + all members continuously enrolled in the
+same plan during 2017 + Charlson scores and indicators built requiring
+only a single diagnosis during 2017, with no filters based on visit
+type, place of service, provider or the like.
+
+As an example of how to interpret these scores, `Diabetes' for a member
+wouldn't indicate that the member meets clinical criteria for diabetes,
+just that she had at least one diagnosis in 2017 related to diabetes. If
+the `Diabetes' rate in a group of members is 6.8\%, that just means it's
+likely that more people in the group have diabetes than in a different
+group with a 5.9\% rate.
+
+\paragraph{Members I'll include}\label{members-ill-include}
+
+Different categories of insurance have different utilization patterns.
+Also, again to keep things simple I'm using MiniHPDM as our data source.
+There may be groups or categories for which our data is better than
+others, so I want to make sure I pick members for whom I have at least
+some confidence in the completeness (and comparability) of our data.
+
+To start, I grouped members by their group's company (United
+Healthcare/Uniprise) and financing arrangment (ASO/FI/\ldots{}) as
+indicated in our membership files.
+
+\begin{longtable}[]{@{}lllrlllrrlllrlll@{}}
+\toprule
+Company & Fund & MbrCnt & Age & Female & HasEmail & HasFitbit & IP.Admit
+& ER.Visit & PMPM & Med & Rx & Charlson & Diabetes & HTN &
+Depression\tabularnewline
+\midrule
+\endhead
+UNIPRISE & ASO & 6,577,414 & 46.0 & 50.5\% & 53.7\% & 5.6\% & 0.05 &
+0.18 & \$430 & \$402 & \$28 & 0.64 & 6.9\% & 18.2\% &
+5.9\%\tabularnewline
+UHC & ASO & 3,014,557 & 44.1 & 50.1\% & 49.9\% & 5.2\% & 0.05 & 0.17 &
+\$472 & \$405 & \$68 & 0.64 & 7.2\% & 18.2\% & 5.9\%\tabularnewline
+UHC & FI & 2,494,049 & 43.3 & 48.4\% & 56.7\% & 5.6\% & 0.05 & 0.18 &
+\$481 & \$379 & \$101 & 0.60 & 6.6\% & 17.7\% & 6.0\%\tabularnewline
+NULL & NULL & 1,663,628 & 67.4 & 55.6\% & 20.5\% & 1.4\% & 0.00 & 0.02 &
+\$43 & \$33 & \$9 & 0.05 & 0.6\% & 1.7\% & 0.6\%\tabularnewline
+UNIPRISE & FI & 222,334 & 55.1 & 47.3\% & 45.5\% & 3.9\% & 0.09 & 0.25 &
+\$459 & \$382 & \$77 & 1.19 & 13.2\% & 32.6\% & 6.6\%\tabularnewline
+NULL & NULL & 170,237 & 45.6 & 52.9\% & 9.1\% & 0.9\% & 0.00 & 0.00 &
+\$2 & \$2 & \$0 & 0.00 & 0.0\% & 0.1\% & 0.0\%\tabularnewline
+UHC & PI & 156,429 & 42.5 & 49.1\% & 61.1\% & 6.2\% & 0.05 & 0.15 &
+\$545 & \$434 & \$111 & 0.54 & 5.2\% & 14.4\% & 6.4\%\tabularnewline
+MAMSI-UHC & FI & 64,701 & 48.8 & 50.6\% & 51.0\% & 4.8\% & 0.06 & 0.24 &
+\$517 & \$355 & \$161 & 1.00 & 12.7\% & 29.4\% & 6.0\%\tabularnewline
+UNIPRISE & PI & 3,212 & 63.2 & 49.4\% & 42.1\% & 4.2\% & 0.12 & 0.29 &
+\$396 & \$396 & \$0 & 1.49 & 14.6\% & 39.4\% & 8.9\%\tabularnewline
+\bottomrule
+\end{longtable}
+
+For Fully Insured we typically restrict to UHC/FI. It seems like both
+Uniprise and UHC are potentially usable for both ASO and FI. I've seen
+misleading figures for UHC-ASO in the past, but to be sure I took a look
+at the 10 largest customer segments within each grouping.
+
+\paragraph{UHC FI}\label{uhc-fi}
+
+There are a few groups that look like they have abnormally low
+utilization, but no group accounts for a large share of overall
+membership of 2.5MM and in aggregate the numbers look reasonable. This
+is the segment we typically focus in our commercial analyses.
+
+\begin{longtable}[]{@{}lrlrrlr@{}}
+\toprule
+MbrCnt & Age & Female & IP.Admit & ER.Visit & PMPM &
+Charlson\tabularnewline
+\midrule
+\endhead
+2,494,049 & 43.3 & 48.4\% & 0.05 & 0.18 & \$481 & 0.6\tabularnewline
+\bottomrule
+\end{longtable}
+
+\begin{longtable}[]{@{}rllrlrrlr@{}}
+\toprule
+Rnk & CUST\_SEG\_NM & MbrCnt & Age & Female & IP.Admit & ER.Visit & PMPM
+& Charlson\tabularnewline
+\midrule
+\endhead
+1 & NORTHSIDE INDEPENDENT SCHOOL DISTRICT & 13,375 & 42.0 & 64.4\% &
+0.05 & 0.17 & \$421 & 0.66\tabularnewline
+2 & SOUTHWEST CARPENTERS HEALTH AND WELFARE TRUST (MEDICAL) & 12,748 &
+40.0 & 43.8\% & 0.01 & 0.07 & \$117 & 0.15\tabularnewline
+3 & STATE OF WISCONSIN & 9,453 & 46.1 & 52.6\% & 0.06 & 0.21 & \$518 &
+0.81\tabularnewline
+4 & ARIZONA STATE RETIREMENT SYSTEM & 8,661 & 58.2 & 59.7\% & 0.05 &
+0.16 & \$697 & 1.11\tabularnewline
+5 & DISTRICT OF COLUMBIA GOVERNMENT & 7,805 & 41.0 & 56.3\% & 0.06 &
+0.33 & \$535 & 0.77\tabularnewline
+6 & GENERAL ATOMICS & 7,063 & 44.6 & 45.7\% & 0.02 & 0.05 & \$177 &
+0.23\tabularnewline
+7 & AT\&T & 6,796 & 39.0 & 45.6\% & 0.05 & 0.28 & \$501 &
+0.64\tabularnewline
+8 & VIRGINIAS HEALTH INSURANCE MARKETPLACE & 6,534 & 43.8 & 55.8\% &
+0.05 & 0.22 & \$505 & 0.75\tabularnewline
+9 & CITY AND COUNTY OF DENVER & 5,151 & 44.1 & 51.5\% & 0.05 & 0.19 &
+\$642 & 0.67\tabularnewline
+10 & FEDERAL EMPLOYEES HEALTH BENEFITS PROGRAM LR & 4,923 & 43.8 &
+53.1\% & 0.04 & 0.18 & \$409 & 0.70\tabularnewline
+\bottomrule
+\end{longtable}
+
+\paragraph{UHC ASO}\label{uhc-aso}
+
+Contrary to my expectation, overall utilization for this group looks
+reasonable. However, several of the largest groups (Royal Caribbean,
+BD-BDIL, Lloyd's of London) are foreign insurance companies (or cruise
+lines) that cover their members when travelling in the US through a
+reciprocal agreement. These groups each account for over 1\% of overall
+members and have clearly different utilization. I'll exclude them from
+this analysis, though it'd be good to try to understand this group and
+whether there's a way to make a finer-grain decision about who to
+include in the future.
+
+\begin{longtable}[]{@{}lrlrrlr@{}}
+\toprule
+MbrCnt & Age & Female & IP.Admit & ER.Visit & PMPM &
+Charlson\tabularnewline
+\midrule
+\endhead
+3,014,557 & 44.1 & 50.1\% & 0.05 & 0.17 & \$472 & 0.64\tabularnewline
+\bottomrule
+\end{longtable}
+
+\begin{longtable}[]{@{}rllrlrrlr@{}}
+\toprule
+Rnk & CUST\_SEG\_NM & MbrCnt & Age & Female & IP.Admit & ER.Visit & PMPM
+& Charlson\tabularnewline
+\midrule
+\endhead
+1 & ROYAL CARIBBEAN CRUISES LTD. & 66,953 & 36.1 & 20.9\% & 0.00 & 0.01
+& \$23 & 0.01\tabularnewline
+2 & BD-BDIL & 60,617 & 45.5 & 53.8\% & 0.01 & 0.01 & \$70 &
+0.04\tabularnewline
+3 & STATE OF ARIZONA & 53,506 & 47.2 & 54.3\% & 0.06 & 0.22 & \$477 &
+0.97\tabularnewline
+4 & SEVEN CORNERS - LLOYDS OF LONDON & 48,250 & 38.3 & 59.6\% & 0.00 &
+0.00 & \$2 & 0.00\tabularnewline
+5 & NORTHWELL HEALTH & 41,497 & 43.5 & 59.0\% & 0.08 & 0.17 & \$658 &
+0.78\tabularnewline
+6 & THE SCHOOL DISTRICT OF PALM BEACH COUNTY & 26,586 & 45.5 & 62.3\% &
+0.05 & 0.21 & \$551 & 0.85\tabularnewline
+7 & UNIVERSITY OF MISSOURI & 26,425 & 44.5 & 54.9\% & 0.06 & 0.18 &
+\$409 & 0.68\tabularnewline
+8 & STATE OF RHODE ISLAND & 26,345 & 48.1 & 52.4\% & 0.07 & 0.22 & \$510
+& 1.02\tabularnewline
+9 & CITY OF AUSTIN & 23,878 & 47.2 & 44.4\% & 0.07 & 0.24 & \$648 &
+0.94\tabularnewline
+10 & PORT AUTHORITY OF NY \& NJ & 23,660 & 55.9 & 47.9\% & 0.09 & 0.24 &
+\$544 & 1.38\tabularnewline
+\bottomrule
+\end{longtable}
+
+\paragraph{Uniprise ASO}\label{uniprise-aso}
+
+These comprise the large national companies you'd think of as likely ASO
+clients. Interestingly, while the overall utilization for this group
+appears reasonable the largest group by far, AT\&T Care Plus, accounts
+for a full 8\% of the membership and is a clear outlier. This
+\href{https://careplus.att.com/}{appears} to be a supplemental policy
+and should probably be excluded in the future. (And the next largest
+group also appears to be an outlier.)
+
+\begin{longtable}[]{@{}lrlrrlr@{}}
+\toprule
+MbrCnt & Age & Female & IP.Admit & ER.Visit & PMPM &
+Charlson\tabularnewline
+\midrule
+\endhead
+6,577,414 & 46 & 50.5\% & 0.05 & 0.18 & \$430 & 0.64\tabularnewline
+\bottomrule
+\end{longtable}
+
+\begin{longtable}[]{@{}rllrlrrlr@{}}
+\toprule
+Rnk & CUST\_SEG\_NM & MbrCnt & Age & Female & IP.Admit & ER.Visit & PMPM
+& Charlson\tabularnewline
+\midrule
+\endhead
+1 & AT\&T INC.-CARE PLUS & 532,826 & 59.2 & 53.7\% & 0.01 & 0.05 & \$134
+& 0.21\tabularnewline
+2 & RAILROAD EMPLOYEES NATIONAL HEALTH \& WELFARE PLAN & 196,640 & 41.0
+& 45.1\% & 0.03 & 0.14 & \$279 & 0.36\tabularnewline
+3 & WAL-MART STORES INC. ASSOCIATES HEALTH AND WELFARE PLAN & 139,102 &
+43.4 & 54.7\% & 0.06 & 0.30 & \$404 & 0.72\tabularnewline
+4 & JPMORGAN CHASE \& CO. & 132,235 & 42.3 & 53.8\% & 0.05 & 0.16 &
+\$467 & 0.62\tabularnewline
+5 & DELTA AIR LINES INC & 119,226 & 46.2 & 50.8\% & 0.05 & 0.16 & \$605
+& 0.70\tabularnewline
+6 & WELLS FARGO & 116,456 & 41.9 & 54.0\% & 0.05 & 0.17 & \$446 &
+0.59\tabularnewline
+7 & SOUTHWEST AIRLINES COMPANY & 84,090 & 43.4 & 50.0\% & 0.04 & 0.18 &
+\$483 & 0.62\tabularnewline
+8 & GENERAL ELECTRIC & 82,701 & 45.5 & 45.7\% & 0.05 & 0.15 & \$420 &
+0.61\tabularnewline
+9 & RAYTHEON COMPANY & 80,854 & 45.8 & 47.4\% & 0.05 & 0.14 & \$484 &
+0.69\tabularnewline
+10 & AMERICAN AIRLINES & 80,011 & 59.1 & 48.4\% & 0.06 & 0.17 & \$301 &
+1.01\tabularnewline
+\bottomrule
+\end{longtable}
+
+\paragraph{Uniprise FI}\label{uniprise-fi}
+
+We've typically excluded these companies in the past from our commercial
+analyses. I'm not sure what these represent. The members are relatively
+old, which could account for the high utilization/Charlson scores. This
+is largely driven by the largest customer segment, with over 1/3 of the
+total members. There are relatively few members overall, especially in
+relation to the companies they represent. For example, there are 7,000
+members from Starbucks and 16,000 from HP Enterprise, small percentages
+of their overall workforces. We'll exclude them for now, but this is
+another group of customers it would be good to better understand in the
+future.
+
+\begin{longtable}[]{@{}lrlrrlr@{}}
+\toprule
+MbrCnt & Age & Female & IP.Admit & ER.Visit & PMPM &
+Charlson\tabularnewline
+\midrule
+\endhead
+222,334 & 55.1 & 47.3\% & 0.09 & 0.25 & \$459 & 1.19\tabularnewline
+\bottomrule
+\end{longtable}
+
+\begin{longtable}[]{@{}rllrlrrlr@{}}
+\toprule
+Rnk & CUST\_SEG\_NM & MbrCnt & Age & Female & IP.Admit & ER.Visit & PMPM
+& Charlson\tabularnewline
+\midrule
+\endhead
+1 & HEALTH AND WELFARE COMMITTEE COOPERATING RAILWAY LABOR ORGANIZATIONS
+& 83,717 & 74.5 & 42.6\% & 0.16 & 0.31 & \$280 & 1.99\tabularnewline
+2 & HEWLETT PACKARD ENTERPRISE COMPANY & 16,211 & 45.2 & 49.0\% & 0.04 &
+0.14 & \$554 & 0.69\tabularnewline
+3 & ARAMARK CORPORATION & 8,662 & 46.6 & 54.4\% & 0.07 & 0.29 & \$667 &
+0.92\tabularnewline
+4 & STARBUCKS CORPORATION & 7,025 & 35.5 & 58.3\% & 0.04 & 0.15 & \$355
+& 0.31\tabularnewline
+5 & FIRST DATA CORPORATION & 6,846 & 43.2 & 52.0\% & 0.05 & 0.17 & \$530
+& 0.69\tabularnewline
+6 & RICOH AMERICAS CORPORATION & 5,688 & 46.4 & 48.8\% & 0.06 & 0.20 &
+\$697 & 0.88\tabularnewline
+7 & HILTON DOMESTIC OPERATING COMPANY INC. & 5,547 & 45.3 & 54.6\% &
+0.07 & 0.22 & \$650 & 0.87\tabularnewline
+8 & AON SERVICE CORPORATION & 5,053 & 42.1 & 59.1\% & 0.06 & 0.20 &
+\$616 & 0.64\tabularnewline
+9 & DARDEN RESTAURANTS INC. & 4,787 & 40.3 & 47.8\% & 0.05 & 0.26 &
+\$478 & 0.54\tabularnewline
+10 & WOOD GROUP U.S. HOLDINGS INC. & 4,742 & 42.6 & 43.5\% & 0.05 & 0.17
+& \$580 & 0.65\tabularnewline
+\bottomrule
+\end{longtable}
+
+\subsection{Initial Fitbit member
+exploration}\label{initial-fitbit-member-exploration}
+
+We matched email addresses of Unitedhealth commercial members with
+Fitbit members.
+
+As an initial question, whose email addresses do we have? I know that
+claims vary by age, by gender, and by funding arrangment (fully-insured
+vs self-funded/ASO). Since we're potentially matching only members whose
+email addresses we have, let's make sure they're similar to the overall
+membership before proceed to a comparison of Fitbit members.
+
+\includegraphics{create_report_with_graphics_in_R_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+Overall, it seems like we're slightly more likely to have email
+addresses for women in FI and for men in ASO, but I'm not sure what that
+tells us. However, when we look at utilization a problem becomes
+evident.
+
+\includegraphics{create_report_with_graphics_in_R_files/figure-latex/unnamed-chunk-9-1.pdf}
+\includegraphics{create_report_with_graphics_in_R_files/figure-latex/unnamed-chunk-9-2.pdf}
+
+The pattern is the same for FI and ASO: members whose email addresses we
+know are significantly (in a practical if not statistical sense--I
+haven't performed any statistical tests) more likely to have had a
+diagnosis related to virtually every condition. We see this in
+utilization statistics as well.
+
+\begin{longtable}[]{@{}lllrlrrlllrlll@{}}
+\toprule
+Insurance & HaveEmail & MbrCnt & Age & Female & IP.Admit & ER.Visit &
+PMPM & Med & Rx & Charlson & Diabetes & HTN & Depression\tabularnewline
+\midrule
+\endhead
+UHC-FI & No & 1,080,348 & 41.2 & 45.9\% & 0.040 & 0.179 & \$338 & \$288
+& \$50 & 0.46 & 5.1\% & 13.6\% & 4.6\%\tabularnewline
+UHC-FI & Yes & 1,413,701 & 45.0 & 50.3\% & 0.052 & 0.173 & \$589 & \$449
+& \$140 & 0.71 & 7.7\% & 20.8\% & 7.1\%\tabularnewline
+UHC-FI & Total & 2,494,049 & 43.3 & 48.4\% & 0.047 & 0.176 & \$481 &
+\$379 & \$101 & 0.60 & 6.6\% & 17.7\% & 6\%\tabularnewline
+\bottomrule
+\end{longtable}
+
+\begin{longtable}[]{@{}lllrlrrlllrlll@{}}
+\toprule
+Insurance & HaveEmail & MbrCnt & Age & Female & IP.Admit & ER.Visit &
+PMPM & Med & Rx & Charlson & Diabetes & HTN & Depression\tabularnewline
+\midrule
+\endhead
+Uni-ASO & No & 3,045,962 & 44.4 & 53.7\% & 0.049 & 0.183 & \$336 & \$325
+& \$12 & 0.56 & 5.8\% & 15.3\% & 5.2\%\tabularnewline
+Uni-ASO & Yes & 3,531,452 & 47.3 & 47.8\% & 0.055 & 0.169 & \$510 &
+\$469 & \$41 & 0.72 & 7.8\% & 20.7\% & 6.4\%\tabularnewline
+Uni-ASO & Total & 6,577,414 & 46.0 & 50.5\% & 0.052 & 0.175 & \$430 &
+\$402 & \$28 & 0.64 & 6.9\% & 18.2\% & 5.9\%\tabularnewline
+\bottomrule
+\end{longtable}
+
+I don't know the sources of our email addresses, but it makes intuitive
+sense. If you're healthy and have no claims or need to find a provider
+we're probably less likely to know your email address. If you have many
+claims to manage and need to find many different providers there's
+probably a good chance we have your email address.
+
+Given all of that, though, it's clear that we shouldn't compare members
+who have Fitbits with all other members. Since we would only potentially
+know if a member has a Fitbit if we know the member's email address, we
+should compare members who have Fitbits only to other members whose
+email addresses we have. So let's go ahead and do that.
+
+\subsection{Explore members with (and without)
+Fitbits}\label{explore-members-with-and-without-fitbits}
+
+\includegraphics{create_report_with_graphics_in_R_files/figure-latex/unnamed-chunk-11-1.pdf}
+
+\begin{longtable}[]{@{}lllrlrrlllrlll@{}}
+\toprule
+Insurance & HaveFitbit & MbrCnt & Age & Female & IP.Admit & ER.Visit &
+PMPM & Med & Rx & Charlson & Diabetes & HTN & Depression\tabularnewline
+\midrule
+\endhead
+UHC-FI & No & 1,275,001 & 45.1 & 49\% & 0.052 & 0.177 & \$589 & \$449 &
+\$140 & 0.71 & 7.9\% & 21\% & 7\%\tabularnewline
+UHC-FI & Yes & 138,700 & 44.6 & 62.7\% & 0.049 & 0.138 & \$595 & \$452 &
+\$143 & 0.66 & 6.4\% & 19.2\% & 7.8\%\tabularnewline
+UHC-FI & Total & 1,413,701 & 45.0 & 50.3\% & 0.052 & 0.173 & \$589 &
+\$449 & \$140 & 0.71 & 7.7\% & 20.8\% & 7.1\%\tabularnewline
+\bottomrule
+\end{longtable}
+
+\begin{longtable}[]{@{}lllrlrrlllrlll@{}}
+\toprule
+Insurance & HaveFitbit & MbrCnt & Age & Female & IP.Admit & ER.Visit &
+PMPM & Med & Rx & Charlson & Diabetes & HTN & Depression\tabularnewline
+\midrule
+\endhead
+Uni-ASO & No & 3,165,013 & 47.4 & 46.7\% & 0.055 & 0.172 & \$509 & \$468
+& \$41 & 0.72 & 7.9\% & 20.8\% & 6.4\%\tabularnewline
+Uni-ASO & Yes & 366,439 & 46.8 & 57.5\% & 0.049 & 0.137 & \$521 & \$481
+& \$41 & 0.68 & 6.7\% & 19.9\% & 6.8\%\tabularnewline
+Uni-ASO & Total & 3,531,452 & 47.3 & 47.8\% & 0.055 & 0.169 & \$510 &
+\$469 & \$41 & 0.72 & 7.8\% & 20.7\% & 6.4\%\tabularnewline
+\bottomrule
+\end{longtable}
+
+
+\end{document}

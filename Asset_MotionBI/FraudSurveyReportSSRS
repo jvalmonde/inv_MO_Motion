@@ -1,0 +1,105 @@
+USE pdb_DermReporting
+
+-- ===========================================================================================================================
+-- Author:		Wilfredo Sadora jr (wsadora)
+-- Create date: 4-7-2016
+-- Description: This script is used in SSRS to generate the necessary SSRS report for Fraud Survey
+-- Most part of the script is from Garrett Hyatt
+-- This script is not called as a whole but parts of the script was used to get the data for datasets in the SSRS report
+-- ===========================================================================================================================
+
+if object_id('tempdb..#table') IS NOT NULL
+	DROP TABLE tempdb..#table
+
+--For the 1st Table - Fraud Survey Summary
+SELECT 
+		Year_mo
+		,FraudLevel = Case when MaxScore > 5 then 'Likely' when maxscore > 3 then 'Moderate' when maxscore >= 0 then 'Normal' else NULL end 
+		,Total = Sum(vE.TotalAwards)
+		,Count = Count(*)
+		INTO #table    
+		FROM [pdb_DermFraud].[dbo].[FraudRollup] fr
+							INNER JOIN [pdb_DermReporting].[dbo].[Dim_Member] m          ON fr.Memberid = m.Dermsl_Memberid
+							INNER JOIN  [pdb_DermReporting].[dbo].Fact_Activity vE       ON m.Account_ID = vE.Account_ID 
+							Inner Join pdb_DermReporting.dbo.Dim_date dd                 on ve.Dt_Sys_ID = dd.DT_SYS_ID and  fr.LogDate =  dd.Full_Dt
+		
+		WHERE fr.LookupClientId in (50,147)
+		AND m.ClientName in ('Key Accounts','All Savers Motion')
+		Group by                  
+				Year_mo
+		,Case when MaxScore > 5 then 'Likely' when maxscore > 3 then 'Moderate' when maxscore >= 0 then 'Normal' else NULL end 
+
+
+SELECT TOP 13 n.Year_mo, isnull(l.Count,'') as [Likely],		 l.Count / cast( (isnull(l.Count,0)+ isnull(m.Count,0) + isnull(n.Count,0)) as decimal(9,2))  as [likely_percent],	--% likely
+						l.Total as [Tlikely],
+						isnull(m.Count,'') as [Moderate],	 m.Count / cast( (isnull(l.Count,0)+ isnull(m.Count,0) + isnull(n.Count,0)) as decimal(9,2))  as [moderate_percent],	--% moderate
+						m.Total as [Tmoderate],
+						isnull(n.Count,'') as [Normal],		 n.Count / cast( (isnull(l.Count,0)+ isnull(m.Count,0) + isnull(n.Count,0)) as decimal(9,2))  as [normal_percent],		--% normal
+						n.Total as [Tnormal],
+						survey.SurveySent,
+						survey.SurveyCompleted
+	FROM (SELECT Year_mo, FraudLevel, Total, Count FROM #table WHERE FraudLevel = 'Normal') n
+	LEFT JOIN (SELECT Year_mo, FraudLevel, Total, Count FROM #table WHERE FraudLevel = 'Moderate') m ON n.Year_mo = m.Year_mo
+	LEFT JOIN (SELECT Year_mo, FraudLevel, Total, Count FROM #table WHERE FraudLevel = 'Likely') l ON n.Year_mo = l.Year_mo
+	LEFT JOIN (--This part is used for Survey Sent & completed
+				SELECT LEFT(t.SurveySentDate,4) + SUBSTRING(CONVERT(varchar(30),t.SurveySentDate),6,2) as Year_mo, 
+				SurveySent = COUNT(CASE WHEN Responseflag < 1 THEN 1 END),
+				SurveyCompleted = COUNT(CASE WHEN Responseflag > 0 THEN 1 END)
+				FROM (
+					--Script from Garrett
+					Select SurveySentDate = Convert(Date,s.RowCreatedDateTime), b.EmailDescription, c.EmailTypeDescription, lc.Clientname
+					,CustomData = dbo.pad(Convert(Varchar(30),s.SurveyCode ),10,'0','l') + 'E' + Convert(Varchar(5),s.EmailiD)   
+					,Responseflag = Max( case when fs.Prompt is not null then 1 else 0 end) 
+					FROM Dermsl_prod.dbo.Survey s    ---Record of surveys sent
+											Inner join Dermsl_Prod.dbo.Email b  --Email Contents
+													ON s.EmailID = b.Emailid 
+											Inner join Dermsl_prod.dbo.EmailType c  --Email type
+													ON  b.EmailTypeID = c.EmailTypeId
+											Inner join Dermsl_prod.dbo.Member m     --Use member to match back to client
+													ON s.Memberid = m.Memberid 
+											Inner join Dermsl_prod.dbo.LookupClient lc   --Client
+													ON m.LOOKUPClientID = lc.LookupClientid 
+													and lc.Clientname in ( 'All Savers motion', 'Key Accounts') 
+											Left JOIN [pdb_DermReporting].[dbo].[Fact_Survey] fs
+													On dbo.pad(Convert(Varchar(30),s.SurveyCode ),10,'0','l') + 'E' + Convert(Varchar(5),s.EmailiD)    = fs.CustomData
+					Where EmailTypeDescription  = 'Fraud Deterrent' and EmailDescription not like '%Reminder%' ---Only Fraud Detterent emails.
+					Group by  Convert(Date,s.RowCreatedDateTime), b.EmailDescription, c.EmailTypeDescription, lc.Clientname, dbo.pad(Convert(Varchar(30),s.SurveyCode ),10,'0','l') + 'E' + Convert(Varchar(5),s.EmailiD) 
+					)t
+
+				GROUP BY LEFT(t.SurveySentDate,4) + SUBSTRING(CONVERT(varchar(30),t.SurveySentDate),6,2)
+			)survey ON n.YEAR_MO = survey.Year_mo
+order by n.Year_mo desc
+
+-----------------------------------------
+--Get the response from the response table the dbo.Fact_Survey which contains 1 row per question.
+SELECT  v.[SurveyID]
+      ,[CollectorID]
+      ,[RespondentID]
+      ,[CustomData]
+      ,[StartDate]
+      ,[EndDate]
+      ,[IPAddress]
+      ,[EmailAddress]
+      ,[FirstName]
+      ,[LastName]
+      ,[PromptID]
+      ,[ResponseID]
+      ,[Prompt]
+      ,[ResponseText]
+      ,[OthersSpecify]
+ ,SurveyName = CASE WHEN SurveyName LIKE '%Tier 1%' then 'Fraud Tier 1'
+					WHEN SurveyName LIKE '%Tier 2%' then 'Fraud Tier 2'
+					ELSE '' 
+					END
+ FROM [pdb_DermReporting].[dbo].[Fact_Survey] v
+
+WHERE  v.SurveyId in 
+  (
+73841105	
+,67668495
+,67668443
+)           
+--ONLY INCLUDE THE LAST 12 MONTHS
+AND [StartDate] >= DATEADD(MONTH,-13,getdate()) 
+ORDER BY StartDate desc
+

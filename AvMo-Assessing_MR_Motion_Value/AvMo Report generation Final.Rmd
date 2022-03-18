@@ -1,0 +1,2047 @@
+---
+title: "AvMo Report"
+author: "Steve Smela"
+date: "April 14, 2018"
+output: word_document
+---
+
+```{r setup1, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r setup2, message=FALSE, warning=FALSE, echo=FALSE}
+# All of the files used here should be in the current working directory; use 'setwd()' before running this code.
+
+# The starting point for the analyses is to run "AvMo Master" to load the necessary functions to access the data.
+source("AvMo Master.R")
+
+library(knitr)
+
+# Previously data was stored in two data sets, one for each of the pilots (2016 and 2017), by running setupMemberMonth.  
+# Load these data sets.
+
+if(!exists("All2016Pilot")) load("All2016Pilot.rda")
+
+if(!exists("All2017Pilot")) load("All2017Pilot.rda")
+
+# Using these data, I created data sets used in the analysis. Created them with outliers
+# kept because the option works only if Yr != "All" and we have outlier info only for 2014-2017.  However, include the death flag
+# to exclude end-of-life costs.
+
+# IN2016Pilot <- filteredMemberMonth(pilotType = 2016, Data = All2016Pilot, rxRebate = "40%", removeOutliers = F, State = "IN", RemoveDeaths = T)
+# save(IN2016Pilot, file = "IN2016Pilot.rda")
+
+# LTVPilot <- filteredMemberMonth(pilotType = "Lifetime Value", Data = All2017Pilot, rxRebate = "40%", removeOutliers = F, RemoveDeaths = T)
+# save(LTVPilot, file = "LTVPilot.rda")
+
+# These were likewise saved.  Load them ....
+
+if(!exists("IN2016Pilot")) load("IN2016Pilot.rda")
+
+if(!exists("LTVPilot")) load("LTVPilot.rda")
+
+```
+
+
+# Introduction
+
+This report summarizes the results of analyses performed under the "Assessing the Value of Motion to M&R (AvMo)" initiative.
+
+The analysis considered two Motion pilot projects.  The first began in June 2016 and the second, "Lifetime Value" pilot, in February 2017.  Only residents of Indiana are included in the analysis of the 2016 pilot.  The Lifetime Value pilot included a matched set of plan benefit packages (PBPs) and some of the analyses will compare the Lifetime Value participants to those in the control population.
+
+The AvMo initiative had two broad goals. The first was to provide an update to previous work given the availability of addtional data with the passage of time.  The second was to answer additonal questions as indicated by the Killer Questions, for example, the effect of Motion programs on members' decisions to renew their coverage.  The sections of this report address the Killer Questions one by one.
+
+## Background on data and terminology
+
+The 2016 Indiana pilot included 15,714 individuals and the Lifetime Value pilot 35,025, with an additional 7,061 in the control group.
+
+These groups are divided into subgroups as follows.  For the Lifetime Value pilot, "Contacted" members are those whom Savvysherpa was able to contact by telephone to invite participation in the pilot.  (The 2016 pilot contacted potential participants by mail, so everyone in that sample can be considered to have been contacted.)  "Signed Up" members are those who chose to participate in the Motion program while "Ever Walked" members are those who actually participated by taking their first steps.  Ever Walked members are therefore a subset of Signed Up members, who in turn are a subset of Contacted members.
+
+In this report we also address the question of whether Motion programs affect members' likelihood of re-enrolling in a United Healthcare Medicare Advantage plan.  Consequently, we will discuss Re-enrolled and Dis-enrolled members.
+
+Revenue and cost data are current through September 2017. RAF scores for 2017 and re-enrollment data are current through March 2018.
+
+To exclude members with exceptionally high costs, two filters were applied.  The first made use of a flag in the data indicating whether, in a particular year, a member was in the top 5% of the UHC Medicare Advantage population in terms of costs.  We call these members "outliers."  I will typically apply this outlier filter only when the time span under consideration is a single calendar year.
+
+The second filter makes use of a flag indicating the death of a member.  If this flag is set, the filter excludes the data from the last twelve months of the member's life, in order to reduce the impact of end-of-life costs. [This is a change from previous analyses, which used 12 months of continuous enrollment within a year as a means of excluding end-of-life costs.]
+
+At various points in this analysis these filters will be applied, either singly, in combination, or not at all.  As a result, the member totals will typically not match the numbers given above.
+
+# Killer Question #1, Part 1
+
+The first part of Killer Question is, "Do profitable members stay profitable over consecutive years? "
+
+Let's begin by considering how many years' worth of data we have on individuals, and in how many years the individual was profitable.
+
+For this discussion, we have a "year" of data on an individual if we have at least one month's worth of data in given calendar year, after removing the last 12 months of data on individuals who died.  For example, if someone entered the data in June 2013 and died in August 2017, after subtracting the period from September 2016 to August 2017, that person would appear in the data in four calendar years, and hence we have four "years" of data on him or her.  For each year in which we have data for a person, we add up his or her costs and revenue to determine whether he or she was profitable in that year.
+
+As this chart shows, for the 2016 we typically have two years' worth of data on a member, whereas for the Lifetime Value pilot we have a more even distribution of tenure.
+
+```{r KQ1_1, message=FALSE, warning=FALSE, echo=FALSE}
+
+
+## Start with 2016 Indiana pilot ##
+
+# Create data sets by member & year.  Need to take out 2018 since that's just a placeholder for enrollment/re-enrollment.
+
+# 2016 Indiana data
+
+INMemberYear <- IN2016Pilot %>% 
+  filter(Year != "2018") %>%
+  group_by(SavvyHICN, Year) %>%
+  summarise(Value = sum(Total_Value), Profitable = ifelse(Value > 0, 1, 0))
+
+# Collapse down to member level.  Calculate # of years in data & how many of those years were profitable
+INMember <- INMemberYear %>% group_by(SavvyHICN) %>%
+  summarise(Years = n(), ProfitableYears = sum(Profitable),
+            ProfitablePct = 100*ProfitableYears/Years)
+
+INMember$PilotType <- "2016"
+
+# LTV pilot
+
+LTVMemberYear <- LTVPilot %>% 
+  filter(Year != "2018") %>%
+  group_by(SavvyHICN, Year) %>%
+  summarise(Value = sum(Total_Value), Profitable = ifelse(Value > 0, 1, 0))
+
+# Collapse down to member level.  Calculate # of years in data & how many of those years were profitable
+LTVMember <- LTVMemberYear %>% group_by(SavvyHICN) %>%
+  summarise(Years = n(), ProfitableYears = sum(Profitable),
+            ProfitablePct = 100*ProfitableYears/Years)
+
+LTVMember$PilotType <- "LTV"
+
+#### Combine the two data sets ###
+
+MembersCombo <- rbind(INMember, LTVMember)
+
+MembersCombo %>% ggplot() + geom_bar(aes(x = Years, y = ..prop.., fill = PilotType), position = "dodge") +
+  labs(title = "Years of data for pilot members", subtitle = "Deceased filter applied", y = "Proportion of total in pilot")
+```
+
+Turning now to the stability of profitability, over time, we begin with members for whom we have one year's worth of data.  For the 2016 pilot, about 81% were profitable in that year, whereas for the Lifetime Value pilot about 86% of the one-year members were profitable.
+
+```{r KQ1_2, message=FALSE, warning=FALSE, echo=FALSE}
+
+# For those with one year of data, how many were profitable?
+
+OneYear <- matrix(nrow = 2, ncol = 2)
+
+colnames(OneYear) <- c("Not Profitable", "Profitable")
+rownames(OneYear) <- c("2016 Pilot", "Lifetime Value Pilot")
+
+OneYear[1,1] <- round(100* table(INMember$ProfitablePct[INMember$Years == 1]) / length(INMember$SavvyHICN[INMember$Years == 1]), 1)[1]
+OneYear[1,2] <- round(100* table(INMember$ProfitablePct[INMember$Years == 1]) / length(INMember$SavvyHICN[INMember$Years == 1]), 1)[2]
+
+OneYear[2,1] <- round(100* table(LTVMember$ProfitablePct[LTVMember$Years == 1]) / length(LTVMember$SavvyHICN[LTVMember$Years == 1]), 1)[1]
+OneYear[2,2] <- round(100* table(LTVMember$ProfitablePct[LTVMember$Years == 1]) / length(LTVMember$SavvyHICN[LTVMember$Years == 1]), 1)[2]
+
+kable(OneYear, caption = "Profitability of members with one year of data (% of total, deceased filter applied)")
+
+```
+
+
+Proceeding to members with two years of data, about 4% were unprofitable in both years, 20-23% were profitable in one of the two years, and around 73-76% were profitable in both years.
+
+```{r KQ1_3, message=FALSE, warning=FALSE, echo=FALSE}
+
+# For those with two years of data, how many were profitable?
+
+TwoYears <- matrix(nrow = 2, ncol = 3)
+
+colnames(TwoYears) <- c("Neither Year", "One Year", "Both Years")
+rownames(TwoYears) <- c("2016 Pilot", "Lifetime Value Pilot")
+
+TwoYears[1,1] <- round(100* table(INMember$ProfitablePct[INMember$Years == 2]) / length(INMember$SavvyHICN[INMember$Years == 2]), 1)[1]
+TwoYears[1,2] <- round(100* table(INMember$ProfitablePct[INMember$Years == 2]) / length(INMember$SavvyHICN[INMember$Years == 2]), 1)[2]
+TwoYears[1,3] <- round(100* table(INMember$ProfitablePct[INMember$Years == 2]) / length(INMember$SavvyHICN[INMember$Years == 2]), 1)[3]
+
+TwoYears[2,1] <- round(100* table(LTVMember$ProfitablePct[LTVMember$Years == 2]) / length(LTVMember$SavvyHICN[LTVMember$Years == 2]), 1)[1]
+TwoYears[2,2] <- round(100* table(LTVMember$ProfitablePct[LTVMember$Years == 2]) / length(LTVMember$SavvyHICN[LTVMember$Years == 2]), 1)[2]
+TwoYears[2,3] <- round(100* table(LTVMember$ProfitablePct[LTVMember$Years == 2]) / length(LTVMember$SavvyHICN[LTVMember$Years == 2]), 1)[3]
+
+
+kable(TwoYears, caption = "Profitability of members with two years of data (% of total, deceased filter applied)")
+
+```
+
+Turning now to plots of members with three, four, five, or six years' worth of data, we see that the majority of members are profitable in most years; very few are consistently unprofitable.
+
+```{r KQ1_4, message=FALSE, warning=FALSE, echo=FALSE}
+MembersCombo %>% 
+  filter(Years == 3) %>%
+  ggplot() + geom_bar(aes(x = ProfitableYears, y = ..prop.., fill = PilotType), position = "dodge") +
+  labs(title = "Years of profitability", subtitle = "Members with three years of data, deceased filter applied", y = "Proportion of total in pilot", 
+       x = "Profitable Years")
+
+MembersCombo %>% 
+  filter(Years == 4) %>%
+  ggplot() + geom_bar(aes(x = ProfitableYears, y = ..prop.., fill = PilotType), position = "dodge") +
+  labs(title = "Years of profitability", subtitle = "Members with four years of data, deceased filter applied", y = "Proportion of total in pilot", 
+       x = "Profitable Years")
+
+MembersCombo %>% 
+  filter(Years == 5) %>%
+  ggplot() + geom_bar(aes(x = ProfitableYears, y = ..prop.., fill = PilotType), position = "dodge") +
+  labs(title = "Years of profitability", subtitle = "Members with five years of data, deceased filter applied", y = "Proportion of total in pilot", 
+       x = "Profitable Years")
+
+MembersCombo %>% 
+  filter(Years == 6) %>%
+  ggplot() + geom_bar(aes(x = ProfitableYears, y = ..prop.., fill = PilotType), position = "dodge") +
+  labs(title = "Years of profitability", subtitle = "Members with six years of data, deceased filter applied", y = "Proportion of total in pilot", 
+       x = "Profitable Years")
+    
+```
+
+As noted above, for members with two years of data, roughly 75% were profitable in both years, about 20% were profitable in one year, and the rest were unprofitable in both years. These patterns hold if we look at year-on-year-changes as well.  For example, if we take Indiana members from the 2016 pilot who appeared in the data in 2015 and 2016, 72.8% were profitable in both years, 4.2% were unprofitable in both years, 10.9% were profitable in 2015 but not 2016, and 12.1% were unprofitable in 2015 but profitable in 2016.
+
+```{r KQ1_5, message=FALSE, warning=FALSE, echo=FALSE}
+# Let's look at year-to-year transitions
+INMemberYear$Year2 <- paste0("Y", INMemberYear$Year)
+
+# Change to wide format
+INMemberYearWide <- INMemberYear %>% select(-Value, -Year) %>% spread(key = Year2, value = Profitable)
+
+kable(round(100 * table(INMemberYearWide$Y2015, INMemberYearWide$Y2016) / sum(sum(table(INMemberYearWide$Y2015, INMemberYearWide$Y2016))),2), caption = "2015 and 2016 profitability, 2016 pilot (% of members)")
+
+```
+
+A similar pattern holds for the Lifetime Value pilot. For example, here are the 2016/2017 numbers.
+
+
+```{r KQ1_6, message=FALSE, warning=FALSE, echo=FALSE}
+
+# Let's look at year-to-year transitions
+LTVMemberYear$Year2 <- paste0("Y", LTVMemberYear$Year)
+
+# Change to wide format
+LTVMemberYearWide <- LTVMemberYear %>% select(-Value, -Year) %>% spread(key = Year2, value = Profitable)
+
+kable(round(100 * table(LTVMemberYearWide$Y2016, LTVMemberYearWide$Y2017) / sum(sum(table(LTVMemberYearWide$Y2016, LTVMemberYearWide$Y2017))), 2), caption = "2016 and 2017 profitability, Lifetime Value pilot (% of members)")
+
+```
+
+These patterns are quite stable, so further examples will not be shown.
+
+The overall message is that:
+
+1. Most members are consistently profitable.
+2. Very few are consistently unprofitable.
+3. A member who is unprofitable in one year is quite likely to be profitable in the next year (excluding end-of-life costs).
+
+Moreover, the transition between being profitable or not is not smooth--there are very few members who are marginally profitable.  To illustrate this point, consider Lifetime Value pilot members who where profitable in 2016:  
+
+```{r KQ1_7, message=FALSE, warning=FALSE, echo=FALSE}
+
+summary(LTVMemberYear$Value[LTVMemberYear$Year == "2016" & LTVMemberYear$Profitable == 1])
+```
+
+and those who were unprofitable:
+
+```{r KQ1_8, message=FALSE, warning=FALSE, echo=FALSE}
+summary(LTVMemberYear$Value[LTVMemberYear$Year == "2016" & LTVMemberYear$Profitable == 0])
+
+```
+
+Among those who were were profitable the median value was \$5,784.  The first quartile was \$3,662, so 75% of the members were at least this profitable.  Conversely, the median value among those who were unprofitable was -\$9,060, and 75% of the unprofitable members had values of -\$2,805 or less.
+
+So the answer to the first part of Killer Question #1, "Do profitable members stay profitable over consecutive years?" is Yes, with the addendum that even those who are unprofitable tend not to remain so.
+
+# Killer Question 1, Part 2
+
+The second part of Killer Question #1 is, "If Motion has a selection effect, is it stable?"
+
+To answer this question, we consider "selection" to mean that there are systematic differences between those who choose to participate in a Motion program and those who do not.  As an addendum to the selection question, among those who sign up for a motion program, is there a difference between those who Ever Walk and those who don't?
+
+To take a first cut at these questions, we look at per-member per-month (PMPM) values for revenue, costs, and value (revenue minus costs)in the year the pilot was conducted. Outliers and deceased members have been filtered out. Detailed tables containing the values appearing in this report are in the Appendix.
+
+For the 2016 pilot, we see that the size of the error bars corresponds to the number of individuals in each group. The overall message is that those who signed up (N = 712) had lower revenue and costs than those who did not sign up (N = 14,490), but the difference in revenue outweighed the difference in costs, so on net they had lower revenue. The difference in value was marginally significant (p = .060), the difference in revenue was significant (p < .001), while the difference in costs was not (p = .260).  Those who signed up were younger by about two years (72 vs. 74 years) and had lower RAFs (.63 vs. .76).
+
+The differences between the Walked (N = 485) and Didn't Walk (N = 227) were not statistically significant.
+
+```{r KQ1_9, message=FALSE, warning=FALSE, echo=FALSE}
+
+# Confidence intervals previously, separately calculated with file "ConfInts.R".  Load results.
+
+load("IN_CIs.rda")
+
+INResults <- matrix(nrow = 5, ncol = 6)
+colnames(INResults) <- c("Group", "Name", "N", "Revenue", "Cost", "Value")
+
+INResults[1,1] <- 1
+INResults[2,1] <- 2
+INResults[3,1] <- 3
+INResults[4,1] <- 4
+INResults[5,1] <- 5
+
+INResults[1,2] <- "Overall"
+INResults[2,2] <- "Signed Up"
+INResults[3,2] <- "Not Signed Up"
+INResults[4,2] <- "Ever Walked"
+INResults[5,2] <- "Didn't Walk"
+
+INResults <- cbind(INResults, IN_CIs)
+
+temp1 <- IN2016Pilot %>% filter(Year == 2016, Top5_Prcnt_2016 == 0)
+
+INResults[1,3] <- length(unique(temp1$SavvyHICN))
+INResults[1,4] <- as.numeric(round(temp1 %>% summarise(MLI = sum(Total_Revenue) / length(SavvyHICN)),2))
+INResults[1,5] <- as.numeric(round(temp1 %>% summarise(MLI = sum(Total_Cost) / length(SavvyHICN)),2))
+INResults[1,6] <- as.numeric(round(temp1 %>% summarise(MLI = sum(Total_Value) / length(SavvyHICN)),2))
+
+INResults[2,3] <- length(unique(temp1$SavvyHICN[temp1$Enrolled == T]))
+INResults[2,4] <- as.numeric(round(temp1 %>% 
+                                     filter(Enrolled == T) %>% 
+                                     summarise(MLI = sum(Total_Revenue) / length(SavvyHICN)),2))
+INResults[2,5] <- as.numeric(round(temp1 %>% 
+                                     filter(Enrolled == T) %>% 
+                                     summarise(MLI = sum(Total_Cost) / length(SavvyHICN)),2))
+INResults[2,6] <- as.numeric(round(temp1 %>% 
+                                     filter(Enrolled == T) %>% 
+                                     summarise(MLI = sum(Total_Value) / length(SavvyHICN)),2))
+
+INResults[3,3] <- length(unique(temp1$SavvyHICN[temp1$Enrolled == F]))
+INResults[3,4] <- as.numeric(round(temp1 %>% 
+                                     filter(Enrolled == F) %>% 
+                                     summarise(MLI = sum(Total_Revenue) / length(SavvyHICN)),2))
+INResults[3,5] <- as.numeric(round(temp1 %>% 
+                                     filter(Enrolled == F) %>% 
+                                     summarise(MLI = sum(Total_Cost) / length(SavvyHICN)),2))
+INResults[3,6] <- as.numeric(round(temp1 %>% 
+                                     filter(Enrolled == F) %>% 
+                                     summarise(MLI = sum(Total_Value) / length(SavvyHICN)),2))
+
+temp2 <-  IN2016Pilot %>% filter(Year == 2016, Top5_Prcnt_2016 == 0, Enrolled == T)
+
+INResults[4,3] <- length(unique(temp2$SavvyHICN[temp2$Registered == T]))
+INResults[4,4] <- as.numeric(round(temp2 %>% 
+                                     filter(Registered == T) %>% 
+                                     summarise(MLI = sum(Total_Revenue) / length(SavvyHICN)),2))
+INResults[4,5] <- as.numeric(round(temp2 %>% 
+                                     filter(Registered == T) %>% 
+                                     summarise(MLI = sum(Total_Cost) / length(SavvyHICN)),2))
+INResults[4,6] <- as.numeric(round(temp2 %>% 
+                                     filter(Registered == T) %>% 
+                                     summarise(MLI = sum(Total_Value) / length(SavvyHICN)),2))
+
+INResults[5,3] <- length(unique(temp2$SavvyHICN[temp2$Registered == F]))
+INResults[5,4] <- as.numeric(round(temp2 %>% 
+                                     filter(Registered == F) %>% 
+                                     summarise(MLI = sum(Total_Revenue) / length(SavvyHICN)),2))
+INResults[5,5] <- as.numeric(round(temp2 %>% 
+                                     filter(Registered == F) %>% 
+                                     summarise(MLI = sum(Total_Cost) / length(SavvyHICN)),2))
+INResults[5,6] <- as.numeric(round(temp2 %>% 
+                                     filter(Registered == F) %>% 
+                                     summarise(MLI = sum(Total_Value) / length(SavvyHICN)),2))
+
+INResults <- as.tibble(INResults)
+
+INResults$Group <- as.numeric(INResults$Group)
+INResults$N <- as.numeric(INResults$N)
+INResults$Revenue <- as.numeric(INResults$Revenue)
+INResults$Cost <- as.numeric(INResults$Cost)
+INResults$Value <- as.numeric(INResults$Value)
+INResults$Rev_L <- as.numeric(INResults$Rev_L)
+INResults$Rev_U <- as.numeric(INResults$Rev_U)
+INResults$Cost_L <- as.numeric(INResults$Cost_L)
+INResults$Cost_U <- as.numeric(INResults$Cost_U)
+INResults$Val_L <- as.numeric(INResults$Val_L)
+INResults$Val_U <- as.numeric(INResults$Val_U)
+
+
+
+INResults %>%
+  ggplot() + 
+    geom_point(aes(x = Group, y = Value, ymin = 0), color = "blue3") +
+    geom_errorbar(aes(x = Group, ymin = Val_L, ymax = Val_U,width = .2), color = "blue3") +
+    geom_vline(xintercept = 1.5, lty = 2) +
+    geom_vline(xintercept = 3.5, lty = 2) +
+    labs(title = "2016 Pilot, 2016 PMPM Value", y = "Dollars", x = "") +
+    scale_x_continuous(labels = c("Overall", "Signed Up", "Didn't Sign Up", "Walked", "Didn't Walk"))
+
+
+```
+
+```{r KQ1_9b, message=FALSE, warning=FALSE, echo=FALSE}
+INResults %>%
+  ggplot() + 
+    geom_point(aes(x = Group, y = Revenue, ymin = 0), color = "green4") +
+    geom_errorbar(aes(x = Group, ymin = Rev_L, ymax = Rev_U, width = .2), color = "green4") +
+    geom_vline(xintercept = 1.5, lty = 2) +
+    geom_vline(xintercept = 3.5, lty = 2) +
+    labs(title = "2016 Pilot, 2016 PMPM Revenue", y = "Dollars", x = "") +
+    scale_x_continuous(labels = c("Overall", "Signed Up", "Didn't Sign Up", "Walked", "Didn't Walk"))
+```
+
+```{r KQ1_9a, message=FALSE, warning=FALSE, echo=FALSE}
+
+INResults %>%
+  ggplot() + 
+    geom_point(aes(x = Group, y = Cost, ymin = 0), color = "red") +
+    geom_errorbar(aes(x = Group, ymin = Cost_L, ymax = Cost_U,width = .2), color = "red") +
+    geom_vline(xintercept = 1.5, lty = 2) +
+    geom_vline(xintercept = 3.5, lty = 2) +
+    labs(title = "2016 Pilot, 2016 PMPM Cost", y = "Dollars", x = "") +
+    scale_x_continuous(labels = c("Overall", "Signed Up", "Didn't Sign Up", "Walked", "Didn't Walk"))
+
+```
+
+
+
+
+Turning to the 2017 Lifetime Value pilot, I include the Contacted / Not Contacted comparison as well.  Potential study participants were contacted by telephone, and it is possible that those who didn't answer the phone were  different in some way than those who didn't.
+
+Once again the lengths of the error bars vary with the size of the group:
+
+* Contacted:      14,071
+* Not Contacted:  19,351
+* Signed Up:       2,958
+* Didn't Sign Up: 11,113
+* Ever Walked:     1,472
+* Didn't Walk:     1,486
+
+
+The difference in value between the Contacted / Not Contacted groups is significant (p = .040), but the differences between Signed Up / Didn't Sign Up and Ever Walked / Didn't Walk are not (p = .640 and p = .240, respectively).
+
+On the revenue side, there were significant (p < .001) differences between all of the paired groups (Contacted / Not Contacted, Signed Up / Not Signed Up, and Ever Walked / Didn't Walk), Signed Up members had lower revenue than those who didn't sign up, and those who Ever Walked had lower revenue than those who didn't.
+
+For costs, the differences are likewise significant (p < .001). The direction of the group differences in costs parallels the revenue differences.  
+
+As with the 2016 pilot, in the Lifetime Value pilot those who Signed Up were younger and had lower RAFs.
+
+```{r KQ1_10, message=FALSE, warning=FALSE, echo=FALSE}
+# Confidence intervals previously, separately calculated with file "ConfInts.R".
+
+load("LTV_CIs.rda")
+
+LTVResults <- matrix(nrow = 7, ncol = 6)
+colnames(LTVResults) <- c("Group", "Name", "N", "Revenue", "Cost", "Value")
+
+LTVResults[1,1] <- 1
+LTVResults[2,1] <- 2
+LTVResults[3,1] <- 3
+LTVResults[4,1] <- 4
+LTVResults[5,1] <- 5
+LTVResults[6,1] <- 6
+LTVResults[7,1] <- 7
+
+
+LTVResults[1,2] <- "Overall"
+LTVResults[2,2] <- "Contacted"
+LTVResults[3,2] <- "Not Contacted"
+LTVResults[4,2] <- "Signed Up"
+LTVResults[5,2] <- "Not Signed Up"
+LTVResults[6,2] <- "Ever Walked"
+LTVResults[7,2] <- "Didn't Walk"
+
+LTVResults <- cbind(LTVResults, LTV_CIs)
+
+temp1 <- LTVPilot %>% filter(Year == 2017, Top5_Prcnt_2017 == 0)
+
+LTVResults[1,3] <- length(unique(temp1$SavvyHICN))
+LTVResults[1,4] <- as.numeric(round(temp1 %>% summarise(MLI = sum(Total_Revenue) / length(SavvyHICN)),2))
+LTVResults[1,5] <- as.numeric(round(temp1 %>% summarise(MLI = sum(Total_Cost) / length(SavvyHICN)),2))
+LTVResults[1,6] <- as.numeric(round(temp1 %>% summarise(MLI = sum(Total_Value) / length(SavvyHICN)),2))
+
+LTVResults[2,3] <- length(unique(temp1$SavvyHICN[temp1$Reached == T]))
+LTVResults[2,4] <- as.numeric(round(temp1 %>% 
+                                     filter(Reached == T) %>% 
+                                     summarise(MLI = sum(Total_Revenue) / length(SavvyHICN)),2))
+LTVResults[2,5] <- as.numeric(round(temp1 %>% 
+                                     filter(Reached == T) %>% 
+                                     summarise(MLI = sum(Total_Cost) / length(SavvyHICN)),2))
+LTVResults[2,6] <- as.numeric(round(temp1 %>% 
+                                     filter(Reached == T) %>% 
+                                     summarise(MLI = sum(Total_Value) / length(SavvyHICN)),2))
+
+LTVResults[3,3] <- length(unique(temp1$SavvyHICN[temp1$Reached == F]))
+LTVResults[3,4] <- as.numeric(round(temp1 %>% 
+                                     filter(Reached == F) %>% 
+                                     summarise(MLI = sum(Total_Revenue) / length(SavvyHICN)),2))
+LTVResults[3,5] <- as.numeric(round(temp1 %>% 
+                                     filter(Reached == F) %>% 
+                                     summarise(MLI = sum(Total_Cost) / length(SavvyHICN)),2))
+LTVResults[3,6] <- as.numeric(round(temp1 %>% 
+                                     filter(Reached == F) %>% 
+                                     summarise(MLI = sum(Total_Value) / length(SavvyHICN)),2))
+
+temp2 <-  LTVPilot %>% filter(Year == 2017, Top5_Prcnt_2017 == 0, Reached == T)
+
+LTVResults[4,3] <- length(unique(temp2$SavvyHICN[temp2$Enrolled == T]))
+LTVResults[4,4] <- as.numeric(round(temp2 %>% 
+                                     filter(Enrolled == T) %>% 
+                                     summarise(MLI = sum(Total_Revenue) / length(SavvyHICN)),2))
+LTVResults[4,5] <- as.numeric(round(temp2 %>% 
+                                     filter(Enrolled == T) %>% 
+                                     summarise(MLI = sum(Total_Cost) / length(SavvyHICN)),2))
+LTVResults[4,6] <- as.numeric(round(temp2 %>% 
+                                     filter(Enrolled == T) %>% 
+                                     summarise(MLI = sum(Total_Value) / length(SavvyHICN)),2))
+
+LTVResults[5,3] <- length(unique(temp2$SavvyHICN[temp2$Enrolled == F]))
+LTVResults[5,4] <- as.numeric(round(temp2 %>% 
+                                     filter(Enrolled == F) %>% 
+                                     summarise(MLI = sum(Total_Revenue) / length(SavvyHICN)),2))
+LTVResults[5,5] <- as.numeric(round(temp2 %>% 
+                                     filter(Enrolled == F) %>% 
+                                     summarise(MLI = sum(Total_Cost) / length(SavvyHICN)),2))
+LTVResults[5,6] <- as.numeric(round(temp2 %>% 
+                                     filter(Registered == F) %>% 
+                                     summarise(MLI = sum(Total_Value) / length(SavvyHICN)),2))
+
+temp3 <-  LTVPilot %>% filter(Year == 2017, Top5_Prcnt_2017 == 0, Enrolled == T)
+
+LTVResults[6,3] <- length(unique(temp3$SavvyHICN[temp3$Registered == T]))
+LTVResults[6,4] <- as.numeric(round(temp3 %>% 
+                                     filter(Registered == T) %>% 
+                                     summarise(MLI = sum(Total_Revenue) / length(SavvyHICN)),2))
+LTVResults[6,5] <- as.numeric(round(temp3 %>% 
+                                     filter(Registered == T) %>% 
+                                     summarise(MLI = sum(Total_Cost) / length(SavvyHICN)),2))
+LTVResults[6,6] <- as.numeric(round(temp3 %>% 
+                                     filter(Registered == T) %>% 
+                                     summarise(MLI = sum(Total_Value) / length(SavvyHICN)),2))
+
+LTVResults[7,3] <- length(unique(temp3$SavvyHICN[temp3$Registered == F]))
+LTVResults[7,4] <- as.numeric(round(temp3 %>% 
+                                     filter(Registered == F) %>% 
+                                     summarise(MLI = sum(Total_Revenue) / length(SavvyHICN)),2))
+LTVResults[7,5] <- as.numeric(round(temp3 %>% 
+                                     filter(Registered == F) %>% 
+                                     summarise(MLI = sum(Total_Cost) / length(SavvyHICN)),2))
+LTVResults[7,6] <- as.numeric(round(temp3 %>% 
+                                     filter(Registered == F) %>% 
+                                     summarise(MLI = sum(Total_Value) / length(SavvyHICN)),2))
+
+
+LTVResults <- as.tibble(LTVResults)
+
+LTVResults$Group <- as.numeric(LTVResults$Group)
+LTVResults$N <- as.numeric(LTVResults$N)
+LTVResults$Revenue <- as.numeric(LTVResults$Revenue)
+LTVResults$Cost <- as.numeric(LTVResults$Cost)
+LTVResults$Value <- as.numeric(LTVResults$Value)
+LTVResults$Rev_L <- as.numeric(LTVResults$Rev_L)
+LTVResults$Rev_U <- as.numeric(LTVResults$Rev_U)
+LTVResults$Cost_L <- as.numeric(LTVResults$Cost_L)
+LTVResults$Cost_U <- as.numeric(LTVResults$Cost_U)
+LTVResults$Val_L <- as.numeric(LTVResults$Val_L)
+LTVResults$Val_U <- as.numeric(LTVResults$Val_U)
+
+
+
+LTVResults %>%
+  ggplot() + 
+    geom_point(aes(x = Group, y = Value, ymin = 0), color = "blue3") +
+    geom_errorbar(aes(x = Group, ymin = Val_L, ymax = Val_U, width = .2), color = "blue3") +
+    geom_vline(xintercept = 1.5, lty = 2) +
+    geom_vline(xintercept = 3.5, lty = 2) +
+    geom_vline(xintercept = 5.5, lty = 2) +
+    labs(title = "Lifetime Value Pilot, 2017 PMPM Value", y = "Dollars", x = "") +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7),
+                     labels = c("Overall", "Contacted", "Not Contacted", "Signed Up", 
+                                "Didn't Sign Up", "Ever Walked", "Didn't Walk")) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+
+```
+
+```{r KQ1_10b, message=FALSE, warning=FALSE, echo=FALSE}
+LTVResults %>%
+  ggplot() + 
+    geom_point(aes(x = Group, y = Revenue, ymin = 0), color = "green4") +
+    geom_errorbar(aes(x = Group, ymin = Rev_L, ymax = Rev_U, width = .2), color = "green4") +
+    geom_vline(xintercept = 1.5, lty = 2) +
+    geom_vline(xintercept = 3.5, lty = 2) +
+    geom_vline(xintercept = 5.5, lty = 2) +
+    labs(title = "Lifetime Value Pilot, 2017 PMPM Revenue", y = "Dollars", x = "") +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7),
+                     labels = c("Overall", "Contacted", "Not Contacted", "Signed Up", 
+                                "Didn't Sign Up", "Ever Walked", "Didn't Walk")) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+```{r KQ1_10a, message=FALSE, warning=FALSE, echo=FALSE}
+
+LTVResults %>%
+  ggplot() + 
+    geom_point(aes(x = Group, y = Cost, ymin = 0), color = "red") +
+    geom_errorbar(aes(x = Group, ymin = Cost_L, ymax = Cost_U, width = .2), color = "red") +
+    geom_vline(xintercept = 1.5, lty = 2) +
+    geom_vline(xintercept = 3.5, lty = 2) +
+    geom_vline(xintercept = 5.5, lty = 2) +
+    labs(title = "Lifetime Value Pilot, 2017 PMPM Costs", y = "Dollars", x = "") +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7),
+                     labels = c("Overall", "Contacted", "Not Contacted", "Signed Up", 
+                                "Didn't Sign Up", "Ever Walked", "Didn't Walk")) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+
+Going back to the Killer Question,"If Motion has a selection effect, is it stable?", we can say the following about members who Sign Up for Motion, compared to those who did not:
+
+1. Revenue: they had lower revenue (and lower age and RAF).
+2. Cost: they had lower cost in the Lifetime Value pilot and their costs were not different in the 2016 pilot.
+3. Value: they had marginally lower value in the 2016 pilot and their value was not different in the Lifetime Value pilot.
+
+The stability question is a bit trickier to answer.   For the 2016 pilot, we have data for 2017, so we can go forward in time and compare 2016 and 2017 amounts. Of course, the change in 2016 to 2017 reflects a combination of selection effects and the potential effect of the Motion program on members' health and health care costs.
+
+The graph below compares those who Signed Up versus those who didn't.  The gap in revenue held fairly constant from 2016 to 2017.  Costs rose slightly faster for the Signed Up group, and switched from being slightly lower to slightly higher.  The net effect was to widen the Value gap from \$78 to \$110 and increase its significance (from p = .060 for 2016 to p = .018 for 2017.)
+
+
+```{r KQ1_11, message=FALSE, warning=FALSE, echo=FALSE}
+
+# 2016-17 change in PMPM, by Enrolled.  Data previously generated in 
+# "IN  2016-17 change graph data creation Enr vs Not"
+
+load("PMPMChangeEnr.rda")
+
+PMPMChangeEnr <- as.tibble(PMPMChangeEnr) %>%
+  mutate(Year = as.numeric(Year),
+         Rev_L = as.numeric(Rev_L),
+         Rev = as.numeric(Rev),
+         Rev_U = as.numeric(Rev_U),
+         Cost_L = as.numeric(Cost_L),
+         Cost = as.numeric(Cost),
+         Cost_U = as.numeric(Cost_U),
+         Val_L = as.numeric(Val_L),
+         Val = as.numeric(Val),
+         Val_U = as.numeric(Val_U))
+
+pd <- position_dodge(width = -0.1)
+
+PMPMChangeEnr %>%
+  mutate(Participating = ifelse(`Signed Up` == "Yes", 1, 2),
+         Year = as.numeric(Year)) %>%
+  ggplot() +
+  geom_line(aes(x = Year, y = Val, ymin = 0, color = "Value", linetype = factor(Participating)), position = pd) +
+  geom_line(aes(x = Year, y = Rev, color = "Revenue", linetype = factor(Participating)), position = pd) +
+  geom_line(aes(x = Year, y = Cost, color = "Cost", linetype = factor(Participating)), position = pd) +
+  geom_errorbar(aes(x = Year, ymin = Val_L, ymax = Val_U,width = .01, linetype = factor(Participating)), color = "blue", position = pd) +
+  geom_errorbar(aes(x = Year, ymin = Rev_L, ymax = Rev_U,width = .01, linetype = factor(Participating)), color = "green4", position = pd) +
+  geom_errorbar(aes(x = Year, ymin = Cost_L, ymax = Cost_U,width = .01, linetype = factor(Participating)), color = "red", position = pd) +
+  scale_linetype_discrete(name = "Signed up", labels = c("Yes", "No")) +
+  scale_color_discrete(name = "") +
+  labs(title = "Changes in PMPM Amounts 2016-17", subtitle = "2016 pilot, by Signed Up", y = "Dollars", x = "Year") +
+  scale_x_continuous(breaks = c(2016, 2017), labels = c("2016", "2017")) 
+
+
+```
+
+In the next graph, the differences between the Ever Walked and Didn't Walk values are not significant, but we see that costs increased for the Ever Walked group more than for Didn't Walk group, leading to a widening gap in the PMPM Values.
+
+```{r KQ1_11a, message=FALSE, warning=FALSE, echo=FALSE}
+
+# 2016-17 change in PMPM, by Walked.  Data previously generated in 
+# "IN  2016-17 change graph data creation Walked vs Not"
+
+load("PMPMChangeWalk.rda")
+
+colnames(PMPMChangeWalk) <- c("Year", "Walked", "Rev_L", "Rev", "Rev_U", "Cost_L", "Cost", "Cost_U", "Val_L", "Val", "Val_U")
+
+PMPMChangeWalk <- as.tibble(PMPMChangeWalk) %>%
+  mutate(Year = as.numeric(Year),
+         Rev_L = as.numeric(Rev_L),
+         Rev = as.numeric(Rev),
+         Rev_U = as.numeric(Rev_U),
+         Cost_L = as.numeric(Cost_L),
+         Cost = as.numeric(Cost),
+         Cost_U = as.numeric(Cost_U),
+         Val_L = as.numeric(Val_L),
+         Val = as.numeric(Val),
+         Val_U = as.numeric(Val_U))
+
+pd <- position_dodge(width = -0.1)
+
+PMPMChangeWalk %>%
+  mutate(Participating = ifelse(Walked == "Yes", 1, 2),
+         Year = as.numeric(Year)) %>%
+  ggplot() +
+  geom_line(aes(x = Year, y = Val, ymin = 0, color = "Value", linetype = factor(Participating)), position = pd) +
+  geom_line(aes(x = Year, y = Rev, color = "Revenue", linetype = factor(Participating)), position = pd) +
+  geom_line(aes(x = Year, y = Cost, color = "Cost", linetype = factor(Participating)), position = pd) +
+  geom_errorbar(aes(x = Year, ymin = Val_L, ymax = Val_U,width = .01, linetype = factor(Participating)), color = "blue", position = pd) +
+  geom_errorbar(aes(x = Year, ymin = Rev_L, ymax = Rev_U,width = .01, linetype = factor(Participating)), color = "green4", position = pd) +
+  geom_errorbar(aes(x = Year, ymin = Cost_L, ymax = Cost_U,width = .01, linetype = factor(Participating)), color = "red", position = pd) +
+  scale_linetype_discrete(name = "Ever Walked", labels = c("Yes", "No")) +
+  scale_color_discrete(name = "") +
+  labs(title = "Changes in PMPM Amounts 2016-17", subtitle = "2016 pilot, by Ever Walked", y = "Dollars", x = "Year") +
+  scale_x_continuous(breaks = c(2016, 2017), labels = c("2016", "2017")) 
+
+
+
+
+
+
+```
+
+This may seem disheartening; we would like the gap in costs between the Ever Walked and Didn't Walk groups to decrease, not increase. However, one thing to consider is members' tenure.  It turns out that the Ever Walked group has a higher percentage of members who were "new" in 2016 (53%) than the Didn't Walk group (46%). As we'll see in a moment, this matters because costs tend to rise between the first and second years of membership.
+
+In the following discussion, I defined "start year" to be the first year in which we have continuous data on a member extending to the year of the pilot. For example, for those with Start Year 2016, we have data in 2016 but not 2015; for those in Start Year 2015, we have data for 2015 and 2016, but not 2014. It's possible that we have data in, say, 2014 for someone in Start Year 2016.  However, the break in continuity re-sets the clock.
+
+This is important because of the presumed lag in documenting members' health conditions, adjusting RAF scores and, consquently, payments from Medicare to United Health.  
+
+And, indeed, the graphs below support this view: the longer a member has been with United, on average, the higher the member's revenue is. 
+
+Costs generally are higher for members with a Start Year prior to the year of the pilot.  That is, at the time of the pilot, they are in their second year of continuous membership.  For the 2016 pilot, those with a Start Year of 2015 have higher costs than those with a 2016 Start Year, and for the Lfetime Value pilot 2016 Start Year costs are higher than 2017 Start Year Costs.
+
+
+```{r KQ1_12, message=FALSE, warning=FALSE, echo=FALSE}
+
+## 2016 Pilot ##
+
+
+IN2016 <- filteredMemberMonth(pilotType = 2016, Data = All2016Pilot, Yr = 2016, State = "IN", RemoveDeaths = T)
+IN2017 <- filteredMemberMonth(pilotType = 2016, Data = All2016Pilot, Yr = 2017, State = "IN", RemoveDeaths = T)
+
+# Create 'cohorts' based on how far back their data stretches continuously
+
+temp <- All2016Pilot %>% 
+  filter(St_Cd == "IN") %>%
+  group_by(SavvyHICN, Year) %>%
+  summarise() %>%
+  mutate(Y2016 = ifelse(Year == 2016, 1, 0),
+         Y2015 = ifelse(Year == 2015, 1, 0),
+         Y2014 = ifelse(Year == 2014, 1, 0), 
+         Y2013 = ifelse(Year == 2013, 1, 0),
+         Y2012 = ifelse(Year == 2012, 1, 0)) %>%
+  group_by(SavvyHICN) %>%
+  summarise(Y2016 = sum(Y2016),
+            Y2015 = sum(Y2015),
+            Y2014 = sum(Y2014),
+            Y2013 = sum(Y2013),
+            Y2012 = sum(Y2012)) %>%
+  mutate(One = ifelse(Y2016 == 1 & Y2015 == 0, 1, 0),
+         Two = ifelse(Y2016 == 1 & Y2015 == 1 & Y2014 == 0, 1, 0),
+         Three = ifelse(Y2016 == 1 & Y2015 == 1 & Y2014 == 1 & Y2013 == 0, 1, 0),
+         Four = ifelse(Y2016 == 1 & Y2015 == 1 & Y2014 == 1 & Y2013 == 1 & Y2012 == 0, 1, 0),
+         Five = ifelse(Y2016 == 1 & Y2015 == 1 & Y2014 == 1 & Y2013 == 1 & Y2012 == 1, 1, 0))
+
+One <- temp %>% filter(One == 1) %>% select(SavvyHICN)
+Two <- temp %>% filter(Two == 1) %>% select(SavvyHICN)
+Three <- temp %>% filter(Three == 1) %>% select(SavvyHICN)
+Four <- temp %>% filter(Four == 1) %>% select(SavvyHICN)
+Five <- temp %>% filter(Five == 1) %>% select(SavvyHICN)
+
+# Create 2016 data set
+
+OneYear16 <- merge(IN2016, One, by = "SavvyHICN")
+TwoYears16 <- merge(IN2016, Two, by = "SavvyHICN")
+ThreeYears16 <- merge(IN2016, Three, by = "SavvyHICN")
+FourYears16 <- merge(IN2016, Four, by = "SavvyHICN")
+FiveYears16 <- merge(IN2016, Five, by = "SavvyHICN")
+
+OneYear16 <- OneYear16 %>% mutate(Start = 2016)
+TwoYears16 <- TwoYears16 %>% mutate(Start = 2015)
+ThreeYears16 <- ThreeYears16 %>% mutate(Start = 2014)
+FourYears16 <- FourYears16 %>% mutate(Start = 2013)
+FiveYears16 <- FiveYears16 %>% mutate(Start = 2012)
+
+IN2016B <- rbind(OneYear16, TwoYears16)
+IN2016B <- rbind(IN2016B, ThreeYears16)
+IN2016B <- rbind(IN2016B, FourYears16)
+IN2016B <- rbind(IN2016B, FiveYears16)
+
+# Create 2017 data set
+
+OneYear17 <- merge(IN2017, One, by = "SavvyHICN")
+TwoYears17 <- merge(IN2017, Two, by = "SavvyHICN")
+ThreeYears17 <- merge(IN2017, Three, by = "SavvyHICN")
+FourYears17 <- merge(IN2017, Four, by = "SavvyHICN")
+FiveYears17 <- merge(IN2017, Five, by = "SavvyHICN")
+
+OneYear17 <- OneYear17 %>% mutate(Start = 2016)
+TwoYears17 <- TwoYears17 %>% mutate(Start = 2015)
+ThreeYears17 <- ThreeYears17 %>% mutate(Start = 2014)
+FourYears17 <- FourYears17 %>% mutate(Start = 2013)
+FiveYears17 <- FiveYears17 %>% mutate(Start = 2012)
+
+IN2017B <- rbind(OneYear17, TwoYears17)
+IN2017B <- rbind(IN2017B, ThreeYears17)
+IN2017B <- rbind(IN2017B, FourYears17)
+IN2017B <- rbind(IN2017B, FiveYears17)
+
+# By Enrolled/Not Enrolled
+
+IN2016B %>%
+  group_by(Start, Enrolled) %>%
+  summarise(PMPM_Value = sum(Total_Value) / length(SavvyHICN),
+            PMPM_Revenue = sum(Total_Revenue) / length(SavvyHICN),
+            PMPM_Cost = sum(Total_Cost) / length(SavvyHICN)) %>% 
+  mutate(Participating = ifelse(Enrolled, 1, 2)) %>%
+  ggplot() +
+    geom_line(aes(x = Start, y = PMPM_Value, ymin = 0, color = "Value", linetype = factor(Participating))) +
+    geom_line(aes(x = Start, y = PMPM_Revenue, color = "Revenue", linetype = factor(Participating))) +
+    geom_line(aes(x = Start, y = PMPM_Cost, color = "Cost", linetype = factor(Participating))) +
+    scale_linetype_discrete(name = "Signed up", labels = c("Yes", "No")) +
+    scale_color_discrete(name = "") +
+    labs(title = "2016 Pilot, 2016 PMPM Amounts", subtitle = "By start year and participation in Motion", y = "Dollars", x = "Start Year") +
+    scale_x_continuous(breaks = c(2012, 2013, 2014, 2015, 2016), labels = c("<=2012", "2013", "2014", "2015", "2016"))
+
+```
+
+```{r KQ1_12a, message=FALSE, warning=FALSE, echo=FALSE}
+## LTV Pilot ##
+
+# Memory issues
+# rm(LTVPilot)
+
+LTV2016 <- filteredMemberMonth(pilotType = "Lifetime Value", Data = All2017Pilot, Yr = 2016, RemoveDeaths = T)
+LTV2017 <- filteredMemberMonth(pilotType = "Lifetime Value", Data = All2017Pilot, Yr = 2017, RemoveDeaths = T)
+
+# Create 'cohorts' based on how far back their data stretches continuously
+
+temp <- All2017Pilot %>% 
+  filter(PilotType == "Lifetime Value") %>%
+  group_by(SavvyHICN, Year) %>%
+  summarise() %>%
+  mutate(Y2017 = ifelse(Year == 2017, 1, 0),
+         Y2016 = ifelse(Year == 2016, 1, 0),
+         Y2015 = ifelse(Year == 2015, 1, 0),
+         Y2014 = ifelse(Year == 2014, 1, 0), 
+         Y2013 = ifelse(Year == 2013, 1, 0)) %>%
+  group_by(SavvyHICN) %>%
+  summarise(Y2017 = sum(Y2017),
+            Y2016 = sum(Y2016),
+            Y2015 = sum(Y2015),
+            Y2014 = sum(Y2014),
+            Y2013 = sum(Y2013)) %>%
+  mutate(One = ifelse(Y2017 == 1 & Y2016 == 0, 1, 0),
+         Two = ifelse(Y2017 == 1 & Y2016 == 1 & Y2015 == 0, 1, 0),
+         Three = ifelse(Y2017 == 1 & Y2016 == 1 & Y2015 == 1 & Y2014 == 0, 1, 0),
+         Four = ifelse(Y2017 == 1 & Y2016 == 1 & Y2015 == 1 & Y2014 == 1 & Y2013 == 0, 1, 0),
+         Five = ifelse(Y2017 == 1 & Y2016 == 1 & Y2015 == 1 & Y2014 == 1 & Y2013 == 1, 1, 0))
+
+One <- temp %>% filter(One == 1) %>% select(SavvyHICN)
+Two <- temp %>% filter(Two == 1) %>% select(SavvyHICN)
+Three <- temp %>% filter(Three == 1) %>% select(SavvyHICN)
+Four <- temp %>% filter(Four == 1) %>% select(SavvyHICN)
+Five <- temp %>% filter(Five == 1) %>% select(SavvyHICN)
+
+# Create 2017 data set
+
+OneYear17 <- merge(LTV2017, One, by = "SavvyHICN")
+TwoYears17 <- merge(LTV2017, Two, by = "SavvyHICN")
+ThreeYears17 <- merge(LTV2017, Three, by = "SavvyHICN")
+FourYears17 <- merge(LTV2017, Four, by = "SavvyHICN")
+FiveYears17 <- merge(LTV2017, Five, by = "SavvyHICN")
+
+OneYear17 <- OneYear17 %>% mutate(Start = 2017)
+TwoYears17 <- TwoYears17 %>% mutate(Start = 2016)
+ThreeYears17 <- ThreeYears17 %>% mutate(Start = 2015)
+FourYears17 <- FourYears17 %>% mutate(Start = 2014)
+FiveYears17 <- FiveYears17 %>% mutate(Start = 2013)
+
+LTV2017B <- rbind(OneYear17, TwoYears17)
+LTV2017B <- rbind(LTV2017B, ThreeYears17)
+LTV2017B <- rbind(LTV2017B, FourYears17)
+LTV2017B <- rbind(LTV2017B, FiveYears17)
+
+
+# By Reached/Not Reached
+
+LTV2017B %>%
+  group_by(Start, Reached) %>%
+  summarise(PMPM_Value = sum(Total_Value) / length(SavvyHICN),
+            PMPM_Revenue = sum(Total_Revenue) / length(SavvyHICN),
+            PMPM_Cost = sum(Total_Cost) / length(SavvyHICN)) %>% 
+  mutate(Contacted = ifelse(Reached, 1, 2)) %>%
+  ggplot() +
+  geom_line(aes(x = Start, y = PMPM_Value, ymin = 0, color = "Value", linetype = factor(Contacted))) +
+  geom_line(aes(x = Start, y = PMPM_Revenue, color = "Revenue", linetype = factor(Contacted))) +
+  geom_line(aes(x = Start, y = PMPM_Cost, color = "Cost", linetype = factor(Contacted))) +
+  scale_linetype_discrete(name = "Contacted", labels = c("Yes", "No")) +
+  scale_color_discrete(name = "") +
+  labs(title = "2017 Pilot, 2017 PMPM Amounts", subtitle = "By start year and contacted status", y = "Dollars", x = "Start Year") +
+  scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, 2017), labels = c("<=2013", "2014", "2015", "2016", "2017"))
+
+
+# By Enrolled/Not Enrolled
+
+LTV2017B %>%
+  filter(Reached == T) %>%
+  group_by(Start, Enrolled) %>%
+  summarise(PMPM_Value = sum(Total_Value) / length(SavvyHICN),
+            PMPM_Revenue = sum(Total_Revenue) / length(SavvyHICN),
+            PMPM_Cost = sum(Total_Cost) / length(SavvyHICN)) %>% 
+  mutate(Participating = ifelse(Enrolled, 1, 2)) %>%
+  ggplot() +
+    geom_line(aes(x = Start, y = PMPM_Value, ymin = 0, color = "Value", linetype = factor(Participating))) +
+    geom_line(aes(x = Start, y = PMPM_Revenue, color = "Revenue", linetype = factor(Participating))) +
+    geom_line(aes(x = Start, y = PMPM_Cost, color = "Cost", linetype = factor(Participating))) +
+    scale_linetype_discrete(name = "Signed up", labels = c("Yes", "No")) +
+    scale_color_discrete(name = "") +
+    labs(title = "2017 Pilot, 2017 PMPM Amounts", subtitle = "By start year and participation in Motion", y = "Dollars", x = "Start Year") +
+    scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, 2017), labels = c("<=2013", "2014", "2015", "2016", "2017"))
+
+
+```
+
+Going back to the question of the stability of selection effects, for the 2016 pilot the relationship between those who signed up and those who didn't is quite consistent over Start Years:  those who signed up had lower revenue, lower costs, and lower value.
+
+For the Lifetime Value pilot, the Contacted / Not Contacted differences are likewise persistent across Start Years, suggesting the method of recruitment resulted in members with higher revenue and higher costs being selected into the study. (RAFs and ages were slightly higher among the Contacted group as well.) On net, those who were Contacted had similar PMPM Value as those who were not.
+
+In the next graph, the gap in revenue between those who Signed Up and those who didn't was stable across start years.  With the exception of Start Year 2014, costs were were lower among the Signed Up group. The net result is that, over most Start Years, the average value of the Signed Up group was higher than or about the same as the group that didn't sign up.
+
+Returning now to the issue of the change in PMPM costs between 2016 and 2017 for the 2016 pilot, if we separate the members with 2016 Start Years from those with earlier Start Years, we can see the tenure effects quite clearly.
+
+```{r KQ1_13, message=FALSE, warning=FALSE, echo=FALSE}
+
+# Load previously-created data sets.  Created in
+# "IN  2016-17 change graph data creation Enr vs Not, 2015 Cohort" and
+# "IN  2016-17 change graph data creation Enr vs Not, 2016 Cohort"
+
+load("PMPMChangeEnr15.rda")
+load("PMPMChangeEnr16.rda")
+
+PMPMChangeEnr15 <- as.tibble(PMPMChangeEnr15) %>%
+  mutate(Year = as.numeric(Year),
+         Rev_L = as.numeric(Rev_L),
+         Rev = as.numeric(Rev),
+         Rev_U = as.numeric(Rev_U),
+         Cost_L = as.numeric(Cost_L),
+         Cost = as.numeric(Cost),
+         Cost_U = as.numeric(Cost_U),
+         Val_L = as.numeric(Val_L),
+         Val = as.numeric(Val),
+         Val_U = as.numeric(Val_U),
+         StartYear = 2015)
+
+PMPMChangeEnr16 <- as.tibble(PMPMChangeEnr16) %>%
+  mutate(Year = as.numeric(Year),
+         Rev_L = as.numeric(Rev_L),
+         Rev = as.numeric(Rev),
+         Rev_U = as.numeric(Rev_U),
+         Cost_L = as.numeric(Cost_L),
+         Cost = as.numeric(Cost),
+         Cost_U = as.numeric(Cost_U),
+         Val_L = as.numeric(Val_L),
+         Val = as.numeric(Val),
+         Val_U = as.numeric(Val_U),
+         StartYear = 2016)
+
+PMPMChangeEnr15_16 <- rbind(PMPMChangeEnr15, PMPMChangeEnr16)
+
+pd <- position_dodge(width = -0.1)
+
+PMPMChangeEnr15_16 %>%
+  mutate(Participating = ifelse(SignedUp == "Yes", 1, 2),
+         Year = as.numeric(Year)) %>%
+  ggplot() +
+  geom_line(aes(x = Year, y = Val, ymin = 0, color = "Value", linetype = factor(Participating)), position = pd) +
+  geom_line(aes(x = Year, y = Rev, color = "Revenue", linetype = factor(Participating)), position = pd) +
+  geom_line(aes(x = Year, y = Cost, color = "Cost", linetype = factor(Participating)), position = pd) +
+  geom_errorbar(aes(x = Year, ymin = Val_L, ymax = Val_U,width = .01, linetype = factor(Participating)), color = "blue", position = pd) +
+  geom_errorbar(aes(x = Year, ymin = Rev_L, ymax = Rev_U,width = .01, linetype = factor(Participating)), color = "green4", position = pd) +
+  geom_errorbar(aes(x = Year, ymin = Cost_L, ymax = Cost_U,width = .01, linetype = factor(Participating)), color = "red", position = pd) +
+  scale_linetype_discrete(name = "Signed up", labels = c("Yes", "No")) +
+  scale_color_discrete(name = "") +
+  labs(title = "Changes in PMPM Amounts 2016-17", subtitle = "2016 pilot, by Signed Up", y = "Dollars", x = "Year") +
+  scale_x_continuous(breaks = c(2016, 2017), labels = c("2016", "2017")) +
+  facet_wrap(~ factor(StartYear, labels = c("Before 2016", "2016")))
+
+
+
+```
+
+```{r KQ1_13b, message=FALSE, warning=FALSE, echo=FALSE}
+
+# 2016-17 change in PMPM, by Walked
+
+# Load previously-created data sets.  Created in 
+# "IN  2016-17 change graph data creation Walked vs Not 2015 Cohort" and 
+# "IN  2016-17 change graph data creation Walked vs Not 2016 Cohort"
+
+load("PMPMChangeWalk15.rda")
+load("PMPMChangeWalk16.rda")
+
+PMPMChangeWalk15 <- as.tibble(PMPMChangeWalk15) %>%
+  mutate(Year = as.numeric(Year),
+         Rev_L = as.numeric(Rev_L),
+         Rev = as.numeric(Rev),
+         Rev_U = as.numeric(Rev_U),
+         Cost_L = as.numeric(Cost_L),
+         Cost = as.numeric(Cost),
+         Cost_U = as.numeric(Cost_U),
+         Val_L = as.numeric(Val_L),
+         Val = as.numeric(Val),
+         Val_U = as.numeric(Val_U),
+         StartYear = 2015)
+
+PMPMChangeWalk16 <- as.tibble(PMPMChangeWalk16) %>%
+  mutate(Year = as.numeric(Year),
+         Rev_L = as.numeric(Rev_L),
+         Rev = as.numeric(Rev),
+         Rev_U = as.numeric(Rev_U),
+         Cost_L = as.numeric(Cost_L),
+         Cost = as.numeric(Cost),
+         Cost_U = as.numeric(Cost_U),
+         Val_L = as.numeric(Val_L),
+         Val = as.numeric(Val),
+         Val_U = as.numeric(Val_U),
+         StartYear = 2016)
+
+PMPMChangeWalk15_16 <- rbind(PMPMChangeWalk15, PMPMChangeWalk16)
+
+pd <- position_dodge(width = -0.1)
+
+PMPMChangeWalk15_16 %>%
+  mutate(Participating = ifelse(Walked == "Yes", 1, 2),
+         Year = as.numeric(Year)) %>%
+  ggplot() +
+  geom_line(aes(x = Year, y = Val, ymin = 0, color = "Value", linetype = factor(Participating)), position = pd) +
+  geom_line(aes(x = Year, y = Rev, color = "Revenue", linetype = factor(Participating)), position = pd) +
+  geom_line(aes(x = Year, y = Cost, color = "Cost", linetype = factor(Participating)), position = pd) +
+  geom_errorbar(aes(x = Year, ymin = Val_L, ymax = Val_U,width = .01, linetype = factor(Participating)), color = "blue", position = pd) +
+  geom_errorbar(aes(x = Year, ymin = Rev_L, ymax = Rev_U,width = .01, linetype = factor(Participating)), color = "green4", position = pd) +
+  geom_errorbar(aes(x = Year, ymin = Cost_L, ymax = Cost_U,width = .01, linetype = factor(Participating)), color = "red", position = pd) +
+  scale_linetype_discrete(name = "Ever Walked", labels = c("Yes", "No")) +
+  scale_color_discrete(name = "") +
+  labs(title = "Changes in PMPM Amounts 2016-17", subtitle = "2016 pilot, by Ever Walked", y = "Dollars", x = "Year") +
+  scale_x_continuous(breaks = c(2016, 2017), labels = c("2016", "2017")) +
+  facet_wrap(~ factor(StartYear, labels = c("Before 2016", "2016")))
+
+
+```
+
+**These graphs suggest the importance of adjusting for tenure effects in evaluting Motion programs.** 
+For members with Start Years before 2016, the differences between those who Signed Up and those who didn't persist between 2016 and 2017--that is, the selection effects are stable. For those with a 2016 Start Year, signing up for the Motion program is associated with an increase in costs between 2016 and 2017, leading to an increasing gap in value.
+
+Actually participating in Motion (i.e, taking steps) decreased costs for those with Start Years before 2016, leading to a closing of the value gap beweeen the Ever Walked and Didn't Walk groups.  However, for members with a 2016 Start Year, walking lead to increased costs and a reversal of the value differences.  (Note, however, that as the error bars indicate, there is a great deal of variation in the resultes.  The trends should be considered illustrative but not definitive. For details see the tables in the Appendix).
+
+## Summary of Killer Question #1
+
+* Do profitable members stay profitable over consecutive years?  Yes
+
+* Does Motion have a selection effect?  Yes.  Motion attracts members who have lower revenue.  It attracts members whose costs are lower among those that signed up (both populations). It attracts members whose costs are lower for those that ever walked (Lifetime Value) or not different (2016 Pilot). It attracts members whose value is not different (Lifetime Value population) or marginally lower (2016 Pilot).
+    + Is it stable? Yes, once tenure effects are accounted for.
+    
+## Comparison to previous work
+
+Work conducted in Fall 2017 under the "Member Level Insights" project analyzed 2015 data from members of the 2017 Lifetime Value pilot who had 12 months of continuous enrollment in 2015. The study found that those who Signed Up had around \$64 PMPM lower value than those who did not, a statistically signfificant difference (p = .020).  In comparison, using 2017 data, the current study finds that the gap is just \$12, which is not significant (p = .640).  In other words, using more current data (i.e., data from the year in which the pilot was conducted), what had been an adverse selection effect is now one that is, at worst, neutral.
+
+
+# Killer Questions #2 and #3
+
+## KQ #2:
+
+* Do profitable members renew at higher rates when offered the Motion program?
+* Do unprofitable members renew at stable or lower rates when offered the Motion program?
+
+## KQ #3:  Can retention be accurately measured while accounting for shifting competitive markets and changing plan attributes?
+
+These questions revolve around the decision members have to continue their enrollment with United Health, whether Motion affects that decision and, if so, whether it affects that decision in ways that are beneficial to United.
+
+To address these questions, I constructed a series of survival models, which model the time between the start of the pilot and when a member is no longer enrolled in a United Health plan.  Enrollment data are current through March 2018; members who are still enrolled at that point are considered "censored" (that is, we don't know what their future dis-enrollment date is).
+
+I prepared three sets of comparisons. The first two assess whether just knowing about Motion influences members, regardless of whether they decide to Sign Up. In the first comparison, following the "intention to treat" spirit, I compare anyone who was eligible to be in the Lifetime Value pilot (regardless of whether they were Contacted or not) to members in the control group selected for the study.  The second compares Contacted vs. Not Contacted members in the Lifetime Value pilot.  The third compares members who Signed Up vs. those who did not, for both the 2016 and Lifetime Value pilots.
+
+Most disenrollments occur at the end of a calendar year, but in some cases members leave in the middle of the year.  For the Lifetime Value pilot there was one "dis-enrollment opportuntity" at the end of 2017; for the 2016 pilot, there were two, at the ends of 2016 and 2017.
+
+As explanatory variables I used members' age, gender, tenure (months of being a United customer prior to the start date of the study), and PMPM value. To assess the state of market competition, I used United's share of the private Medicare membership in the members' county, how that share changed over time, and the change in the number of companies competing with United in the county.  For the 2016 pilot, I used market share values at the beginning of 2016 and 2017, and change variables covering 2016-2017 and 2017-2018, depending on the year I was modeling.  For the Lifetime Value pilot I used 2017 share and 2017-2018 change variables.
+
+Information on "changing plan attributes" was not available, so this part if Killer Question #3 remains unanswered.
+
+Members who "dis-enrolled" due to death were not included in the analysis.  Outlier members were removed.
+
+
+
+```{r KQ1_2&3_1, message=FALSE, warning=FALSE, echo=FALSE}
+
+# Clear workspace, start over.  Need data sets without deaths removed.
+
+# The starting point for the analyses is to run "AvMo Master" to load the necessary functions to access the data.
+
+source("AvMo Master.R")
+
+library(knitr)
+library(survival)
+
+# Previously data was stored in two data sets, one for each of the pilots (2016 and 2017), by running setupMemberMonth.  
+# Load these data sets.
+
+if(!exists("All2016Pilot")) load("All2016Pilot.rda")
+
+if(!exists("All2017Pilot")) load("All2017Pilot.rda")
+
+if(!exists("CompeteData")) source("Competitive analysis data setup.R")
+
+MaxDate = 201803             # Last month for which we have data
+
+# Create data sets for each pilot and for the control set
+
+IN2016Pilot_2 <- filteredMemberMonth(Data = All2016Pilot, State = "IN", pilotType = 2016)
+LTVPilot_2 <- filteredMemberMonth(pilotType = "Lifetime Value", Data = All2017Pilot, Yr = 2017)
+LTVControl <- filteredMemberMonth(pilotType = "Lifetime Value Control", Data = All2017Pilot, Yr = 2017)
+
+# Create tenure data sets, counting months of being a customer prior to the start of the study.
+
+Tenure_16 <- All2016Pilot %>% 
+  mutate(Prior = Year_Mo <= 201606) %>%
+  group_by(SavvyHICN) %>%
+  summarise(Tenure = sum(Prior))
+
+Tenure17 <- All2017Pilot %>% 
+  mutate(Prior = Year_Mo <= 201702) %>%
+  group_by(SavvyHICN) %>%
+  summarise(Tenure = sum(Prior))
+
+```
+
+
+The Killer Questions ask about the effect of profitability on re-enrollment decisions.  Before turning to them, let's consider the question from a different perspective:  do those who re-enroll have different value from those who don't? As the following tables demonstrate, the answer is yes.
+
+```{r KQ1_2&3_2, message=FALSE, warning=FALSE, echo=FALSE}
+
+# Pilot began in June 2016.  Can't get total value data from before then because some members have disenrollments from before that time.
+# A few disenrolled in June 2016 but then rejoined, so let's use the max disenrollment date after then.  (Assumes no further 
+# disenrollments / re-enrollments, which is what I believe I found when taking the average previously.)
+
+# But we need to break the data into two time periods, 2016 and 2017, since RAF and competitive position change.
+
+IN2016_16 <- IN2016Pilot_2 %>%
+  replace_na(list(Death_Flag = 0)) %>%
+  filter(Year_Mo >= 201606 & Year_Mo <= 201612,
+         Gdr_Cd != " ", 
+         Death_Flag == 0 | Disenroll_Year_Mo >= 201701,
+         Top5_Prcnt_2016 == 0) %>%
+  select(SavvyHICN, Disenroll_Year_Mo, Death_Flag, FIPS, Age, Gdr_Cd, Total_Value, RAFMMR, Enrolled, Registered)
+
+# Calculate PMPM value based on enroll / disenroll.  Note:  Get CIs on these
+IN2016_16 <- IN2016_16 %>% 
+  mutate(Disenrolled = ifelse(Disenroll_Year_Mo <= 201612, 1, 0))
+
+temp1 <- IN2016_16 %>% group_by(Disenrolled) %>%
+  summarise(PMPM_Value = sum(Total_Value) / n(),
+            Members = 0)
+
+temp1[1,3] <- length(unique(IN2016_16$SavvyHICN[IN2016_16$Disenrolled == 0]))
+temp1[2,3] <- length(unique(IN2016_16$SavvyHICN[IN2016_16$Disenrolled == 1]))
+
+kable(temp1, caption = "2016 Pilot, Disenrollment in 2016")
+
+```
+
+
+
+```{r KQ1_2&3_2a, message=FALSE, warning=FALSE, echo=FALSE}
+
+# Repeat for 2016 pilot, 2017 dis-enrollments
+
+IN2016_17 <- IN2016Pilot_2 %>%
+  replace_na(list(Death_Flag = 0)) %>%
+  filter(Year_Mo >= 201701,
+         Gdr_Cd != " ", 
+         Death_Flag == 0 | Disenroll_Year_Mo >= 201801,
+         Top5_Prcnt_2017 == 0) %>%
+  select(SavvyHICN, Disenroll_Year_Mo, Death_Flag, FIPS, Age, Gdr_Cd, Total_Value, RAFMMR, Enrolled, Registered)
+
+IN2016_17 <- IN2016_17 %>% 
+  mutate(Disenrolled = ifelse(Disenroll_Year_Mo <= 201712, 1, 0))
+
+temp2 <- IN2016_17 %>% group_by(Disenrolled) %>%
+  summarise(PMPM_Value = sum(Total_Value) / n(),
+            Members = 0)
+
+temp2[1,3] <- length(unique(IN2016_17$SavvyHICN[IN2016_17$Disenrolled == 0]))
+temp2[2,3] <- length(unique(IN2016_17$SavvyHICN[IN2016_17$Disenrolled == 1]))
+
+kable(temp2, caption = "2016 Pilot, Disenrollment in 2017")
+```
+
+
+
+```{r KQ1_2&3_2b, message=FALSE, warning=FALSE, echo=FALSE}
+
+# And for Lifetime Value pilot
+
+RetentionLTV <- LTVPilot_2 %>% 
+  filter(Year_Mo >= 201702 & Year_Mo <= 201709) %>%
+  select(SavvyHICN, Year_Mo, Disenroll_Year_Mo, Death_Flag, Reached, Enrolled, Registered, FIPS, Age, Gdr_Cd, Total_Value, RAFMMR) %>%
+  replace_na(list(Death_Flag = 0)) %>%
+  arrange(SavvyHICN, Year_Mo) %>%
+  filter(Death_Flag == 0 | Disenroll_Year_Mo >= 201801)
+
+RetentionLTV <- RetentionLTV %>% mutate(Disenrolled = (Disenroll_Year_Mo < MaxDate))
+
+temp3 <- RetentionLTV %>% group_by(Disenrolled) %>%
+  summarise(PMPM_Value = sum(Total_Value) / n(),
+            Members = 0)
+
+temp3[1,3] <- length(unique(RetentionLTV$SavvyHICN[RetentionLTV$Disenrolled == 0]))
+temp3[2,3] <- length(unique(RetentionLTV$SavvyHICN[RetentionLTV$Disenrolled == 1]))
+
+kable(temp3, caption = "Lifetime Value Pilot, Disenrollment in 2017")
+
+```
+
+
+Clearly, the preferred (i.e., higher-value) members are re-enrolling, and the less-preferred (lower-value) members are disenrolling.  We turn back to the Killer Questions:  what influences these decisions, and what roles do Motion and the competitive environment play?
+
+```{r KQ1_2&3_3, message=FALSE, warning=FALSE, echo=FALSE}
+
+# More data set-up...
+
+# Back to 2016 pilot 
+
+# Collapse down to one observation per member
+
+IN2016_16 <- IN2016_16 %>%
+  group_by(SavvyHICN) %>%
+  summarise(Months = n(),
+            TotalValue = sum(Total_Value),
+            PMPMValue = TotalValue / Months / 100,
+            Age = mean(Age) - 1,
+            Gender = first(Gdr_Cd),
+            RAF = mean(RAFMMR, na.rm = T),
+            Registered = mean(Registered),
+            Enrolled = mean(Enrolled),
+            Disenroll_Year_Mo = max(Disenroll_Year_Mo),
+            FIPS = mean(FIPS)) %>%
+  arrange(SavvyHICN)
+
+IN2016_16$Gender <- as.factor(as.character(IN2016_16$Gender))  # Got rid of blanks before, now make factor with just 2 levels
+
+# Add in start/Stop times and 'death' indicator
+IN2016_16 <- IN2016_16 %>% 
+  mutate(Start = 0,
+         End = Months,
+         Disenrolled = ifelse(Disenroll_Year_Mo <= 201612, 1, 0))
+
+IN2016_16 <- IN2016_16 %>% select(SavvyHICN, Start, End, Months, Disenroll_Year_Mo, Disenrolled, everything()) %>% arrange(Disenroll_Year_Mo)
+
+# Merge in competitive data
+
+IN2016_16 <- merge(IN2016_16, CompetitiveData, by="FIPS", all.x = T) 
+
+IN2016_16 <- IN2016_16 %>%
+  select(-Share2017, -Share2018, -Sh17_18, -Companies2017, -Companies2018, -Comp17_18) %>%
+  rename(Share = Share2016, 
+         ShChg = Sh16_17,
+         Companies = Companies2016,
+         CompChg = Comp16_17)
+
+# Merge in tenure
+IN2016_16 <- merge(IN2016_16, Tenure_16, by="SavvyHICN", all.x = T) 
+
+# Ten members have repeated data in All2016Pilot, giving them 14 Months.  PMPM amounts will be OK, so just make the correction.
+IN2016_16$Months <- ifelse(IN2016_16$Months == 14, 7, IN2016_16$Months)
+
+### Create data set for 2017 ###
+
+# Collapse down to one observation per member
+
+IN2016_17 <- IN2016_17 %>%
+  group_by(SavvyHICN) %>%
+  summarise(Months = n(),
+            TotalValue = sum(Total_Value),
+            PMPMValue = TotalValue / Months / 100,
+            Age = mean(Age),
+            Gender = first(Gdr_Cd),
+            RAF = mean(RAFMMR, na.rm = T),
+            Registered = mean(Registered),
+            Enrolled = mean(Enrolled),
+            Disenroll_Year_Mo = max(Disenroll_Year_Mo),
+            FIPS = mean(FIPS)) %>%
+  arrange(SavvyHICN)
+
+IN2016_17$Gender <- as.factor(as.character(IN2016_17$Gender))  # Got rid of blanks before, now make factor with just 2 levels
+
+# Add in start/Stop times and 'death' indicator
+IN2016_17 <- IN2016_17 %>% 
+  mutate(Start = 7,
+         End = 7 + 12*(as.integer(Disenroll_Year_Mo / 100) - 2017) + Disenroll_Year_Mo %% 100,
+         Disenrolled = ifelse(Disenroll_Year_Mo <= 201712, 1, 0))
+
+IN2016_17 <- IN2016_17 %>% select(SavvyHICN, Start, End, Months, Disenroll_Year_Mo, Disenrolled, everything()) %>% arrange(Disenroll_Year_Mo)
+
+# Add competitive data
+IN2016_17 <- merge(IN2016_17, CompetitiveData, by="FIPS", all.x = T) 
+
+IN2016_17 <- IN2016_17 %>%
+  select(-Share2016, -Share2018, -Sh16_17, -Companies2016, -Companies2018, -Comp16_17) %>%
+  rename(Share = Share2017, 
+         ShChg = Sh17_18,
+         Companies = Companies2017,
+         CompChg = Comp17_18)
+
+# Add tenure data
+IN2016_17 <- merge(IN2016_17, Tenure_16, by="SavvyHICN", all.x = T) 
+
+# Put data sets together
+
+IN2016Combined <- rbind(IN2016_16, IN2016_17)
+
+IN2016Combined <- IN2016Combined %>% arrange(SavvyHICN, Start)
+
+# Take out missing observations
+IN2016Combined <- IN2016Combined[is.na(IN2016Combined$ShChg) == F, ]
+
+
+## LTV data set ###
+
+# Re-do gender variable
+
+RetentionLTV$Gdr_Cd <- as.factor(as.character(RetentionLTV$Gdr_Cd))
+
+# Collapse down to one observation per member
+
+RetentionLTV <- RetentionLTV %>%
+  group_by(SavvyHICN) %>%
+  summarise(Months = n(),
+            TotalValue = sum(Total_Value),
+            PMPMValue = TotalValue / Months / 100,
+            Age = mean(Age),
+            Gender = first(Gdr_Cd),
+            RAF = mean(RAFMMR, na.rm = T),
+            Reached = mean(Reached),
+            Registered = mean(Registered),
+            Enrolled = mean(Enrolled),
+            Disenroll_Year_Mo = max(Disenroll_Year_Mo),
+            FIPS = mean(FIPS)) %>%
+  arrange(SavvyHICN)
+
+
+# Now need to compute months from start of enrollment to last observed time.
+
+RetentionLTV <- RetentionLTV %>% mutate(MonthsSinceStart = 10 + 12*(as.integer(Disenroll_Year_Mo / 100) - 2018) + Disenroll_Year_Mo %% 100)
+
+# Count as censored anyone who reached MaxDate and or who died before then
+
+RetentionLTV <- RetentionLTV %>% mutate(Disenrolled = (Disenroll_Year_Mo < MaxDate))
+
+RetentionLTV <- merge(RetentionLTV, CompetitiveData, by="FIPS", all.x = T)
+RetentionLTV <- merge(RetentionLTV, Tenure17, by = "SavvyHICN", all.x = T)
+
+
+## And Control data set ###
+
+RetentionControl <- LTVControl %>% 
+  filter(Year_Mo >= 201702 & Year_Mo <= 201709) %>%
+   select(SavvyHICN, Year_Mo, Disenroll_Year_Mo, Death_Flag, FIPS, Age, Gdr_Cd, Total_Value, RAFMMR) %>%
+  replace_na(list(Death_Flag = 0)) %>%
+  arrange(SavvyHICN, Year_Mo) %>%
+  filter(Death_Flag == 0 | Disenroll_Year_Mo > 201801)
+
+# Re-do gender variable
+
+RetentionControl$Gdr_Cd <- as.factor(as.character(RetentionControl$Gdr_Cd))
+
+RetentionControl <- RetentionControl %>%
+  group_by(SavvyHICN) %>%
+  summarise(Group = "Control", 
+            Months = n(),
+            TotalValue = sum(Total_Value),
+            PMPMValue = TotalValue / Months / 100,
+            Age = mean(Age),
+            Gender = first(Gdr_Cd),
+            RAF = mean(RAFMMR, na.rm = T),
+            Disenroll_Year_Mo = max(Disenroll_Year_Mo),
+            FIPS = mean(FIPS)) %>%
+  arrange(SavvyHICN)
+
+
+# Now need to compute months from start of enrollment to last observed time.
+
+RetentionControl <- RetentionControl %>% mutate(MonthsSinceStart = 10 + 12*(as.integer(Disenroll_Year_Mo / 100) - 2018) + Disenroll_Year_Mo %% 100)
+
+# Count as censored anyone who reached MaxDate and or who died before then
+
+RetentionControl <- RetentionControl %>% mutate(Disenrolled = (Disenroll_Year_Mo < MaxDate))
+
+RetentionControl <- merge(RetentionControl, CompetitiveData, by="FIPS", all.x = T)
+RetentionControl <- merge(RetentionControl, Tenure17, by = "SavvyHICN", all.x = T)
+
+# Combine the two 2017 pilot data sets
+
+temp <- RetentionLTV %>% select(-Reached, -Enrolled, -Registered) %>% mutate(Group = "Treatment")
+
+Combined <- rbind(RetentionControl, temp)
+
+# Take out missing data
+Combined <- Combined[is.na(Combined$Sh17_18) == F, ]
+
+#  Previous analyses indicated that counties where share increased dramatically (>50 percentage points)
+# are problematic.  Take these out
+
+Combined2 <- Combined[Combined$Sh17_18 < 50, ]
+
+# Estimate model
+
+CoxControl1small <- coxph(Surv(time = MonthsSinceStart, event = Disenrolled) ~ as.factor(Group) + PMPMValue + Age + Tenure + as.factor(Gender) +
+                       RAF + Share2017 + Sh17_18 + Comp17_18, data = Combined2, ties = "breslow")
+# summary(CoxControl1small)$coefficients[1,2]  # 1.132404
+# summary(CoxControl1small)$coefficients[1,5]  # 0.03656317
+
+```
+
+
+Let's turn to our first comparison:  the Lifetime Value Pilot study members vs. those in the control group. As the graph below illustrates, study members were less likely to remain enrolled than those in the control group.  In fact, their likelihood of disenrolling was about 13% higher (p = .037) once the other demographic and market competition factors were accounted for.
+
+
+```{r KQ1_2&3_4, message=FALSE, warning=FALSE, echo=FALSE}
+
+ModControl <- survfit(Surv(time = MonthsSinceStart, event = Disenrolled) ~ as.factor(Group), data = Combined, 
+                     type = 'kaplan-meier')
+# summary(ModControl)
+
+# survdiff(Surv(time = MonthsSinceStart, event = Disenrolled) ~ as.factor(Group), data = Combined)
+
+
+plot(ModControl, ymin = .85, lty = 2:1, xlab = "Months since start of pilot", ylab = "% remaining enrolled")
+legend(0, .9, c("Control", "Pilot"), lty = c(2,1))
+title("Re-enrollment, Lifetime Value Pilot vs. Control")
+
+### Moving on to Reached / Not Reached
+
+RetentionLTV <- RetentionLTV[is.na(RetentionLTV$Sh17_18) == F, ]
+
+ModReached <- survfit(Surv(time = MonthsSinceStart, event = Disenrolled) ~ as.factor(Reached), data = RetentionLTV, 
+                      type = 'kaplan-meier')
+#summary(ModReached)
+
+# survdiff(Surv(time = MonthsSinceStart, event = Disenrolled) ~ as.factor(Reached), data = RetentionLTV)
+
+RetentionLTV2 <- RetentionLTV[RetentionLTV$Sh17_18 < 50, ]
+
+CoxReached1a <- coxph(Surv(time = MonthsSinceStart, event = Disenrolled) ~ as.factor(Reached) + PMPMValue + Tenure + Age + as.factor(Gender) + RAF + Share2017 + Sh17_18 + Comp17_18, data = RetentionLTV2, ties = "breslow")
+
+#summary(CoxReached1a)
+
+```
+
+However, about 2/3 of the control group came from Pima County, AZ (Tucson), so it's quite possible that unaccounted-for locality effects are confounded with the treatment / control groupings.  Additionally, it's difficult to see how being in a PBP where Motion was offered would affect a members' re-enrollment decision if more than half were unaware of it (i.e., they were Not Contacted).
+
+The next graph shows the comparison between the members who were Contacted and those who weren't for the Lifetime Value pilot.  The two survival curves are quite close and, indeed, the difference between them is not statistically significant (p = `r round(summary(CoxReached1a)$coefficients[1,5],3)`).
+
+```{r KQ1_2&3_5, message=FALSE, warning=FALSE, echo=FALSE}
+
+
+plot(ModReached, ymin = .85, lty = 2:1, xlab = "Months since start of pilot", ylab = "% remaining enrolled")
+legend(0, .9, c("Contacted", "Not Contacted"), lty = c(1,2))
+title("Re-enrollment, LTV Pilot, by Contacted")
+
+
+### Results for 2016 pilot ####
+
+CoxEnroll2016 <- coxph(Surv(Start, End, event = Disenrolled) ~ as.factor(Enrolled) + PMPMValue + Age + Tenure + as.factor(Gender) +
+                      RAF + Share + ShChg + CompChg, data = IN2016Combined, ties = "breslow")
+#summary(CoxEnroll2016)
+
+
+```
+
+Finally, we look at the effect of Signing Up for Motion, this time adding results for the 2016 pilot. There was no significant difference in re-enrollment between members who Signed Up and those who didn't (p = `r round(summary(CoxEnroll2016)$coefficients[1,5],3)`) once other factors were accounted for.
+
+```{r KQ1_2&3_6, message=FALSE, warning=FALSE, echo=FALSE}
+
+ModEnrolled2016 <- survfit(Surv(Start, End, event = Disenrolled) ~ as.factor(Enrolled), data = IN2016Combined, 
+                      type = 'kaplan-meier')
+# summary(ModEnrolled2016)
+
+plot(ModEnrolled2016, ymin = .85, lty = 2:1, xlab = "Months since start of pilot", ylab = "% remaining enrolled")
+legend(0, .9, c("Signed Up", "Not Signed Up"), lty = c(1,2))
+title("Re-enrollment, 2016 Pilot, by Signed Up")
+
+# And LTV pilot
+
+CoxEnrolledLTV <- coxph(Surv(time = MonthsSinceStart, event = Disenrolled) ~ as.factor(Enrolled) + PMPMValue + Tenure + Age + as.factor(Gender) + RAF + Share2017 + Sh17_18 + Comp17_18, data = RetentionLTV2[RetentionLTV2$Reached == 1, ], ties = "breslow")
+
+# summary(CoxEnrolledLTV)
+
+```
+
+And for the Lifetime Value pilot, there was again no significant difference between those who Signed Up and those who didn't (p = `r round(summary(CoxEnrolledLTV)$coefficients[1,5],3)`).
+
+```{r KQ1_2&3_7, message=FALSE, warning=FALSE, echo=FALSE}
+
+
+
+ModEnrolledLTV <- survfit(Surv(time = MonthsSinceStart, event = Disenrolled) ~ as.factor(Enrolled), data = RetentionLTV2[RetentionLTV2$Reached == 1, ], 
+                      type = 'kaplan-meier')
+# summary(ModEnrolledLTV)
+
+
+plot(ModEnrolledLTV, ymin = .85, lty = 2:1, xlab = "Months since start of pilot", ylab = "% remaining enrolled")
+legend(0, .9, c("Signed Up", "Not Signed Up"), lty = c(1,2))
+title("Re-enrollment, LTV Pilot, by Signed Up")
+
+```
+
+So far, that the effect of Motion on re-enrollment, whether it's simply being offered Motion or choosing to Sign Up for it, is either neutral or negative.  (As noted above, however, the comparison between members eligible to participate in the Lifetime Value pilot and those in the control group should be made with caution.)
+
+
+However, Killer Question # 2 asks whether Motion influences profitable members to renew at higher rates, and unprofitable members to renew at lower rates.  To answer this, we turn to the results from the survival models, in which PMPM value (in units of $100 per month) was used as a predictor.
+
+As shown in the next graph, the results are quite consistent across models.  The vertical axis shows how the likelihood of disenrollment changes with each increase of $100 in PMPM value.  The values are above 1, which means that as PMPM value increases the probability of remaining enrolled. For example, for the comparison of the Lifetime Value pilot vs. the control group, an increase of \$100 increases the likelihood of remaining enrolled by a factor of 1.005. If the error bars do not cross 1, the effect is significant.  The only case where this is not so is for the Lifetime Value pilot, for the comparison between those who Signed Up and those who didn't.
+
+```{r KQ1_2&3_8, message=FALSE, warning=FALSE, echo=FALSE}
+
+Value <- matrix(nrow = 4, ncol = 4)
+
+colnames(Value) <- c("Model_No", "Estimate", "UL", "LL")
+rownames(Value) <- c("LTV vs. Control", "Contacted vs. Not", "2016 Signed Up", "LTV Signed Up")
+
+Value[, 1] <- seq(1:4)
+
+Value[1,2] <- 1/summary(CoxControl1small)$conf.int[2,1]
+Value[1,3:4] <- 1/summary(CoxControl1small)$conf.int[2,3:4]
+
+Value[2,2] <- 1/summary(CoxReached1a)$conf.int[2,1]
+Value[2,3:4] <- 1/summary(CoxReached1a)$conf.int[2,3:4]
+
+Value[3,2] <- 1/summary(CoxEnroll2016)$conf.int[2,1]
+Value[3,3:4] <- 1/summary(CoxEnroll2016)$conf.int[2,3:4]
+
+Value[4,2] <- 1/summary(CoxEnrolledLTV)$conf.int[2,1]
+Value[4,3:4] <- 1/summary(CoxEnrolledLTV)$conf.int[2,3:4]
+
+Value <- as.tibble(Value)
+
+
+Value %>%
+  ggplot() + 
+    geom_point(aes(x = Model_No, y = Estimate)) +
+    geom_errorbar(aes(x = Model_No, ymin = LL, ymax = UL, width = .2)) +
+    labs(title = "Effect of PMPM Value on Re-Enrollment", 
+         subtitle = "Per $100 of value", y = "Odds Ratio", x = "") +
+    scale_x_continuous(labels = c("LTV vs. Control", "LTV Contacted vs. Not", "2016 Signed Up vs. Not", "LTV Signed Up vs. Not")) +
+theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+
+
+This is encouraging, and it is in agreement with the results presented above, where we saw that members who disenrolled had lower value than those who re-enrolled.
+
+Turning back to the Killer Question, if Motion influenced profitable members differently from unprofitable members, we would expect to see a difference in the effects of PMPM value between the groups in each of the comparisons above. In other words, the effect of PMPM value on re-enrollment would be different for members in the Lifetime Value pilot vs. the control group, or between those who were Contacted and Not Contacted within the LTV pilot population.  To test for this effect, I included interaction terms in the models.  In all cases the interaction terms were not significant, which means that being offered Motion does not affect higher-value and lower-value members differently when it comes to their re-enrollment decision.
+
+So, to answer Killer Question #2, we can say that higher-value members renew at higher rates than lower-value members. However, we cannot say that Motion had an effect on this relationship.
+
+Before turning to Killer Question #3, I'd like to present the effects on re-enrollment of the other variables included in the models.
+
+Gender turned out not to be signficant.
+
+For tenure, I used the number of months in which we had data on a member prior to the start of the pilot, beginning in 2007.  I ignored gaps in the timeline, under the assumption that familiarity with United Health was what mattered. As illustrated below, the effect of tenure of re-enrollment is positive.
+
+
+```{r KQ1_2&3_9, message=FALSE, warning=FALSE, echo=FALSE}
+
+Tenure <- matrix(nrow = 4, ncol = 4)
+
+colnames(Tenure) <- c("Model_No", "Estimate", "UL", "LL")
+rownames(Tenure) <- c("LTV vs. Control", "Contacted vs. Not", "2016 Signed Up", "LTV Signed Up")
+
+Tenure[, 1] <- seq(1:4)
+
+Tenure[1,2] <- 1/summary(CoxControl1small)$conf.int[4,1]
+Tenure[1,3:4] <- 1/summary(CoxControl1small)$conf.int[4,3:4]
+
+Tenure[2,2] <- 1/summary(CoxReached1a)$conf.int[4,1]
+Tenure[2,3:4] <- 1/summary(CoxReached1a)$conf.int[4,3:4]
+
+Tenure[3,2] <- 1/summary(CoxEnroll2016)$conf.int[4,1]
+Tenure[3,3:4] <- 1/summary(CoxEnroll2016)$conf.int[4,3:4]
+
+Tenure[4,2] <- 1/summary(CoxEnrolledLTV)$conf.int[4,1]
+Tenure[4,3:4] <- 1/summary(CoxEnrolledLTV)$conf.int[4,3:4]
+
+Tenure <- as.tibble(Tenure)
+
+
+Tenure %>%
+  ggplot() + 
+    geom_point(aes(x = Model_No, y = Estimate)) +
+    geom_errorbar(aes(x = Model_No, ymin = LL, ymax = UL, width = .2)) +
+    labs(title = "Effect of Tenure on Re-Enrollment", 
+         subtitle = "Per month of tenure", y = "Odds Ratio", x = "") +
+    scale_x_continuous(labels = c("LTV vs. Control", "LTV Contacted vs. Not", "2016 Signed Up vs. Not", "LTV Signed Up vs. Not")) +
+theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+Age also has a positive effect--each additional year of age increases the likelihood of remaining enrolled.
+
+```{r KQ1_2&3_10, message=FALSE, warning=FALSE, echo=FALSE}
+
+Age <- matrix(nrow = 4, ncol = 4)
+
+colnames(Age) <- c("Model_No", "Estimate", "UL", "LL")
+rownames(Age) <- c("LTV vs. Control", "Contacted vs. Not", "2016 Signed Up", "LTV Signed Up")
+
+Age[, 1] <- seq(1:4)
+
+Age[1,2] <- 1/summary(CoxControl1small)$conf.int[3,1]
+Age[1,3:4] <- 1/summary(CoxControl1small)$conf.int[3,3:4]
+
+Age[2,2] <- 1/summary(CoxReached1a)$conf.int[3,1]
+Age[2,3:4] <- 1/summary(CoxReached1a)$conf.int[3,3:4]
+
+Age[3,2] <- 1/summary(CoxEnroll2016)$conf.int[3,1]
+Age[3,3:4] <- 1/summary(CoxEnroll2016)$conf.int[3,3:4]
+
+Age[4,2] <- 1/summary(CoxEnrolledLTV)$conf.int[3,1]
+Age[4,3:4] <- 1/summary(CoxEnrolledLTV)$conf.int[3,3:4]
+
+Age <- as.tibble(Age)
+
+Age %>%
+  ggplot() + 
+    geom_point(aes(x = Model_No, y = Estimate)) +
+    geom_errorbar(aes(x = Model_No, ymin = LL, ymax = UL, width = .2)) +
+    labs(title = "Effect of Age on Re-Enrollment", 
+         subtitle = "Per year of age", y = "Odds Ratio", x = "") +
+    scale_x_continuous(labels = c("LTV vs. Control", "LTV Contacted vs. Not", "2016 Signed Up vs. Not", "LTV Signed Up vs. Not")) +
+theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+
+Increasing risk adjustment factors (RAFs) are associated with a decreased probability of re-enrolling. Note that this is the effect of RAF after age and gender have been accounted for.
+
+```{r KQ1_2&3_11, message=FALSE, warning=FALSE, echo=FALSE}
+
+RAF <- matrix(nrow = 4, ncol = 4)
+
+colnames(RAF) <- c("Model_No", "Estimate", "UL", "LL")
+rownames(RAF) <- c("LTV vs. Control", "Contacted vs. Not", "2016 Signed Up", "LTV Signed Up")
+
+RAF[, 1] <- seq(1:4)
+
+RAF[1,2] <- 1/summary(CoxControl1small)$conf.int[6,1]
+RAF[1,3:4] <- 1/summary(CoxControl1small)$conf.int[6,3:4]
+
+RAF[2,2] <- 1/summary(CoxReached1a)$conf.int[6,1]
+RAF[2,3:4] <- 1/summary(CoxReached1a)$conf.int[6,3:4]
+
+RAF[3,2] <- 1/summary(CoxEnroll2016)$conf.int[6,1]
+RAF[3,3:4] <- 1/summary(CoxEnroll2016)$conf.int[6,3:4]
+
+RAF[4,2] <- 1/summary(CoxEnrolledLTV)$conf.int[6,1]
+RAF[4,3:4] <- 1/summary(CoxEnrolledLTV)$conf.int[6,3:4]
+
+RAF <- as.tibble(RAF)
+
+RAF %>%
+  ggplot() + 
+    geom_point(aes(x = Model_No, y = Estimate)) +
+    geom_errorbar(aes(x = Model_No, ymin = LL, ymax = UL, width = .2)) +
+    labs(title = "Effect of RAF on Re-Enrollment", 
+         subtitle = "For a 1-point change in RAF", y = "Odds Ratio", x = "") +
+    scale_x_continuous(labels = c("LTV vs. Control", "LTV Contacted vs. Not", "2016 Signed Up vs. Not", "LTV Signed Up vs. Not")) +
+theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+## Killer Question #3
+
+We turn now to Killer Question #3:  What is the effect on member retention of changes in market competition?
+
+As mentioned above, I used as predictors United's share of the Medicare Advantage population in a county, the year-on-year change in this share, and the year-on-year change in the number of companies providing MA plans in the county.
+
+Not surprisingly, the higher United's market share is, the higher the likelihood of remaining enrolled is.  Moreover, increasing market share is also associated with higher retention rates.
+
+```{r KQ1_2&3_12, message=FALSE, warning=FALSE, echo=FALSE}
+
+Share <- matrix(nrow = 4, ncol = 4)
+
+colnames(Share) <- c("Model_No", "Estimate", "UL", "LL")
+rownames(Share) <- c("LTV vs. Control", "Contacted vs. Not", "2016 Signed Up", "LTV Signed Up")
+
+Share[, 1] <- seq(1:4)
+
+Share[1,2] <- 1/summary(CoxControl1small)$conf.int[7,1]
+Share[1,3:4] <- 1/summary(CoxControl1small)$conf.int[7,3:4]
+
+Share[2,2] <- 1/summary(CoxReached1a)$conf.int[7,1]
+Share[2,3:4] <- 1/summary(CoxReached1a)$conf.int[7,3:4]
+
+Share[3,2] <- 1/summary(CoxEnroll2016)$conf.int[7,1]
+Share[3,3:4] <- 1/summary(CoxEnroll2016)$conf.int[7,3:4]
+
+Share[4,2] <- 1/summary(CoxEnrolledLTV)$conf.int[7,1]
+Share[4,3:4] <- 1/summary(CoxEnrolledLTV)$conf.int[7,3:4]
+
+Share <- as.tibble(Share)
+
+Share %>%
+  ggplot() + 
+    geom_point(aes(x = Model_No, y = Estimate)) +
+    geom_errorbar(aes(x = Model_No, ymin = LL, ymax = UL, width = .2)) +
+    labs(title = "Effect of Market Share on Re-Enrollment", 
+         subtitle = "For a 1-percentage point difference", y = "Odds Ratio", x = "") +
+    scale_x_continuous(labels = c("LTV vs. Control", "LTV Contacted vs. Not", "2016 Signed Up vs. Not", "LTV Signed Up vs. Not")) +
+theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+```{r KQ1_2&3_13, message=FALSE, warning=FALSE, echo=FALSE}
+
+ShChg <- matrix(nrow = 4, ncol = 4)
+
+colnames(ShChg) <- c("Model_No", "Estimate", "UL", "LL")
+rownames(ShChg) <- c("LTV vs. Control", "Contacted vs. Not", "2016 Signed Up", "LTV Signed Up")
+
+ShChg[, 1] <- seq(1:4)
+
+ShChg[1,2] <- 1/summary(CoxControl1small)$conf.int[8,1]
+ShChg[1,3:4] <- 1/summary(CoxControl1small)$conf.int[8,3:4]
+
+ShChg[2,2] <- 1/summary(CoxReached1a)$conf.int[8,1]
+ShChg[2,3:4] <- 1/summary(CoxReached1a)$conf.int[8,3:4]
+
+ShChg[3,2] <- 1/summary(CoxEnroll2016)$conf.int[8,1]
+ShChg[3,3:4] <- 1/summary(CoxEnroll2016)$conf.int[8,3:4]
+
+ShChg[4,2] <- 1/summary(CoxEnrolledLTV)$conf.int[8,1]
+ShChg[4,3:4] <- 1/summary(CoxEnrolledLTV)$conf.int[8,3:4]
+
+ShChg <- as.tibble(ShChg)
+
+ShChg %>%
+  ggplot() + 
+    geom_point(aes(x = Model_No, y = Estimate)) +
+    geom_errorbar(aes(x = Model_No, ymin = LL, ymax = UL, width = .2)) +
+    labs(title = "Effect of Change in Market Share on Re-Enrollment", 
+         subtitle = "For a 1-percentage point change", y = "Odds Ratio", x = "") +
+    scale_x_continuous(labels = c("LTV vs. Control", "LTV Contacted vs. Not", "2016 Signed Up vs. Not", "LTV Signed Up vs. Not")) +
+theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+Market share can change either because of change in the number of competitors in a county or because United is doing a better (or worse) job of competing against the same set of companies.  The last variable in the models measures the change in the number of competitor companies in the county.
+
+Here the results are all significant, but they are not consistent.  For the comparisons involving the Lifetime Value pilot, an increasing number of competitors is associated with an increasing likelihood of re-enrollment.  For the 2016 pilot, increasing competition leads to a lower likelihood of remaining enrolled.
+
+These contradictory findings cannot be explained without further information about plan design and the regulatory environment in the states where the Motion program was offered.  The 2016 pilot included only residents of Indiana.  For the Lifetime Value pilot, 97% of the study population came from six states (Arizona, Illinois, Massachusetts, Missouri, North Carolina and Oregon). It's possible that there were differences between Indiana and these other states that could explain the different impacts of the change in the number of competitors in a county.
+
+
+```{r KQ1_2&3_14, message=FALSE, warning=FALSE, echo=FALSE}
+
+CompChg <- matrix(nrow = 4, ncol = 4)
+
+colnames(CompChg) <- c("Model_No", "Estimate", "UL", "LL")
+rownames(CompChg) <- c("LTV vs. Control", "Contacted vs. Not", "2016 Signed Up", "LTV Signed Up")
+
+CompChg[, 1] <- seq(1:4)
+
+CompChg[1,2] <- 1/summary(CoxControl1small)$conf.int[9,1]
+CompChg[1,3:4] <- 1/summary(CoxControl1small)$conf.int[9,3:4]
+
+CompChg[2,2] <- 1/summary(CoxReached1a)$conf.int[9,1]
+CompChg[2,3:4] <- 1/summary(CoxReached1a)$conf.int[9,3:4]
+
+CompChg[3,2] <- 1/summary(CoxEnroll2016)$conf.int[9,1]
+CompChg[3,3:4] <- 1/summary(CoxEnroll2016)$conf.int[9,3:4]
+
+CompChg[4,2] <- 1/summary(CoxEnrolledLTV)$conf.int[9,1]
+CompChg[4,3:4] <- 1/summary(CoxEnrolledLTV)$conf.int[9,3:4]
+
+CompChg <- as.tibble(CompChg)
+
+CompChg %>%
+  ggplot() + 
+    geom_point(aes(x = Model_No, y = Estimate)) +
+    geom_errorbar(aes(x = Model_No, ymin = LL, ymax = UL, width = .2)) +
+    labs(title = "Effect of Change in Competition on Re-Enrollment", 
+         subtitle = "For a 1-company change", y = "Odds Ratio", x = "") +
+    scale_x_continuous(labels = c("LTV vs. Control", "LTV Contacted vs. Not", "2016 Signed Up vs. Not", "LTV Signed Up vs. Not")) +
+theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+## Overall model performance
+
+Killer Question # 3 asks whether retention can be "accurately" measured.  One measure of the adequacy of survival models is "concordance,"  which relies on ranking the observations by their predicted survival times, then calculating the proportion of pairs where the rank ordering is correct--that is, does an individual with a longer predicted survival time actually survive longer?  A completely random guess would result in a concordance of 0.5, while perfect prediction would correspond to a concordance of 1.
+
+The models presented here have concordances ranging from .615 to .637, which means that the models have moderate predictive power.
+
+# Killer Question # 4
+
+Killer Question # 4 is:  "Do Motion members maintain their activity levels over time?"
+
+I defined "maintain activity levels" as "continued to log steps."  To calculate the duration of participation in Motion, I calculated the number of days between the member's first and last dates when steps were logged.  I considered anyone whose last log date was before February 28, 2018 to have ended their participation. (The walking data were current up to March 14, so I gave a two-week grace period in case a member had walked but not synched their device after February 28th.)
+
+It's possible that a member could have logged steps infrequently--that is, they were "active" but not really walking. A check on the number of days where walking occurred indicates that most of the time active members actually walked--the mean percent of days walked was around 80%, and the median around 90%, for both pilots.
+
+
+```{r KQ4_1, message=FALSE, warning=FALSE, echo=FALSE}
+
+### Data set-up ###
+
+channel <- odbcConnect(ODBC_Connection)
+
+# LTV Pilot
+
+LTVWalkingQuery <- paste0("select A.SavvyHICN, PilotType, Incentive_Group, B.* ",
+	"from pdb_WalkandWin.dbo.GP1026_WnW_Member_Details as A ",
+	"join pdb_WalkandWin.dbo.GP1026_WnW_Derm_Info as B ",
+	"on A.SavvyHicn = B.SavvyHicn ",
+ "where PilotType = 'Lifetime Value' ")
+
+LTVWalking <- sqlQuery(channel, LTVWalkingQuery)
+
+LTVWalking <- LTVWalking %>% select(-SavvyHicn)
+
+# Indiana 2016
+
+INWalkingQuery <- paste0("SELECT SavvyHICN, SavvyID, Call_Flag, ST_ABBR_CD, WithemailFlag, GroupNumber, Outreach_Method,  ",
+                         "Message_Invite, Motivation, Net_Promoter_Score, SilverSneaker_Flag, Sync_Type, Registered_Flag,  ",
+                         "WithSteps_Flag, Daysmet_FreqTen, Daysmet_Frqcy, TotalFreq_Bouts, Daysmet_Tncty, Total_Steps,  ",
+                         "Total_Incentives, AvgSteps, 300ormoreSteps, FirstLogDate, LastLogDate, LastSyncDate, DaysEnrolled,  ",
+                         "Enrollment_Date, EndorsedMember_Flag, CancelledDateTime, Registered_QMS, DateRun, Member_Status, Dateofcall ",
+                          "FROM pdb_WalkandWin.dbo.Member_2016_Pilot ",
+                         " where Registered_Flag = 1 and ST_ABBR_CD = 'IN' ")
+
+INWalking <- sqlQuery(channel, INWalkingQuery)
+
+# Combined table
+
+CombinedQuery <- "SELECT SavvyHICN, ActiveDays FROM pdb_WalkandWin.dbo.Member_Steps_Combined"
+
+Combined <- sqlQuery(channel, CombinedQuery)
+
+
+# So for LTV data, last date of data is 3/14/18; let's give a two-week grace period and treat anyone whose last log date was after 2018-02-28 as censored.  (Maybe
+# they're still participating but just didn't synch).
+
+LTVCensorDate <- "2018-02-28"
+
+LTVWalking <- LTVWalking %>% 
+  filter(ActivatedTrio_Flag == 1 & Incentive_Group != "") %>%
+         mutate(DaysParticipating = as.integer(as.Date(LastLogDate) - as.Date(FirstLogDate) + 1))
+
+LTVWalking <- LTVWalking %>% select(Enrollment_Date, FirstLogDate, LastLogDate, DaysParticipating, LastSyncDate, DaysEnrolled, everything())
+
+# Create 'death' variable
+
+LTVWalking <- LTVWalking %>% mutate(Quit = ifelse(as.character(LastLogDate) <= LTVCensorDate , 1, 0))
+
+LTVWalking <- LTVWalking %>% select(Enrollment_Date, FirstLogDate, LastLogDate, DaysParticipating, Quit, LastSyncDate, DaysEnrolled, everything())
+
+
+# Now let's look at Indiana data
+
+INCensorDate <- "2018-03-09"
+
+INWalking <- INWalking %>% 
+  filter(WithSteps_Flag == 1) %>%
+  mutate(DaysParticipating = as.integer(as.Date(LastLogDate) - as.Date(FirstLogDate) + 1))
+
+INWalking <- INWalking %>% select(Enrollment_Date, FirstLogDate, LastLogDate, DaysParticipating, LastSyncDate, DaysEnrolled, everything())
+
+# Create 'death' variable
+
+INWalking <- INWalking %>% mutate(Quit = ifelse(as.character(LastLogDate) <= INCensorDate , 1, 0))
+
+INWalking <- INWalking %>% select(Enrollment_Date, FirstLogDate, LastLogDate, DaysParticipating, Quit, LastSyncDate, DaysEnrolled, everything())
+
+INWalking <- merge(INWalking, Combined, by = "SavvyHICN", all.x = T)
+
+
+# Create combined data set
+
+LTV <- LTVWalking %>% select(DaysParticipating, Quit, Incentive_Group)
+IN <- INWalking %>% select(DaysParticipating, Quit) %>% mutate(Incentive_Group = "IN 2016")
+
+Combined <- rbind(LTV, IN)
+
+
+
+## How many days were people actually walking?
+
+LTVWalking <- LTVWalking %>% mutate(PctActive = 100*ActiveDays / DaysParticipating)
+# summary(LTVWalking$PctActive)
+
+
+INWalking <- INWalking %>% mutate(PctAtive = 100 * ActiveDays / DaysParticipating)
+
+# summary(INWalking$PctAtive)
+
+
+# Create survival plot
+
+ComboMod <- survfit(Surv(time = DaysParticipating, event = Quit) ~ as.factor(Incentive_Group), data = Combined, 
+                              type = 'kaplan-meier')
+
+plot(ComboMod, lty = 1:4, col = 1:4, xlab = "Days since first log date",  ylab = "% remaining active")
+legend(0, .58, c( "Indiana 2016", "LTV: $50", "LTV: $150", "LTV: $250"), lty = c(4,3, 1, 2), col = c(4,3,1,2),
+        title = "Incentive Group")
+title("Days of Participation in Walking Program")
+
+# Getting percentages
+LTV50 <- survfit(Surv(time = DaysParticipating, event = Quit) ~ 1, data = Combined[Combined$Incentive_Group == "$50" ,], 
+                  type = 'kaplan-meier')
+#summary(LTV50)[["time"]]
+# summary(LTV50)[["surv"]]
+
+LTV150 <- survfit(Surv(time = DaysParticipating, event = Quit) ~ 1, data = Combined[Combined$Incentive_Group == "$150" ,], 
+                  type = 'kaplan-meier')
+# summary(LTV150)[["time"]]
+# summary(LTV150)[["surv"]]
+
+LTV250 <- survfit(Surv(time = DaysParticipating, event = Quit) ~ 1, data = Combined[Combined$Incentive_Group == "$250" ,], 
+                  type = 'kaplan-meier')
+# summary(LTV250)[["time"]]
+# summary(LTV250)[["surv"]]
+
+
+INMod <- survfit(Surv(time = DaysParticipating, event = Quit) ~ 1, data = Combined[Combined$Incentive_Group == "IN 2016",], 
+                  type = 'kaplan-meier')
+
+# summary(INMod)[["time"]]
+# summary(INMod)[["surv"]]
+
+# summary(ComboMod)[["table"]]
+
+# What % of LTV walkers made their max incentive?
+
+# prop.table(table(LTVWalking$Incentive_Group, LTVWalking$Incentive_Max_Flag), margin = 1)
+
+# Chi-square test on % of those reaching max:
+
+# temp <- table(LTVWalking$Incentive_Group, LTVWalking$Incentive_Max_Flag)[-1,]
+# chisq.test(temp)
+
+# Did members keep going after reaching max?
+
+# table(LTVWalking$Incentive_Max_Flag)
+LTVWalking <- LTVWalking %>% mutate(KeptGoing = ifelse(as.Date(LastLogDate) > as.Date(Dt_Met_Max_Goal),1,0))
+# table(LTVWalking$KeptGoing)
+
+
+
+```
+
+Participants in the Lifetime Value pilot who walked were assigned to three groups, with differing annual maximum incentives.  Not surprisingly, those with higher incentives maintained their engagement with the program more than those with lower incentives. After almost a year, around 40% of the \$50 incentive group were still active, compared to 46% of the \$150 incentive group and 57% for the \$250 group.  For the 2016 pilot (for which the maximum annual incentive was \$50), about 60% of those who walked were still active after a year, and after 567 days a third were still active.  
+
+Median survival times (the point at which 50% of the walkers became inactive) were 252 days for the \$50 incentive group, 313 days for the \$150 incentive group, and 425 days for the 2016 pilot group.  (Over 50% of the \$250 incentive group were still active, so a median survival time cannot be calculated.)
+
+Walkers in the Lifetime Value pilot could reach their annual maximum after 100 days on participation.  That is, the maximum daily earnings for the \$50 group were \$0.50, for the \$150 group they were \$1.50, and for the \$250 group they were \$2.50.  Yet as the curves above show, even though the amount of effort needed to reach the maximum was the same, the groups did not persist at the same rates. In fact, the percentage of walkers who reached the annual maximum varied by group:  52% for the \$50 group, 60% for the \$150 group, and 62% for the \$250 group (These differences are signficant, p = .010). This suggests that the amount of the daily incentive, rather than the annual maximum, may be a more motivating factor.
+
+While it may seem surprising that persistence was higher among the 2016 pilot participants, even though the maximum incentive was only $50 per year, this is most likely a result of how these members were recruited. To be in the 2016 pilot, participants had to take positive action: open a letter sent to them and take action to register themselves.  Those who did so were probably more enthusiastic about participating in a walking program than those in the Lifetime Value pilot, whose members were recruited by telephone.
+
+An encouraging piece of information is that, of the 884 members of the Lifetime Value pilot who reached their maximum incentive, 880 continued to log steps afterward.  I have not looked into whether they stopped in 2017 after reaching the goal and re-started in 2018 after the annual clock was re-set, but as noted above the percentage of days active has been quite high.
+
+To sum up, the answer to Killer Question # 4 is a qualified yes, depending on what one's standard of "maintain activity levels" is.
+
+# Odds and Ends
+
+## Value by RAF deciles
+
+An enduring question concerning the selection effects of Motion programs within the Medicare Advantage population has been how value, revenue and costs vary with RAF. As the following charts show, members with higher RAF tend to be higher-value; while costs increase with RAF, revenue increases even faster. While this question is not specifically related to Motion, it suggests that programs to attract and retain high-RAF individuals could generate significant value. For example, as illustrated above, increasing RAF is associated with a decreased likelihood of re-enrolling. It may be worth investigating whether Motion programs targeting high-RAF individuals will result in a positive change in their re-enrollment patterns.  (I investigated this possbility in the re-enrollment survival models by interacting the Motion variables with RAF.  The interaction terms were not significant, but they had the correct sign, i.e., tending towards increasing re-enrollment).
+
+```{r RAF_1, message=FALSE, warning=FALSE, echo=FALSE}
+
+load("IN_2016_RAF_deciles.rda")   # Created by "IN 2016 RAF deciles"
+load("IN_2017_RAF_deciles.rda")   # Created by "IN 2017 RAF deciles"
+load("LTV_2017_RAF_deciles.rda")  # Created by "LTV 2017 RAF deciles"
+
+IN2016_RAF_deciles <- as.tibble(IN_2016_RAF_deciles) %>% mutate(Decile = seq(1:10))
+IN2017_RAF_deciles <- as.tibble(IN_2017_RAF_deciles) %>% mutate(Decile = seq(1:10))
+LTV2017_RAF_deciles <- as.tibble(LTV_2017_RAF_deciles) %>% mutate(Decile = seq(1:10))
+
+IN2016_RAF_deciles %>%
+  ggplot() +
+  geom_line(aes(x = Decile, y = Val, ymin = 0, ymax = 3000, color = "Value")) +
+  geom_line(aes(x = Decile, y = Rev, color = "Revenue")) +
+  geom_line(aes(x = Decile, y = Cost, color = "Cost")) +
+  geom_errorbar(aes(x = Decile, ymin = Val_L, ymax = Val_U,width = .2), color = "blue") +
+  geom_errorbar(aes(x = Decile, ymin = Rev_L, ymax = Rev_U,width = .2), color = "green4") +
+  geom_errorbar(aes(x = Decile, ymin = Cost_L, ymax = Cost_U,width = .2), color = "red") +
+  scale_color_discrete(name = "") +
+  scale_x_continuous(breaks = seq(1:10)) +
+  labs(title = "Effect of RAF on PMPM Amounts", subtitle = "2016 pilot, 2016 Amounts", y = "Dollars", x = "Decile of RAF")
+
+IN2017_RAF_deciles %>%
+  ggplot() +
+  geom_line(aes(x = Decile, y = Val, ymin = 0, ymax = 3000, color = "Value")) +
+  geom_line(aes(x = Decile, y = Rev, color = "Revenue")) +
+  geom_line(aes(x = Decile, y = Cost, color = "Cost")) +
+  geom_errorbar(aes(x = Decile, ymin = Val_L, ymax = Val_U,width = .2), color = "blue") +
+  geom_errorbar(aes(x = Decile, ymin = Rev_L, ymax = Rev_U,width = .2), color = "green4") +
+  geom_errorbar(aes(x = Decile, ymin = Cost_L, ymax = Cost_U,width = .2), color = "red") +
+  scale_color_discrete(name = "") +
+  scale_x_continuous(breaks = seq(1:10)) +
+  labs(title = "Effect of RAF on PMPM Amounts", subtitle = "2016 pilot, 2017 Amounts", y = "Dollars", x = "Decile of RAF")
+
+LTV2017_RAF_deciles %>%
+  ggplot() +
+  geom_line(aes(x = Decile, y = Val, ymin = 0, ymax = 3000, color = "Value")) +
+  geom_line(aes(x = Decile, y = Rev, color = "Revenue")) +
+  geom_line(aes(x = Decile, y = Cost, color = "Cost")) +
+  geom_errorbar(aes(x = Decile, ymin = Val_L, ymax = Val_U,width = .2), color = "blue") +
+  geom_errorbar(aes(x = Decile, ymin = Rev_L, ymax = Rev_U,width = .2), color = "green4") +
+  geom_errorbar(aes(x = Decile, ymin = Cost_L, ymax = Cost_U,width = .2), color = "red") +
+  scale_color_discrete(name = "") +
+  scale_x_continuous(breaks = seq(1:10)) +
+  labs(title = "Effect of RAF on PMPM Amounts", subtitle = "Lifetime Value pilot, 2017 Amounts", y = "Dollars", x = "Decile of RAF")
+
+
+```
+
+
+## Financial considerations
+
+To assess the value of Motion, we need to understand the costs associated with a Motion program.  These can be roughly partitioned between costs of recruiting participants, device costs, and incentives paid.
+
+As a rough placeholder, we'll use $100 as the cost of a device, including shipping.  For the 2016 pilot, with 713 Signed Up participants, this comes to \$71,300. For Lifetime Value pilot, the figure is \$299,100.
+
+The 2016 pilot participants were recruited by mail, with negligible costs. The Lifetime Value pilot participants were recruited by telephone.  Using phone logs from April 2017, I estimate that the phone calls to the ~14,000 Contacted members cost around \$32,000 in staff time (at \$34/hour).  With other overhead costs, let's round that up to \$40000.
+
+Incentives paid to date for the Lifetime Value pilot are as follows, for a total of \$167,816.   
+
+```{r Finance_1, message=FALSE, warning=FALSE, echo=FALSE}
+
+#### Incentives paid  ####
+
+LTVWalking <- LTVWalking %>% 
+  mutate(ActualIncentive = ifelse(Incentive_Group == "$50" & Incentive_Max_Flag == 1, 50,
+                                  ifelse(Incentive_Group == "$150" & Incentive_Max_Flag == 1, 150,
+                                         ifelse(Incentive_Group == "$250" & Incentive_Max_Flag == 1, 250, Total_Incentives))))
+
+Incentives <- LTVWalking %>% group_by(Incentive_Group) %>% summarise(Total_Incentives = sum(ActualIncentive),
+ #                                                      Participants = n(),
+                                                       Average_Incentive = mean(ActualIncentive)) %>%
+  mutate(Order = ifelse(Incentive_Group == "$50", 1, ifelse(Incentive_Group == "$150", 2, 3))) %>%
+  arrange(Order) %>% select(-Order)
+
+Total <- as.numeric(LTVWalking  %>% summarise(Total_Incentives = sum(ActualIncentive)))
+
+kable(Incentives)
+
+
+```
+
+For the 2016 pilot, incentive amounts are not readily available, but we know the annual maximum is \$50.  If we use the \$32 figure from the \$50 Lifetime Value incentive group, with 486 Ever Walked members in the 2016 pilot, this gives around \$15,500 in incentives paid in the first year.
+
+Adding these amounts, 
+
+# Summary and future directions
+
+This study has answered some important questions regarding selection effects among the Medicare Advantage populations involved in the 2016 and Lifetime Value pilots.
+
+* Member profitablity is consistent over time. If members become unprofitable, they most often do not remain unprofitable.
+* Value tends to increase with increasing member tenure, as the increase in revenue outpaces the increase in costs. Consequently, when assessing Motion's selection effects, tenure needs to be considered.
+* Motion attracts members who have lower revenue and lower costs; the difference in value is either neutral or marginally lower, depending on the pilot. 
+    + The differences in revenue are pretty consistent over differing tenure classes.  The differences in costs are a bit more variable, which translates into more variation in value across tenure as well.
+* Higher-value members tend to re-enroll in United's Medicare Advantage programs at higher rates than lower-value members.  However, we cannot say that Motion programs affect the likelihood to re-enroll.
+* Other factors that influence re-enrollment are:
+    + Tenure (+)
+    + Age (+)
+    + RAF (-)
+    + Market share and increasing market share (+)
+    + Change in number of competitors (+ or - depending on the pilot)
+* Continued participation in walking was highest for the 2016 pilot members, perhaps because of the way they were recruited into the study.
+* Continued participation in walking among the Lifetime Value pilot members varied according to the incentive structure.
+* Most of the Lifetime Value pilot members who reached their maximum incentive continued to walk afterwards.
+
+But there are some unanswered questions, which suggest at directions for future research.
+
+1. If we cannot say that Motion affects member re-enrollment or that seletion effects, as we can thus far detect, are value-neutral, what is its potential value?  There is a hint, from the 2016 pilot, that at least among longer-term members, costs decreased from 2016 to 2017 for those who walked compared to those who Signed Up but didn't walk. Continued monitoring of the study populations over time will help to understand whether the benefits of participating in Motion accrue over time.
+2. On the other hand, in order for there to be benefits, members need to keep walking.  It's pretty clear that incentive structures affect walking behavior.  However, the differences in annual maximum payments are also differences in daily amounts.  Future experimentation should be conducted. For example, what effect might a \$1 per day / \$100 annual maximum have in comparison to a \$0.50 per day / \$100 annual maximum?  Or, perhaps shorter maximum incentive periods (quarterly vs. annually) may be more effective, i.e., if walkers stop when they reach their maximum but resume when a new period begins.
+
+

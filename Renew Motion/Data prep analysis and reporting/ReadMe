@@ -1,0 +1,37 @@
+
+The Renew Motion study had multiple components.  A major focus (Killer Question 1) was Net Promotor Scores (NPS).  We were supposed to do two rounds of phone calls, one before the study got launched and one afterwards. We were supposed to collect at most one NPS from each member of the population in each round.
+
+What happened was:  1.  We collected multiple NPS from some individuals, particularly in Round 1.  2. We collected NPS from some of the participants when the called to register. This was not supposed to happen.
+
+So a lot of the NPS-related data prep is dealing with the problems created by these mistakes.
+
+The data were housed on AWS (Amazon Web Services).  There are some user-specific files invoked to open the connection that are not included in this repo.  For further info on connecting to a Postgresql server see the help file on Savvy Access.
+
+Here's a description of the files.
+
+Renew motion survey final cleanup 052318.xlsx:  Contains corrections needed for cleaning up the Round 1 data.
+
+Round 1 NPS data prep.R:  Reads, cleans and prepares the Round 1 survey data.
+
+Round 2 NPS data prep.R:  Reads, cleans and prepares the Round 2 survey data, then combines it with the Round 1 data to create and save "NPS.rda".
+    
+Prepping data for graphs.R:  Reads in NPS data, outputs files used by "Renew Motion Report.rmd" to create first three figures in report.
+
+
+
+The next bunch of files relate to Killer Questions 2 and 3, which had to do with enrollment, engagement, tracker use, activity levels, goal acheivement, etc.
+
+Renew Motion Roster.R: Originally developed to group individuals into households for a separate analysis of enrollment patterns.  Reads in data from AWS and creates a master list of the study population, saves it as "Renew Motion Roster.rda".
+ 
+Renew Motion Master.R: Takes Roster file, augments it with earnings data and participation data.
+
+Enrollment and Engagement Data Prep.R:  Reads in data on steps walked, goals met, incentives earned, etc. and prepares it for analysis.
+
+Goal Achievement Comparison.R:  To be run in NGIS.  Pulls in data from Walk and Win and Lifetime Value pilots.  Used, in part, to create "WnW and LTV Retention.png" file.
+
+WnW and LTV Retention.png:  Created within NGIS; a plot used in the final report.
+
+
+Finally, the final report document:
+
+Renew Motion Report.Rmd:  Creates final report.

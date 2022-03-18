@@ -1,0 +1,20 @@
+Select SurveySentDate = Convert(Date,s.RowCreatedDateTime), b.EmailDescription, c.EmailTypeDescription, lc.Clientname
+  , CustomData = dbo.pad(Convert(Varchar(30),s.SurveyCode ),10,'0','l') + 'E' + Convert(Varchar(5),s.EmailiD)   
+  , Responseflag = Max( case when fs.Prompt is not null then 1 else 0 end) 
+  FROM Dermsl_prod.dbo.Survey s    ---Record of surveys sent
+                           Inner join Dermsl_Prod.dbo.Email b  --Email Contents
+                                  ON s.EmailID = b.Emailid 
+                           Inner join Dermsl_prod.dbo.EmailType c  --Email type
+                                  ON  b.EmailTypeID = c.EmailTypeId
+                         Inner join Dermsl_prod.dbo.Member m     --Use member to match back to client
+                                  ON s.Memberid = m.Memberid 
+                           Inner join Dermsl_prod.dbo.LookupClient lc   --Client
+                                  ON m.LOOKUPClientID = lc.LookupClientid 
+                                  and lc.Clientname in ( 'All Savers motion', 'Key Accounts') 
+                           Left JOIN [pdb_DermReporting].[dbo].[Fact_Survey] fs
+                                  On dbo.pad(Convert(Varchar(30),s.SurveyCode ),10,'0','l') + 'E' + Convert(Varchar(5),s.EmailiD)    = fs.CustomData
+Where EmailTypeDescription  = 'Fraud Deterrent' and EmailDescription not like '%Reminder%' ---Only Fraud Detterent emails.
+Group by  Convert(Date,s.RowCreatedDateTime), b.EmailDescription, c.EmailTypeDescription, lc.Clientname
+  ,dbo.pad(Convert(Varchar(30),s.SurveyCode ),10,'0','l') + 'E' + Convert(Varchar(5),s.EmailiD) 
+
+---This is the code

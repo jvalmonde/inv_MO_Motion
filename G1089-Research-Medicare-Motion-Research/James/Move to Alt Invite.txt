@@ -1,0 +1,409 @@
+FirstName	LastName	Address1	Address2	City	Sate	Zip	DOB	A	Are you Insured by United Healthcare?	Are you enrolled in Medicare?	ContactNumber	EmailAddress	DateAddedtoThisList	DateAddedtoQMS	Status(fordatauseonly)
+(Dory) Valerie	Henderson	5704 Terry Ave		Saint Louis	MO	63120	10/10/1954	937613622			3143851763		6/26/2017		
+Abel	Chavarria	755 E Hadley 		Las Cruses 	MN	88001	9/27/1951	949105279			5755253712	abelluis1969@outlook.com	6/26/2017		
+Agnes	Simmer	256 Meridian Rd.		Glen Carbon	IL	62034	1/25/1935	12809			6182889838		6/13/2017		
+Aida	Vinent	PO Box 462		Greendale	WI	53129	11/8/1948	97757425600			4145508772	aidavintent@gmail.com	6/20/2017	7/10/2017	
+alan	Douglan-Fruehan	299 trailsend	Unit37c	Sugar Mountain	NC	28604	4/29/1905				3307049281		6/13/2017		
+Alfred	Walden	5811 Wembley Dr		Douglasville	GA	30135	4/26/1941	12472			4044834569		6/13/2017		
+Alice 	Zink	2023 S Starling Dr		Gilbert 	AZ	85295	10/16/1941	hcfah4			4802029790		6/23/2017		
+Alimammy	Kanu	208 Webster Rd		Greenville	SC	29607	4/11/1946	71570			3363700646	alimamy411@gmail.com	6/27/2017		
+Alyssa	Flood	3673 Wassaw Ln NW		Berkeley Lake	GA	30096	1/26/2008	906898			7707136628		6/13/2017		
+Amaza	Hall	088 Parker Rd		Gates	NC	27937	1/31/1947	12309			2523571640 / 2522096502	hall1640@yahoo.com	7/5/2017		
+Amelia	Gurrola	4241 Farquhar Ave	Unit 4	Los Alamitos	CA	90720	12/1/1948	4237			6265127739		6/28/2017		
+Anette	Nesbitt	140 Tallassee Trl		Leesburg	GA	31763	3/22/1944	12472			2297594020	midgerooney@aol.com	6/29/2017		
+Angie	Flood	3673 Wassaw Ln NW		Berkeley Lake	GA	30096	5/20/1974	906898			7707136628		6/13/2017		
+Anna	Barangan	7329 Dale Rd.		El Paso	TX	79915	12/18/1953	notprovided			9157717323		5/24/2017		
+Anne	Sheeley	742 1st Ave		Troy	NY	12182	5/16/1946	50500			5182331541	asheeley@nycap.rr.com	6/29/2017		
+Anthony	Ricotta	1227 Majestic Way		Webster	NY	14580	1/20/1948	50514			5858724499		6/24/2017		
+Arlene	Hopkins	700 Pelham Rd 	Apt 214	Toledo	OH	43606	2/15/1951	973679321-00			4195094912	erh215@yahoo.com	6/28/2017		
+Barbara	Frole	2 oakdale Dr	Apt 409	middletonw 	NJ	7748	8/27/1941	40550			7328569445	basha21f@gmail.com	6/27/2017		
+Barbara	Gillman	7270 Whitfield Ave		Boynton Beach	FL	33437	9/7/1936	929026411			9529492151	stanbar727@gmail.com	6/13/2017	7/10/2017	
+Barbara	Nowak	44 Kingsview Ct.		Buffalo	NY	14221	10/6/1943	950880275-00			7166882444		6/13/2017	7/10/2017	
+Barbara	Shoener	1765 York Island Dr		Naples	FL	34112	10/3/1939	12821			2397930562		6/14/2017	7/10/2017	
+Barbara	Smith	216 Palauw Ave		Mishawaka	IN 	46545	12/30/1965	860196897			9858934869	pbsmitty1965@yahoo.com	6/28/2017		
+Barbara	Taylor	1513 East Martiin St		Raleigh	NC	27610	4/3/1952	71591			9198315002 / 9193459584	btbarbann@gmail.com	6/26/2017		
+Barney	Mosley	3120 NE 158th Ave		Portland	OR	97230	9/4/1949	38077			5038169093	gemofpres@gmail.com	6/1/2017		
+Bernadette	Seal	3521 W 98th St		Evergreen Park	IL	60805	1/29/1948	notprovided			7083739372	daisyblue@aol.com	6/13/2017		
+Bernard	Doyon	6 Fairfield St		Oakland	ME	4963	4/18/1948	35036			2076495682	berniekoko@hotmail.com	6/13/2017		
+Bernard	Rutter	11847 E Stirrup High Dr		Dewey	AZ	86327	11/11/1935	16848			9287135021				
+betty	Kelly	PO BOX 629 Wrens		Wrens	GA	30833	12/20/1946	12472			7068141301	bettykelly@me.com	6/13/2017		
+Betty	Spietz	19302 9th Ave E		Washington 	DC	98387	2/23/1956	50025			2533650910		6/26/2017		
+Beverly	Buonomo	161 Argyle Pl		Kearny	NJ	7032	8/8/1944	40555			2019066435	"bbuonomo@verizon,net"	6/19/2017		
+Beverly	Fox - Schantz	757 Rumson Rd		Rochester	NY	14616	1/5/1952	50514			5857662330	thefox.fox1@gmail.com	6/27/2017		
+Beverly	Walden	5811 Wembley Dr		Douglasville	GA	30135	12/12/1947	12472			4044834569	pete426@att.net	6/23/2017		
+Bill	Carver	1560 St		Lawrence Grand Island	FL	32735	4/30/1943				3526305101 / 3526696740	vmcj345@gmail.com	6/30/2017	7/10/2017	
+Bonnie	Grimm	1251 Sunny Creek DR		Green Bay	WI	54313	5/9/1952	70183			9204989065	grimms61@yahoo.com	6/29/2017		
+Brahmaver	Amrutha	108 Murrieta Blvd	Unit 250	Livermore	CA	94550	10/8/1934	12472			4155722964	metta108@icloud.com	6/29/2017		
+Brenda	Mcdowell	1917 Wyoming Ave 		Fort Pierce 	FL 34982	1/10/1947	1/11/2119	80000			7724624073 / 7728011779	honeycup@bellsouth.net	6/27/2017		
+Brenda	Nicholson	1211 Clara Ave 		Saint Louis	MO	63112	3/25/1951				3143831141	toolbelcdivah@gmail.com	6/26/2017		
+Candy	Newsome	3276 N 27th St		Milwaukee	WI	53216	10/4/1953	52100			4144421966		6/23/2017		
+Carl	Parack	1330 Woodridge Ln		Moberly	MO	65270	4/14/1954	13759			6605370347		7/6/2017		
+Carol	Chenault	417 Line St NE		Decatur	AL	35601	1/27/1948	915014334-00			2562278394	carol@pclnet.net	6/20/2017	7/10/2017	
+Carol	Hall	734 College Ave		Lakeland	FL	33801	9/18/1950	82075			8636604481		5/24/2017	7/10/2017	
+Carol Ann 	Van Etten	7750 E Broadway Rd	lot 902	Mesa	AZ	85208	11/8/1954	HCFAH4			5204314130		6/30/2017		
+Caroline	Jensen	16 Hanson St		Wakefield	MA	01880	11/26/1940	15632 / 929832702-00			7817713379	cjjen@comcast.net	6/28/2017		
+Cathie 	Nicholls	6430 Cottage Hill Rd	Apt 106	Mobile 	AL	36695	11/30/1951	2211			2517160974	nicholls.cathi@gmail.com	6/29/2017		
+Charles	Glaisyer	7718 45th pl W		Mukliteo 	WA	98275	8/19/1948	856405001			4254239720	pacificpearl32@gmail.com	6/29/2017		
+Charles	Godlewski	610 Country Club Ln		Carterville	IL	26918	2/12/1945	12809			7733323971		6/13/2017		
+Charles 	Thieme	603 suncrest Dr		Sherrad	IL	61281	1/27/1947	941382570-00			3097384876	theime2@gmail.com	6/30/2017		
+Christie	Crook	22 Shipwatch Rd		Savannah	GA	31410	12/10/1947				7703615343	ann.crook@gmail.com	6/13/2017		
+Christine	Tutone	3665 Midiron Dr		Winter Park	FL	32789	4/1/1952	16110			3219616162	christutone@aol.com	6/30/2017		
+Claudine	Langille	45 Frast Hill Rd		Belmont	VT	05730	5/3/1952	965222530-00			8022592523	claudbanjo@gmail.com	6/27/2017		
+Colleen	Hayes	7020 whittington Ct		New Port Richey	FL	34653	5/16/1965	940940547			7272376350	muzak4444@gmail.com	6/28/2017		
+Connie	Astry	500 N Bryan Rd		Mission	TX	78572	4/10/1949	99951			8168303600	bunny.astry@sbcglobal.net	6/22/2017	7/10/2017	
+Connie	Fredrick	311 Arvida Spur Rd		Rockt Point	NC	28457	6/23/1944				9107890344		6/13/2017		
+Curtis	Reynolds	3030 Westleigh Dr		Indianapolis	IN	46268	8/19/1951	903107213-1			3176966918	curtreynolds@aol.com	7/6/2017		
+Cynthia	Valdez	PO BOX 637			NM	87701	9/9/1984	nmdsnp			5055879443	cjv4910@rocketmail.com	6/13/2017		
+Cynthia	Collins	7370 E Florida Ave 	Apt 1053 	Denver	CO	80231	2/13/1949	HCFAJ6			7202201982	ct.collins@comcast. Net	7/3/2017		
+Cynthia 	Corter	1985 San Silvestro DR		Venice	FL	34285	10/29/1947				9412281802	ch1985@comcast.net	6/26/2017		
+Dan	Mcmillan	159 Lakeview Dr		Milledgeville	GA	31061	12/30/1939	844231901-00			4784520915		6/14/2017	7/10/2017	
+Darlene	Sforza	2627 Bates rd		O'Fallon	MO	63368	4/28/1945	12367			3146236644	darsforza26@gmail.com	6/26/2017		
+David	Anderson	475 Oboe Way		The villages	FL	32162	12/17/1944				3524460929	Dambacpa@comcast.net	6/28/2017		
+David	Cloud	245 Winchester Dr		Cataula	GA	31804	7/1/1947	12472			7063250654	ddcloud@aol.com	6/14/2017	7/10/2017	
+David	Gamache	1807 Winchester Rd		Shady Valley	TN	37688	11/25/1949	notavailable			9517569840	skierdave@gmail.com	6/15/2017	7/10/2017	
+David	Wayne	245 Winchester Dr		Cataula	GA	31804	7/1/1947	12472			7063274770		6/15/2017		
+David	Johnson	185 Penland St	Apt 305	Ellijay	GA	30541	2/16/1951	99981			4045104532		7/7/2017		
+DAvid	Hill	1837 Carmona AVE		Los Angeles	CA	90019	11/3/1959	1617465-01			7143315629	karengmhill@hotmail.com	7/7/2017		
+Dawn	Ott	37 Palmetto Wood Pkwy		Irmo	SC	29063	6/1/1945	909011537-00			8033154702	dawn4004@att.net	6/28/2017		
+Debora	Frazier	95 South Hamilton Road		Gahanna	OH	43230	5/16/1950				6145604693		6/15/2017		
+Deborah 	Butler	130 Albert Grimley Dr		Cochran	GA	31014	9/7/1951	968400294			4782309692	debbiecbutler@hotmail.com	6/26/2017		
+Debra	Schaub	918 Elm St		Charles	IL	60174	12/15/1950				6307795072	debschaub@icloud.com	6/29/2017		
+Dee	Rusidil	25 Myrthle Warbler Rd.		Hilton Head Island	SC	29926	1218/1948	99980			8436817830/8432982900		6/14/2017		
+Delores	Troop	3993 Tenth st	Apt 1302	Riverside 	CA	92501	8/17/1945	hcfa12			9517500620	delores1273@hotmail.com	6/23/2017		
+Dennis	Mcknight	14421 Book Hollow 	Apt A	San Antonio	TX	78232	4/29/1946	not available			2106694085	greeno7@att.net	6/23/2017	7/10/2017	
+Dennis	Shoener	1765 York Island Dr		Naples	FL	34112	1/8/1934	12821			2397930562		6/14/2017	7/10/2017	
+Dennis	Maciel	"6461 Eagle CT,"		Auburn	CA	95602	6/1/1947	13616			5302691599	dennis.maciel502@gmail.com	7/7/2017		
+Dennis 	Naidl	1441 Glen Rd		Green Bay	WI	54313	9/9/1951	70100			9202642997	naidls@yahoo.com	6/29/2017		
+Dennis 	Paliotti	585 Sky Harbor Dr 409		Clearwater	FL	33759	2/6/1947	82075			7277540948	djpaliotti@hotmail.com	6/23/2017	7/10/2017	
+Diana	Costagliola	110 alexander Ave		Montclair	NJ	7043	1/2/1951	333101207-11			2012202330	balongirl@comcast.net	7/3/2017		
+Diane 	Nelson	19 Princess Ln		North Stonington 	CT	60359	4/10/1952				8605990191	erik.nelson9000@gmail.com	6/26/2017		
+Diann	Cloud	245 Winchester Dr		Cataula	GA	31804	4/18/1948	12472			7063274770		6/14/2017	7/10/2017	
+Dolores	Thieme	603 suncrest Dr		Sherrad	IL	61281	12/24/1949	969341000-00			3097384876		6/30/2017		
+Donald	Frazier	95 South Hamilton Road		Gahanna	OH	43230	4/28/1937				6145604793		6/15/2017	7/10/2017	
+Donald	Scharlott	2512 Lloyd dr.		Columbia	MO	65203	10/3/1951	13760			5733569265		6/5/2017	7/10/2017	
+Donna	Beritt	4762 N Edgemont Rd		Prescott Valley	AZ	86314	4/10/1952	941321982-00			9288304361	drpv.lover@yahoo.com	6/28/2017		
+Donna	Bird	2309 Greenwald St	Apt 2208	Bellevue	NE	68123	1/26/1955	69505			4027231618	dbird047@cox.net	6/27/2017		
+Donna	Godlewski	610 Country Club Ln		Carterville	IL	26918	9/10/1948	12809			7733323971	mrsgodlewski@gmail.com	6/5/2017		
+Donna	Steward	53 E Cobblestone Ct		Kuttawa	KY	42055	4/4/1947	13800			2706253388		6/12/2017	7/10/2017	
+Donna	Tork	19375 Water Oak Dr	Unit302	Port Charlotte	FL	33948	2/15/1945	82082			9414680735	crsnanny@aol.com	6/20/2017	7/10/2017	
+Donna	Smith	1114 S Main St		China Grove	NC	28023	4/24/1958	81158118000			3362397894		7/5/2017		
+Donna 	Roark	5415 KY-160		Littcarr	KY	41834	6/9/1963	402920714a			6068218804	johnsongal1963@yahoo.com	6/26/2017		
+Doris	Valentine	48 Spring Rock Rd		Mills River	NC	28759	6/3/1944	71590			8286847453	doris124@bellsouth.net	6/27/2017		
+Dorothy	McDonald	1613 Caroline Dr		Benton Harbor	MI	49022-2675	7/26/1947	13349			2697577065	demcdonald2001@yahoo.com	7/3/2017		
+Douglas	Soblick	134-20 87th Ave		Richmond Hill	NY	11418	1/9/1951	66070			7187392056		6/14/2017		
+Douglas	Chafi	4057 W Juniper Rd		Cedar Hill	UT	84062	4/26/1987				8013474061	afhsnoopy@gmail.com	6/29/2017		
+Douglas 	Thomas	990 Chapel Hill Dr		Lawrenceville	GA	30045	2/22/1947	972541567-00			7705969527	thomas3751@bellsouth.net	6/29/2017		
+Eddie	Scott	308 Mount Holly Huntersville Rd	Apt 109	Charlotte 	NC	28214	2/15/1935	71526			7048128853		6/30/2017		
+Edward	Blakelock	1991 Jack Rabbit Ln		New Bern 	NC	28562	8/5/1942	13509			2526361796	eblakelock@suddenlink.net	6/27/2017		
+Edward	Valentine	44 New Zealand Rd		Seabrok 	NH	03874	7/12/1949	12927			6037602579	brandie9@comcast.net	6/26/2017		
+Eileen	Davison	7031 Drewry Virginia Line Rd		Manson	NC	27553	8/12/1949	955958424-00			9196027331		6/13/2017	7/10/2017	
+Eileen	Hopkins	2700 Pelham Rd.	Apt214	Toledo	OH	43606	2/15/1951	973679321			4195094912		6/23/2017	7/10/2017	
+Elena	Kotinek	1321 St Paul Road		Grand Island	NE	68801	8/5/1947	94947425100			3083794919	onie3051@gmail.com	6/23/2017	7/10/2017	
+Eleonor	Parsons	494 W 10th Ave	Apt302	Eugene	OR	97401	12/27/1923				5419120763	peleanorg@gmai.com	6/27/2017		
+Ella	Rogers	822 Tower Rd		San Antonio	TX	78223	11/15/1951	HCFAU4			2106357560		7/3/2017		
+Ellen	Menki	6741 Lincoln Ave		Buena Park	CA	90620	3/25/1944	hcfb2			7149958098		6/13/2017		
+Elva 	Roy	3704 Clark Ct		Arlington	TX	76015	7/15/1945	hcfau5			8175575700	elvaroy@tx.rr.com	6/23/2017		
+Emma Lee	Parnell	5623 Dobson ST		North Charleston	SC	29406	6/17/1927	912538444-00			8437440292		6/30/2017		
+Erik	Nelson	19 Princess Ln		North Stonington 	CT	60359	3/23/1945				8605990191	erik.nelson9000@gmail.com	6/26/2017		
+Esther	Connor	P.O Box 974 		Madison	AL	35758	12/28/1950	919794272-00 / 02198			2566658198	n.thomas.50@juno.com	6/29/2017		
+Ethel	Ford	626 Inman rd.		Fayetteville	GA	30215	5/26/1944	12472			4048950097		6/5/2017		
+Farhad	Khan	11570 Willis Rd		Fort Pierce 	FL	34945	5/7/1948				7729402378	ringo5@att.net	6/30/2017		
+Fe	Martinez	4920 Picture Ave		Holidat 	Fl	34690	8/20/1947				7277934308		6/23/2017		
+Florence	Steelman	6289 Landon Village Ct		Clemmons 	NC	27012	5/24/1948	80840			3364485123	helensteelman1@gmail.com	6/26/2017		
+Frances	Perkins	route 73 Box # 3072		Alton	MO	65606	2/4/1952	941269173-00			4172702282		6/29/2017		
+Francis	Demaio	44 Metcalf St		Meford	MA	2155	11/6/1946	12900			7813954465	fdel1909218@aol.com	6/29/2017		
+Francis	Eddy	530 S Ridgewood Ave	Apt34	Daytona Beach	FL	32114	9/19/1952	don’thaveithandy			3863416482		6/14/2017		
+Francis	Flood	3673 Wassaw Ln NW		Berkeley Lake	GA	30096	8/2/1974	906898			7707136628		6/13/2017		
+Frank	Albert Jr	811 Lake Roryal DR		Grovetown 	GA	30813	7/17/1938	12473			7066511053	frank@drbukk.com	6/26/2017		
+Frank	Wilson	P.O Box 854		August	GA	30903	10/2/1958	924731840-00			7062515085	stuccoman908@comcast.net	6/15/2017	7/10/2017	
+Frank	Kelley	907 Alden Rd		Tams River	NJ	8573	8/19/1946	969489806-00			2012142901	fkelley1@verizon.net	7/3/2017		
+Frank	Wilson	P.O Box 854 		Augusta	GA	30903	10/2/1958	924731840-00			7067247438 / 7062515085	stuccoman908@comcast.net	7/7/2017		
+Frederick	Foster	1045 NE 16th Pl		Cape Coral	FL	33909	8/9/1951	926114322-00			2396775294	kbfoster1@gmail.com	7/6/2017		
+Gary	Bartz	127 City Pl		Jacksonville	IL	62650	1/13/1949	959722642-00			2174739647		6/15/2017	7/10/2017	
+Gary	Corder	013 Blandford Ave		Vinton	VA	24179	9/9/1946	979660932-00			9412255334	gary.corder0909@gmail.com	6/26/2017		
+Gayle	Hancock	317 Bellheight Ave.		Morganfield	KY	42437	5/23/1951				2709520079		6/13/2017	7/10/2017	
+Gene	Cox	237 Scout Rd		Four Oaks	NC	27524	1/30/1950	91187726-04			9199347195	mkscox67@aol.com	6/30/2017		
+George	Pease	2145 Augusta Ct		San Louis Obispo	CA	93401	1/15/1948	HCFAV9			8055941786	georgiajeannepease@gmail.com	6/26/2017		
+George	White	9924 N 300 E		Roanoke	IN	46783	4/21/1948	67007			2604138798		5/24/2017	7/10/2017	
+Ginger	Talbert	375 Mountain Valley Dr		Hendersonville	NC	28739	5/18/1943	13507			8285952275		6/23/2017	7/10/2017	
+Gladys	Staffor	2051 Morrison Rd		Concord	NC	28025	2/9/1949	955494658-00			7045627373/7044559234	gms@ctc.net	6/14/2017		
+Glenda	Mosley	118 Pineworth Pointe Dr		Macon	GA	31216	12/27/1959	46000			4784718135	glendamosley84@yahoo.com	7/10/2017		
+Gloria	Sturdivant	407 Jura Court		Shallottem	NC	28470	10/8/1950	92154240-00			9106207456	aandgsturdiant@atmc.net	6/14/2017	7/10/2017	
+Gracie	Salter	1576 E Cottonwood Ln	Apt 1017	Casa Grande	AZ	85122	2/5/1944	836712901			5203404884	graciesalter@yahoo.com	6/29/2017		
+Gray	Steben-Rubin	2190 Creek Vista Dr.		Tucson	AZ	85749	3/19/1946	HCFAC9			9283018663		6/14/2017		
+Gregory	Vanhorn	16423 Amethyst Pkwy		Fort Wayne	IN	46845	11/30/1948	959078603-00			2606377207	gjvanhorn@frontier.com	7/10/2017		
+Gussie	Johnson	3974 Pine Lake Rd		West Point	GA	31833	9/24/1956	924362991			7064150061	gm.johnson@charter.net	6/30/2017		
+Harold	Kochnover	2015 Owenby Dr.		Tallahassee	FL	32308	9/5/1945				8508782299		6/2/2017	7/10/2017	
+Hasmukch	Patel	5765 Beisinger Place		Indianapolis	IN	46237	5/31/1944	961093769			3172010307	hpateljayah@yahoo.com	6/15/2017		
+Helen	Foster	1045 NE 16th Pl					2/26/1950	967813423-00			2395432686 / 2394439950	helenfoster52@yahoo.com	7/6/2017		
+Irene	Paul	183 Forest View Dr		Crossville	TN	38558	5/19/1942	12808			9312870397	paulim42@comcast.net	6/26/2017		
+Irma	Williams	1050 County Rd 49		Tuskegee	IL	36083	5/6/1942	959434559-00			3347277326		6/14/2017		
+Irma	Roman	135-33 124th St		South Ozone Park	NY	11420	12/5/1956	94243539200			9178431256	jicrj316@aol.com	7/6/2017		
+Jacqueline	Gassner	274 S Mountin Dr	Unit D	Maryville	VI	53050	9/24/1946	952158532-00			9203871491	jackigassner@att.net	6/30/2017		
+Jacqueline	Paylor	1513 Ball St.	Apt B	Greensboro	NC	27405	11/26/1963	2.30011E+15			3367079677	wellsjackpot@yahoo.com	7/6/2017		
+Jake	Fennema	6371 East Ashton Place 		Prescott Valley	AZ	86314	3/12/1938	16848			9288481200		6/22/2017	7/10/2017	
+James	Flores	5395 Via Cartagena		Yorba Linda	CA	92886	2/18/1947	hcfaz6			7143120770	jimflores803@yahoo.com	6/14/2017		
+James	Mazetti	9580 N Horseshoe Dr		Hayward	WI	54843	6/5/1946	12809			8156475448		6/14/2017		
+James	Smith	6055 Sailing Ct		Colorado Springs	CO	80918	9/14/1948	hcfaj9			7192019359	tzterrismith@gmail.com	6/22/2017	7/10/2017	
+James	Wheeler	912 Calhoun Cir		Lexington	KY	40513	3/27/1945	13800			8595765493	james.wheeler418@gmail.Com	6/2/2017	7/10/2017	
+James	Mosley Jr	118 Pineworth Pointe Dr		Macon	GA	31216	10/26/1956	46000			4784718135		7/10/2017		
+Jane	Limberries	6 Grace Ave 		Plattsburgh	NY	12901	7/7/1945	50506			5183246117	jane.limberries@gmail.com	6/28/2017		
+Jane	Rogers	1171 US Highway 1		Cameron	NC	28326	11/8/1946	12313			9103663310	popojane@yahoo.com	6/14/2017	7/10/2017	
+Janet 	Decou	6904 E Yacht Dr		Oak Island	NC	28465	2/10/1949	15645			8624854311	mothsly77@gmail.com	7/6/2017		
+Janet 	Vanhorn	16423 Amethyst Pkwy		Fort Wayne	IN	46845	4/18/1950	915259576-00			2606377207	gjvanhorn@frontier.com	7/10/2017		
+Janice	Salve	80 woodend Dr		Easton	CT	06612	11/16/1947	97380571500			2034601326	janice.salva@gmail.com	6/30/2017		
+Janice	Brunson	4149 NW Bethel Rd		Bristol	FL	32321	1/2/1960	9229006500			8506432672	blkflamom@yahoo.com	7/5/2017		
+Janis	Mcmillan	159 Lakeview Dr		Milledgeville	GA	31061	12/4/1943	840520060-00			4784520915	janmcmillan159@yahoo.com	6/14/2017	7/10/2017	
+Janis	Moreman	5806 Arbor Valley Dr.		Arlington	TX	76016	7/19/1950	HCFAU5			8174557446/8174557447		6/13/2017	7/10/2017	
+Jaya	Patel	5765 Beisinger Place		Indianapolis	IN	46237	11/28/1946	926235444			3172010307	jayahasmukh@gmail.com	6/15/2017	7/10/2017	
+Jean	Robinson	3110 Ion Ave		Sullivans Island	SC	29482	12/27/1931	946176774			8438839571	stayeffort713@gmail.com	6/5/2017	7/10/2017	
+Jeanette	Bah	101 10th Ave S	Apt 18B	Phoenix City	AL	36869	1/30/1958	2211			7622073988	jbindet1958@gmail.com	6/27/2017		
+Jeanette	Wilson	60 Straton Moore		Elizabethtown	KY	42701	10/14/1944	13800			2707239377		7/5/2017		
+Jeneal	Steedley	415 Belle Valley Rd		Waycross	GA	31501	7/23/1952	969053466			9122854888	jsteedley70@bellsouth.net	7/3/2017		
+Jesse 	Mcmillan	8019 Parental Cir		Jacksonville	FL	32216	1/2/1951	82082			9044124616	jessemcmillan51@gmail.com	6/29/2017		
+Jessica	Dooley	4566 Brown Ave		Manchester	NH	3103	5/13/1979	03103-945100440-00			6037032503	jdoolet6679@gmail.com	6/29/2017		
+Jim	Baker	19385 Robin Hood Way		Monument	CO	80132	12/24/1945	HCFAJ9			719482308	co80132@comcast.net	6/23/2017		
+Jim	Yorita	6841 Arabella Way		Sacramento	CA	95831	10/19/1945				9167187405		6/26/2017		
+Jimmy	Mcgee	8756 Gerber Rd		Sacramento	CA	95828	8/16/1958	hcfag4			9165252260/9162840998		6/15/2017		
+Joena	Howard	10405 Scarlet Oak Ct		Louisville	KY	40241	12/21/1950	978113737-00			5025517500 / 5024255850	joenahoward@gmail.com	7/10/2017		
+John	Antonucci	396 Baridwood Terrace NW		Acworth	GA	30101	1/30/1948	961997495-00			6784715046	mucci693@gmail.com	6/28/2017		
+John	Jensen	16 Hanson St		Wakefield	MA	01880	6/3/1938	15632 / 909516310-00			7812460032	cjjen@comcast.net	6/28/2017		
+John	Kirksey	94 Burton Ave 	Apt 2	Akron	OH	44302	8/81955	36059			3304313681	sligh885560@yahoo.com	6/26/2017		
+John	Salva	80 woodend Dr		Easton	CT	06612	11/28/1942				2034601326	ctclock@gmail.com	6/30/2017		
+John 	Feltman	72-43 Juno St		Forets Hills	NY	11375	8/17/1952	12313			7185446468		6/28/2017		
+Jose 	Perez	206 Ponderosa Loop		Paige	TX	78659	9/19/1961				5127189837	7280@gmail.com	7/5/2017		
+Josie	Harleston	195 E Covington Dr		Myrtle Beach	SC	29579	5/9/1944	15645			8438609475	bullhead0509@yahoo.com	6/14/2017	7/10/2017	
+josie	Harleston	94 Burton Ave	Apt2	Akron	OH	44302	8/8/1955	36059			3304303681	slighaa5560@yahoo.com	6/14/2017		
+Judith	anderson	324 Endgehill Blvd 		Richardson	TX	75081	2/2/1944	18145			4695004521	judith.anderson42@gmai.com	6/23/2017		
+Judith	Dunn	9016 Ewing Lane 		Thomson	IL	61285	4/27/1942	12809			8155657171	judithdunn15@gmail.com	6/26/2017		
+Judith 	Schneider	25 Edmund ST		Old Saybrook	CT	6475	7/31/1938				8603883467		6/27/2017		
+Judy	Douglas	1717 County Rd 220	Apt 3102	Fleming Island	Fl	32003	7/12/1944				4075925902	sabelpt@aol.com	6/20/2017		
+Judy	Henderson	131 Edgemont Dr		New Albany	IN	47150	7/5/1944	13800			5026936373	judyhenderson131@aol.com	6/14/2017		
+Karen	Camara	303  W 66th	Apt6A	New York	NY	10023	3/16/1941	93115767500			2126001146		6/15/2017	7/10/2017	
+Karen	Glaisyer	7718 45th pl W		Mukliteo 	WA	98275	3/5/1947	840627101			4254239720	karenglaisyer@hotmail.com	6/29/2017		
+Karen	Lawrence	4250 N Newton	Apt229	KansasCity	MO	64117	3/20/1946	99930			8164331570	karenfra2000@yahoo.com	6/16/2017	7/10/2017	
+Karen	Madouse	34265 SW TV Hiway 55		Hillsboro	OR	97123	12/30/1950	hcfan2			5034159484		6/5/2017	7/10/2017	
+Karen	Olomon	31 Oak Ridge		Bufallo	MO	65622	7/6/1945	55813			4173458039		6/14/2017		
+Karen	Turner	4720 Holly Oak Pl 		Dunwoody 	GA	30338	3/18/1949	12473			7065649108	kcturner63@gmail.com	6/29/2017		
+Karen	Hill	1837 Carmona AVE		Los Angeles	CA	90019	3/28/1958	4872937-01			3239395969	karengmhill@hotmail.com	7/7/2017		
+Kathleen	Birtch	3248 N 159th Ave		Goodyear	AZ	85395	12/22/1945	928735489-00			6232178118	jkb1137@aol.com	6/23/2017		
+Kathleen	Deadmond	2516 30th Ave Ct		Moline	IL	61265	8/26/1943	12824			3097970463		6/5/2017		
+Kathleen	Ludwell	368 Barrington Ct		Spring Hill	FL	34609	10/11/1949				3525935067		6/5/2017		
+Kathleen	Dice	985 Auburn Ln		Bartlett 	IL	60103	10/12/1947	12809			6302892568	kgdice@att.net	7/10/2017		
+Kathleen	Zupko	526 N 77th St		Wauwatosa	WI	53213	8/24/1949	13347			4177746866	zupkok@gmail.com	7/10/2017		
+Kathleen 	Reese	1604 Hoover St		New Holstein	WI	53061	5/23/1948	75000			9208272051	roydkathleen@hotmail.com	6/28/2017		
+Kathy	Brand	325 Crosby Ln		Rochester	NY	14612	10/3/1950	50500			5853155141	kbrand1950@frontier.com	6/15/2017	7/10/2017	
+Keith	Runion	717 Shamrock Dr		Little Rock	AR	72205	11/20/1939	notavailable			5016632778	keithrunion@comcast.net	6/14/2017	7/10/2017	
+Ken	Tomacchio	951 Ocean Blvd	Unit4	Hapton	NH	3842	8/11/1949	notprovided			6036012327	ktomacchio@comcast.net	6/16/2017		
+Kenneth	Edwards	3388 Wash Davis Rd		Summerton	SC	29148	2/5/1949	notavailable			8035669595		6/21/2017	7/10/2017	
+Kenneth	Tuman	166 Buckingham Way		Mt.Laurel	NJ	8054	9/29/1941	947301658			8568021740		6/20/2017		
+Kenneth 	Baxley	748 N 600 W		Orem	UT	84057	5/23/1974				8014204382	SirGallaghan749217@gmail.com	6/29/2017		
+Larry	Ellis	6308 Dutch Hollow Rd		Potosi	WI	53820	2/16/1939	917001062-00			6087632234		6/14/2017		
+Laura	Harter	1804 Reading Ln		Prescott	AZ	86301	6/13/1949	307386666-11			9288303051	laurahrtr@yahoo.com	6/14/2017		
+Laura 	Ward	213 Braddock Way St		St. Peters	MO	63376	6/28/1950	923772859-00				lauraward213@gmail.com	7/6/2017		
+Laurie	Wold	1166 NW 174th Pl		Beaverton	OR	97006	4/17/1952	38000			5036453803		6/14/2017		
+Laverne	Pena	1601 S Texas Ave		Mercedes	TX	78580	4/2/1964	<00306>			9563732490	penalaverne@sbcglobal.net	6/14/2017		
+Leanne	Flinn	13776 N 325 E		North Manchester	IN	46962	8/14/1944	67001			2603061138	lianne_flinn@yahoo.com	6/30/2017		
+Linda	Bartz	127 City Pl		Jacksonville	IL	62650	3/18/1957	903308719-00			2174739647	bartzlinda18@gmail.com	6/15/2017	7/10/2017	
+Linda	Burger	6420 Wembridge Dr		East Syracuse	NY	13057	12/6/1950	933957002-00			3154376407	linda1206!@yahoo.com	6/23/2017		
+Linda	Harris	2203 Azalea Dr		Valdosta	GA	13602	9/28/1947	929117234-00			2295633604	reaves.linda@gmail.com	6/23/2017		
+Linda	Mazetti	9580 N Horseshoe Dr		Hayward	WI	54843	6/7/1947	12809			8156475448		6/14/2017		
+Linda	Mincie	600 Redmond Rd		Rome	GA	30165	2/28/1963	99981			7062048633		6/14/2017		
+Linda	Vickers	600 Redmond Rd		Rome	GA	30165	4/14/1984	99981			7062048633		6/14/2017	7/10/2017	
+Linda	Young	2521 Annalee Ave		Brentwood 	MO	63144	6/4/1959	99930			3149680457	dclyoung@att.net	6/23/2017	7/10/2017	
+Loretta	Dawkins	667 Rutherford 	Apt 305	Greenville 	SC	71911	1/28/1956	71911			8645533800	loretta.dawkins@aol.com	6/27/2017		
+Lorraine	Spekczynski	213 Dowington		Cary	NC	27519	4/29/1947	9118772604			9195358331		6/14/2017	7/10/2017	
+Louise	Clark	341 Colby Ave		Eufaula	AL	36027	6/13/1945	975371320-00			3346879033	rclark1@aufaule.rr.com	7/3/2017		
+Lyn	Chevalier	5301 Lake Ridge Rd		Ykiah	CA	95482	9/11/1945	93977946-00			7079722834	peterchevalier@att.net	6/26/2017		
+Lynn	Martin	4673 N Meixner Rd		Prescott Valley	AZ	86314	7/4/1943	azmcare			9286428268	kaylynn101@cableone.net	6/15/2017		
+Lynne	Scharlott	2512 Lloyd dr.		Columbia	MO	65203	12/11/1951	13760			5733569265		5/24/2017	7/10/2017	
+Marcia	Pardue	511 Rosebud Dr.		Lombard	IL	60148	7/16/1948	notprovided			6300614347		6/13/2017	7/10/2017	
+Margaret	Houpt	115 Carter Dr		Oakwood	IL	61859	8/2/1949	906901798-00			2174749995	shadegardensue@gmail.com	6/26/2017		
+Maria	Peters	905 Pine Ridge Drive		Grand Rapids	MN	55744	6/22/1936				2182596400		6/13/2017		
+Maria Concheta	Rossie	904 Julia Ave	Apt1A	Mounttain Grave	MO	65711	4/17/1956	930568757			4172173867	windreamer17@gmail.com	6/30/2017		
+Mariann	Mangiafriada	2604 Hemllock Pl		Basking Ridge	NJ	7920	12/26/1950	3056623360			2017878462	mariann1226@aol.co	7/5/2017		
+Marie	Chafi	4057 W Juniper Rd		Cedar Hill	UT	84062	9/29/1961				8013474061	kimspossiblemc@gmail.com	6/29/2017		
+Marilyn	Myers-Ellen	6308 Dutch Hollow Rd		Potosi	WI	53820	12/28/1939	9407201002-00			6087632234		6/13/2017		
+Mark	Friend	1200 Spartan Drive		ColumbiaCity	IN	46725	10/3/1953				2605039754		6/20/2017	7/10/2017	
+Marlene	Miller	2581 Pairie View Dr		Winter Garden	FL	34787	10/28/1950				4102996626	mrsmarlene@aol.com	6/27/2017		
+Mary	Ledford	1015 Shallowford Rd		Chattanooga	TN	37411	3/24/1955	TNDSNP			4233145506	marykledford@aol.com	6/26/2017		
+Mary	Hoffland	N3525 Trieloff Dr	Lot 26	Fart Atkinson	WI	52538	2/17/1955	935866099-00			6082205293	mhoffland@ymail.com	7/3/2017		
+Mary	Parack	1330 Woodridge Ln		Moberly	MO	65270	9/10/1950	931016013-00			6605370347	Maryann.powell@bcglobal.com	7/6/2017		
+Mary 	Torkelson	1022 S 122nd St		Milwaukee	WI	53214	11/19/1947	70000			4147781815		6/28/2017		
+Mary 	Cox	237 Scout Rd		Four Oaks	NC	27524	6/21/1949	91187726-04			9199157194 / 9199347195	mkscox67@aol.com	6/30/2017		
+Mary Anne	Shiplet	2615 Mt Airy Av		Cincinnati	OH	45239	7/26/1942	973519965-00			5139177010	maryannship@hotmail.com	6/29/2017		
+MaryJo	McWilliams	7240 North Highway 1247		Science Hill	KY	42553	7/20/1949	945873238			6064233815		6/15/2017		
+Matthew	Odom	545 Sheridon Ave		Roselle	NJ	7203	7/14/1945	829795786-00			9082452182	mattthew_odom@hotmail.com	6/29/2017		
+Melinda	Ison	P.Obox 129		Lebetter 	TX	42058	3/4/1952	962769994-00			2702170204	maeison@comcast.net	6/27/2017		
+Melle	Smithour	120 Cascabel St		Los Alamos	NM	87544	4/26/1949	13650			5056622643	smithhourm@comcast.net	6/15/2017		
+Mia	Furstner	2286 33rd Street		Springfield	OR	97477	2/16/1931				5417472164		6/22/2017	7/10/2017	
+Michael	Ludwell	368 Barrington Ct		Spring Hill	FL	34609	11/27/1950	306160886-12			3525935067		6/5/2017		
+Michael	Nuedling	1069 Palafox Dr NE		Altanta	GA	30324	3/29/1944	99979			4042851982	michael.nuedling@yahoo.com	6/14/2017	7/10/2017	
+Michael	Reneau	14 Morris Ford Rd		Blairsville	GA	30512	8/24/1949	975264709-00			4787144981	reneaumike49@gmail.com	6/16/2017	7/10/2017	
+Michael	Weber	7830 Lisbon Ave	Apt 4	Milwaukee	WI	53222	12/29/1956	911695583-00			4149400890		6/26/2017		
+Michael	Nale	3302 Valerie Drive		Champaign	IL	61822	3/30/1948	916009654-44			2177376852	spike330@yahoo.com	7/3/2017		
+Michael	Hilly	1637 Baronet Dr		Manchester	MO	63021	8/24/1950	55021			6366287025	mgh1950instlouis@yahoo.com	7/5/2017		
+Michelle	Smithour	120 Cascabel St		Los Alamos	NM	87544	1/28/1945	13650			5056622643	smithhourm@comcast.net	6/15/2017		
+Minnie	Harris	215 Carters Gini Road		Toney	AL	35773	7/10/1938	920962441			2568594265	harrismj1@gmail.com	6/15/2017	7/10/2017	
+Murlene	Mcgee	8756 Gerber Rd		Sacramento	CA	95828	1/31/1950	hcfag4			9165252260/9162840998	Murlenemcgee@comcast.net	6/15/2017	7/10/2017	
+Nancy	Albert	811 Lake Roryal DR		Grovetown 	GA	30813	11/28/1950	12473			7069106246	sistermac@me.com	6/26/2017		
+Nancy	George	8882 SQ 93rd Pl	Unit F	Ocala 	FL	34481	2/28/1946	961053090-00			4076201084	amethyst1007@hotmail.com	7/6/2017		
+Nancy 	Boyd	1264 Hickory haven		Foristell	MO	63348	7/5/1952	946219265-00 / 55400			6363328105	mnbwen@yahoo.com	7/6/2017		
+Nashat	Zachary	263 Stanley Ave		Hasbruck Heights	NJ	7604	1/20/1948	40555			2019210722	nashatzachary@yahoo.com	6/13/2017		
+Nassar	Ashkar	5600 Azle Ave	Apt 209	Forth Worth	TX	76106	2/7/1948	HCFAU5			817652133	nashakar1@att.net	7/3/2017		
+NeldaSue	Rutter	11847 E Stirrup High Dr		Dewey	AZ	86327	6/4/1948	16848			9287135021	rutter0648@gmail.com	7/3/2017		
+Nelson	Howard	1805 31s tAve Lane NE		Hickory	NC	28602	1/4/1951	901040673			8283246827	newwardhoward@homail.com	6/13/2017		
+Pam	Batham	557 Moore Blvd		Covington	LA	70433	7/26/1951				9858934869	missanne2u@aol.com	6/28/2017		
+Pamela	White	4388 Quail Creek Trace N		Pittsoro	IN	46167	1/1/1948	704			3174404769	jwhite@indy.rr.com	7/5/2017		
+Patricia	Dick	8411 Creek Bank Ln		Tampa	FK	33635	12/13/1949	82075			8138553348	dgary2pat@aol.com	7/5/2017		
+Patricia 	Briggs	5417 Van Ave		Richmond Hill	VA	23227	11/18/1951	974851338-00			8042648768	pbdelta@hotmail.com	6/29/2017		
+Patricia 	Kendrick	10021 Deep Canyon Rd		Moreno Valley	CA	92557	7/24/1951				9512424805	patrickakendrick@aol.com	6/26/2017		
+Patricia 	Gates	373 Rue Renee 		Saint Louis	MO	63122	2/11/1952	930088863-00-55400			3142929631	123volunteer123@gmail.com	7/3/2017		
+Patrick	Rodarte	5405 53rd St. SW		Albuquerque	NM	87105	3/15/1947	939998849			6074221953		6/13/2017		
+Paul	Karetny	10537 Beachwalk Place 		Las Vegas	NV	89144	8/26/1948	15633			9177630172	royalty26@aol.com	6/28/2017		
+Paul 	Smith	216 Palauw Ave		Mishawaka	IN 	46545	8/1/1965	860196897			5742614029		6/28/2017		
+Paula	Allmann	5115 W Henry Ave		Milwaukee	WI	53221	6/9/1968	13347			4142828229	pka@wi.rr.com	6/21/2017	7/10/2017	
+Paula	Farel	310 Burlage Cir		Chapel Hill	NC	27514	2/29/1944				9193604246		6/26/2017		
+Paula	Franzmeier	247 Kalaheo Ave		Kailua	HI	97634	11/1/1949	77000			8083584051	franz808@aol.com	6/16/2017		
+Paula	Hillery	10305 Mahonia St 	Apt 201	Charlotte 	NC	28277	10/14/1959	71571			3478201143	hyleeblssd@gmail.com	6/26/2017		
+Paula	Petlowany	19039 Lake Rd	Apt16	Rocky River	OH	44116	3/23/1952	10788			4408650650		6/21/2017	7/10/2017	
+Pearl	Robinson	5153 Chasteal Trail		Raleigh	NC	27610	7/17/1949	97512174800			9197409681	wcrobinson27@anc.rr.com	6/13/2017	7/10/2017	
+Peggy	Fagan	1226 Hazens Notch Rd	P.O Box386	Mongomery Center	VT	05476	2/28/1941	946355944	yes	yes	8023264428	pfshadow@aol.com	6/22/2017		
+Peggy	Ewert	3530 E Game Far Rd Spc		Springfield	OR	97477	9/12/1956	922363102-00			5416544669		7/10/2017		
+Philip	Gottehrer	19 abeel st 	Apt 1L	Yonkers	NY	10705	11/23/1946	66087			9142755303	phil5149@aol.com	7/5/2017		
+Rachel	Yorita	6841 Arabella Way		Sacramento	CA	95831	9/1/1949	13616			9167187405	rachel.yorita@yahoo.com	6/26/2017		
+Randal	Speer	105 Lonetree Ct 		Advance	NC	27006	3/11/1952	12309			9196180929	rnspeer@gmail.com	6/28/2017		
+Rebecca	Marloew	6 Elgin Ave		Massena	NY	13662	3/30/1943				3157056030	rebmar7@twc.com	6/28/2017		
+Reed 	Nickels	97 Court ST		Bath	ME	4530	6/16/1947				2073192305	jabagwell@comcast.net	6/28/2017		
+Regina	Bherns	204 PineSt		Kendallville	IN	46755	12/3/1956	notavailable			2605703072	gbherns@hotmail.com	6/16/2017	7/10/2017	
+Rella	Jordan	100 Yates Ave		Calumet City	IL	60409	11/20/1936	978615831-00			7086389644	rjordan5359@aol.com	6/16/2017	7/10/2017	
+Reynaldo	Arellano	3922 Bear Oakpath		San Atonio	TX	78223	10/30/1949	13502			2108436942 / 2103379297	reyandcynthia.arella@gmail.com	6/26/2017		
+Richard	Colby	1007 Winding Creek Rd		Apex	NC	27502	6/20/1953				9192749100	richardcolbync@gmail.com	6/26/2017		
+Richard	Jelline	7340 Amberly Ln	Apt3012	Delray Beach	FL	33446	6/16/1948	notavailable			6783677183	rjelline@comcast.net	6/16/2017	7/10/2017	
+Richard	Kuhl	2748 Foxtail Creek Ave		Henderson	NV	89052	5/25/1944	12849			7023618447 / 7088707992	bob44kuhl@yahoo.vom	6/26/2017		
+Richard	Laskin	2200 Wild Apple Court		Apex	NC	27523	3/25/1951				9193725696	rlaskin1951@gmail.com	6/22/2017	7/10/2017	
+Richard	Lavalette	144 Galway Dr 	Apt 108	Mooresville	NC	28117	11/15/1948	15632			9195947244	charlottelav99@gmail.com	6/26/2017		
+Richard	Mehls	7964 Chestnut Ridge Rd		Gasport	NY	14067	4/26/1952	508			7167725616	vmehls@yahoo.com	6/22/2017	7/10/2017	
+Richard	Pandolfi	81 Brisbane Lane		EastMeadow	NY	11554	11/17/1938	974701776-00			5166726331	rpandolf@yahoo.com	6/13/2017	7/10/2017	
+Richard	Rawlings (Wallence)	4225 Cardinal Dr		Indianapolis	IN	46237	10/22/1943				3174032538	rich4031@gmail.com	6/26/2017		
+Richard	Seiple	108 McDole Cir		Cary	NC	27511	7/21/1948	061311781-11			9193624675	sseiple@nc.rr.com	6/21/2017		
+Richard	Ward	213 Braddock Way St		St. Peters	MO	63376	3/17/1948	915133222-00				surveryo213@hotmail.com	7/6/2017		
+Robert	Crews	220 Creekside Cir		Prescott	AZ	86303	7/10/1938	16848			4802745825	rgcrews@cableone.net	6/19/2017		
+robert	ferre	12607 Cascade Hills		San Antonio	TX	78253	7/21/1944	HCFau4			3145176543		6/13/2017	7/10/2017	
+Robert	Foster	338 eutaw st.		Pittsburgh	PA	15211	1/9/1944				4123379660		5/24/2017	7/10/2017	
+Robert	Muller	1113 Cloverwood Ln		Trouthan 	NC	2816	2/20/1949				7047426010	muller.r71@yahoo.com	6/27/2017		
+Robert	Phillips	1531 Fox River Run		Mukwonago	WI	53149	12/17/1948	70097			2625017299		6/19/2017	7/10/2017	
+Robert	Schantz	757 Rumson Rd		Rochester	NY	14616	11/9/1950	50514			5857662330	robertschantz116@gmail.com	6/27/2017		
+Robert	Scott	3201 Miccosukee bldng 5 AptD	AptD	Tallahassee	FL	32308	11/5/1979	82082			8508798858	"bobdobalina79@gmail,com"	6/19/2017	7/10/2017	
+Robert	Sluder	122 Miliam Bridge Rd		Cartersville	GA	30120	4/3/1960	99977			7066696762	gracy2mark@gmail.com/mark0823r@gmail.com	6/19/2017	7/10/2017	
+Robert	Wulff	802 Steeplechase Rd		St Charles	IL	60174	2/10/1940	12809			6303772135		7/5/2017		
+Roberta	Spence	282 Kimberly JO Lane		Marienville	PA	16239	7/11/1945	967854034-00			8149272215	bobbi2@usachoice.net	6/13/2017	7/10/2017	
+Robin	Brown	821 NE 18th Ct	Apt4	Lauderdale	FL	33305	1/5/1952	972236635			9542138156		6/15/2017	7/10/2017	
+Rocky	White Jr.	4401 Southwest Blvd	Apt 224	San Angelo	TX	76904	2/5/1953	99952			3252123016		6/28/2017		
+Rogene	Mckieman	701 West Elizabeth		Gunnison	CO	81230	10/21/1939				9706414955		6/15/2017		
+Roger	Sherman	1207 Franklin St		Valparaiso	IN	46383	4/1/1949	notprovided			2194643697		6/20/2017	7/10/2017	
+Rohert	Yakes	2501 E State Route 89 A		Cottonwood	AZ	86326	5/13/1964	96249162900			9285923218		7/10/2017		
+Ronald	Lazer	301 Fairview Ave		ParkRidge	IL	60068	1/1/1945				8472129487		6/21/2017		
+Ronald	Lazer	310 Fairview Ave		ParkRidge	IL	60068	1/1/1945				8472129487		6/21/2017		
+Ronald	Nowak	44 Kingsview Ct.		Buffalo	NY	14221	12/8/1938				7166882444		6/2/2017	7/10/2017	
+Rose 	Stark	"830 Spruce St,"		Quincy	IL	62301	1/10/1951	12810			2172487955	rosestark90@gmail.com	6/26/2017		
+Rosemary	Gardner	1570 murells inlet			SC	29676	9/16/1955				8434503976		5/24/2017		
+Rosemary	Pilkerton	7133 Sanford Ct		Annandale	VA	22003	3/21/1952	936131404			7035738042	crastyrose16@cox.com	6/16/2017	7/10/2017	
+Roy Max	Crook	22 Shipwatch Rd		Savannah	GA	31410	5/11/1945				7703615343	roymcrook@gmail.com	6/22/2017		
+Roy Max	Reese	1604 Hoover St		New Holstein	WI	53061	8/2/1949	75000			9208272051	roydkathleen@hotmail.com	6/28/2017		
+Ruben	Shepat	6S xon Ln		Newport	VA	23601	4/9/1938	94604300400			7578819207		6/16/2017		
+Ruth Darlene	Carver	1560 St		Lawrence Grand Island	FL	32735	12/15/1944	1562			3526305101 / 3526696740	darcarver2@gmail.com	6/30/2017		
+Sabrina	Rogue	60 Grand view Dr	Apt 7	Thornville 	OH	43076	6/23/1961	475			6143008318	sabrinarogue@icloud.com	6/26/2017		
+Sandra	Penny	3426 Whitfield Ct		Elkhart	IN	46517	10/10/1950				5743709852	michgirld56@yahoo.com	6/27/2017		
+Sandra	Wilkes	560 Augusto Dr		Canton	GA	30115	10/11/1947	935720669			6784294972	sandrawilkes1@gmail.com	6/15/2017	7/10/2017	
+Sharon	Eckhardt	924 Cottage Rd		New Boston	IL	61272	2/26/1940	17200			3095878356		6/28/2017		
+Sharon	Nickels	97 Court ST		Bath	ME	4530	6/8/1951				2073192305		6/28/2017		
+Sharon	Thompson	6500 W Cold Sprint Rd		Greenfield	WI	53220	12/10/1951	70000			41445451683		6/16/2017	7/10/2017	
+Sheila	Ruscitti	9 Cheryl St.		Nashua	NH	3062	10/20/1942	854470490-00			6035981797		6/16/2017		
+Sheila	Schram	29255 Providence Rd		Temecula	CA	92951	4/17/1945	notavailable			6613132931	littleredreiter1@yahoo.com	6/20/2017		
+Shelly	Sykes	421 Madison Ln		Hamilton	NY	13346	2/21/1951				6072809959	syellehs@gmail.com	6/26/2017		
+Sheril	Lyons	P.O Box 103		Halsey	OR	97348	8/11/1951	7081720-01			5419910487	shermerch@gmail.com	6/30/2017		
+Sherry	alston	126 El LaKinley Cir	Unit101	Myrtle Beach	SC	29588	3/6/1956	99978			7432672736		6/20/2017		
+Sherry	Cheadle	147 E Reynolds St.		Cottage Grove	WI	53527	2/22/1948	915473719-00			6088430408		5-Jun	7/10/2017	
+Sherry	Linscott	704W Division St		Galva	IL	61434	5/29/1956	937785471-00			3099328308	tchgal1@yahoo.com	6/21/2017	7/10/2017	
+Shirley	Baisley	2257 S Crosscreek Ln		Boise	ID	83706	10/28/1951	notprovided			2088614345		6/15/2017	7/10/2017	
+Shirley	Killmeier	3040 Shelly Graham Dr		Graham	NC	28253	4/12/1945	68092			3363278238	shirleyk2@bellsouth.ner	6/21/2017		
+Shirley	Miller	663 sackman St		Mansfield 	OH	44128	10/23/1974				5675604044	shlliemiller1023@gmail.net	6/26/2017		
+Shirley	Russel	8072 S 1475 E Sandy		Sandy	UT	84093	12/13/1943				8015614592		6/16/2017		
+Soogie	Doodnath	2111 Carbine CT		Kissimmee	FL	34743	4/27/1959	934881130-00			4072180903	sdoodnath50@yahoo.com	7/7/2017		
+Stanford	Gillman	7270 Whitfield Ave		Boynton Beach	FL	33437	4/26/1931				5617427167	stanbar712@gmail.com	6/13/2017	7/10/2017	
+Stanley	Hampton	968 N Garsden Ave		Covina	CA	91724	5/26/1949				6263326613	shampton60@gmail.com	6/26/2017		
+Stanley	Grimm	1251 Sunny Creek DR		Green Bay	WI	54313	4/9/1943	70099			9204989065	grimms61@yahoo.com	6/29/2017		
+Steven	Jones	32909 S Wright Rd		Molalla	OR	97038	8/22/1948	notprovided			5033673249/5038298178		6/23/2017		
+STeven	Culnon	2659 Turtle Head Peak Dr		Las VEgas	NV	89135	12/17/1950	955201531-00			7028690925	cherylculnon@yahoo.com	7/7/2017		
+Susan	Blakelock	1991 Jack Rabbit Ln		New Bern 	NC	28562	10/28/1943	13509			2526361796	sblakelock@suddenlink.net	6/27/2017		
+Susan	Geiszler	9124Silk Threads Ave		Las Vegas	NV	89149	12/14/1946	notavailable			7029823269	biotechsue@gmail.com	6/27/2017		
+Susan	Kochnover	2015 owenby dr.		Tallahassee	FL	32308	7/24/1946				8508782299		5/24/2017	7/10/2017	
+Susan	Sherman	1207 Franklin St		Valparaiso	IN	46383	4/26/1951	notprovided			2194643697		6/20/2017	7/10/2017	
+Susan	Wulff	802 Steeplechase Rd		St Charles	IL	60174	1/5/1948	12809			6303772135	wulffs@earthlink.net	7/5/2017		
+Susan 	Fryc	7915 White St	 	Waterville	NY	13480	11/16/1951	15637			3158418260	pafryc@yahoo.com	6/27/2017		
+Susan 	Ribaudo	616 Osage Lake Dr		Cedar Hill	MO	63016	12/27/1948				6362743565	sue.ribaudo@yahoo.com	6/27/2017		
+Sydney	Flood	3673 Wassaw Ln NW		Berkeley Lake	GA	30096	7/9/2003	906898			7707136628		13-Jun		
+Sylvia	Macias	P.O Box 211 866		Dallas	TX	75211	8/10/1971	3086306-01	yes	yes	8173748277	macbs@att.net	6/28/2017		
+Sylvia	Skellenger	1913 Alyssas Dr		Manchaca	TX	78652	11/5/1948	13507			2813524949	sylvia.skellenger@aol.com	6/27/2017		
+Tamara Louis	Heggie	12101 Bell St		Amarillo	TX	79118	3/22/1959				8063368094	detasakah@hotmail.com	6/26/2017		
+Tammy 	Fischer	102 Rexford Rd	Apt 2	Syracuse	NY	13212	7/25/1965	13008			3152994497	tff725@gmail.com	6/26/2017		
+Tangee	Ladson	108 Brooks Blvd	Apt F1	Fort Valley	GA	31030-3541	9/30/1943	99981			4782255141	trentadad@hotmail.com	6/28/2017		
+Teri 	Voss	536 Dewey Ave		Edwardsville	IL	62025	4/18/1946	969359563-00			6184771500	tlvoss@yahoo.com	7/6/2017		
+Terrence	Jones	4601 Village Ln	Apt 2003	Baytown	TX	77521	9/29/1965	967333616			8158716893		6/24/2017		
+Terri	Smith	6055 Sailing Ct		Colorado Springs	CO	80918	9/20/1951	hcfaj9			7192019359	tzterrismith@gmail.com	6/19/2017	7/10/2017	
+Theresa	Wiant	429 E Grand ave. extension		Clarion	PA	16214	7/19/1965	12946			8143197113		5/24/2017		
+Thomas	Brown	135 Manor Blvd	Apt406	Naples	FL	34104	8/26/1942				9415854661		19-Jun	7/10/2017	
+Thomas	Donahue	123 Burns Terrace		PennYan	NY	14527	3/15/1947	937998849			6074221953	tdonahue37@gmail.com	6/20/2017	7/10/2017	
+Thomas	Gates	373 Rue Renee 		Saint Louis	MO	63122	9/22/1951	55400			3142929631		7/3/2017		
+Valerie	Henderson	5704 Terry Ave		Saint Louis	MO	63120	10/10/1954	937613622			3143851763	valerie0817@att.net	6/28/2017		
+Valerie	Valentine	44 New Zealand Rd		Seabrok 	NH	03874	11/19/1950	12927			6037602579	brandie9@comcast.net	6/26/2017		
+Vernis	Moreman	5806 Arbor Valley Dr.		Arlington	TX	76016	4/24/1947	HCFAU5			8174557446/8174557447		6/23/2017	7/10/2017	
+Vickie	Murphy	271 Kirkland Lane		Johnstown	CO	80534	2/2/1950	6733635-01			7202447287	1950vlmurphy@gmail.com	6/23/2017		
+Virginia	Beasly	3205 Nicklaus Ct		Fulton	MO	65251	10/18/1944	99932			5735927539	glbeasly@charter.com	6/21/2017		
+Virginia	Deluoco	919 Pincrest Rd		Girard	OH	44420	12/7/1958	10102			3303605100	virginiadeluoco@gmail.com	6/23/2017		
+Virginia	Obrien	220 Sedona Rd		Sedona	AZ	86351	1/16/1942	069754797-11			9283004749	gini2@jimgini.net	6/15/2017		
+Vivian	Maldonado	7907 Delight St	Apt104	San Atonio	TX	78224	9/19/1979	873351501			2109109356	hermelindasaenz@gmail.com	6/26/2017		
+Warren	Robinson	5154 Chasteal Trl		Raleigh	NC	27610	5/11/1946	917887974-00			9197409681	probinson27@nc.rr.com	6/26/2017		
+Waymond	Smith	2913 Alene Av 		Tracy	CA	95376	3/22/1939	13616			2098325857	waymondsmith.322@gmail.com	6/27/2017		
+William	Criscoe	260 Mack Rd		Seagrove	NC	27341	3/3/1938	928741523-00			3368792559	swcriscoe@rtmc.net	6/27/2017	7/10/2017	
+William	Deadmond	2516 30th Ave Ct		Moline	IL	61265	8/23/1942	12824			3097970463		6/27/2017	7/10/2017	
+William J	Williams	1050 County Rd 49		Tuskegee	IL	36083	11/26/1939	916361022-00			3347277326		6/27/2017		
+Willie	Wooley	5514 W Milada Dr		Laveen	AZ	85339	7/18/1942	793935901			6022724715/6026191524	wwooley@q.com	6/27/2017	7/10/2017	
+Yolanda	Weks	1533 Heather  Trace Ln		Winston Salem	NC	27127	4/22/1972				3367845604	yoyo798@yahoo.com	7/5/2017		
+Yvonne	Singley	2301 S Noble Ave		Springfield	IL	32704	6/18/1947	973025138-00			2175465143	yvonnesingley@comcast.net	6/29/2017		
+Zida	Tyc	1351 Gulf Blvd	Unit209	Cleawater	FL	33767	11/22/1939	940850844-00			7275965345	walterstyc@aol.com	6/27/2017		
+John E	Schubert	694 California Ave		East Galesburg	IL	61430	12/13/1938	960951928-00 / 17200			3093355945	jschubert19@gmail.com	7/11/2017		
+Val G	Schubert	694 California Ave		East Galesburg	IL	61430	11/20/1944	950429081-00 / 17200			3093355945	valschubert44@gmail.com	7/11/2017		
+Jacqueline	Thorpe	3381 Greenbriar Pkwy SW	Apt 315	Atlanta	GA	30331	8/15/1945	965235854-00			4045737209	churchgoer315@gmail.com	7/11/2017		
+Glenn	Mcqueen	535 Snow Hill Rd		Fayetteville	NC	28306	1/12/1952	960966135-00			9103087264	glenncq@embarqmail.com	7/11/2017		
+David	Mason	10401  Stirrup Way		Tampa 	FL	33626	10/26/1950	82075			8138541385	dfmasonii@gmail.com	7/11/2017		
+Daneil	Reilly	2937 Westbrook Dr		Fort Wayne	IN	46805	11/11/1946	904959724-00			2604839999	danielreilly@yahoo.com	7/11/2017		
+Joe H	Cooley Jr	3003 Tim Tam Trail		Versailles	KY	40383	11/29/1950	965921131-00			8598736806	icooley1950@aol.com	7/11/2017		
+John 	Manniing	1524 Stewart St		West Plains	MO	65775	5/1/1942				4172543627	justmelookingjohn@aol.com	7/11/2017		
+Curtis	Akers	7931 N 2600 East Rd		Le Roy	IL	61752	7/19/1952	901034427-00			3095309220	crts52akers@gmail.com	7/11/2017		
+Paula	Baugman	25707 Hunt Trail		South Bend 	IN	46628	11/1/1952				5742204018		7/11/2017		
+Julie	Toigo	1 Gramercy Dr		Piscataway Township	NJ	8854	8/16/1938	710712			7329855107	jtoigo@optonline.net	7/11/2017		
+Frances	Kerr	733 Plantation Estates Dr	Apt E-114	Matthews 	NC	28105	9/25/1928	948117778-00			7048460630	fkgkerr@yahoo.com	7/12/2017		
+Anne	Townes	2516 Suffolk Ave		High Point	NC	27265	12/2/1956				3363072166		7/12/2017		
+Karen	Mickelson	1213 Overstreet Dr		Prescott	AZ	86303	9/17/1962	945945728-00			6026210505	black1111962@yahoo.com	7/12/2017		
+Peggy	Tennyson	1440 Forum Dr	Apt 316	Rolla	MO	65401	1/6/1966	939028993	yes	yes	5736476109	peggysue4512@hotmail.com	7/12/2017		
+Nicholas	Mentesana	12 Oak Ct		Fanwood	NJ	7023	7/9/1942	90743993-00			9083228031	nment@verizon.net	7/12/2017		
+Linda	Mentesana	3580 Kinsrow Ave		307 Eugene	OR	97401	4/5/1943	399379632-11			5414841807	lindalovesmickey@yahoo.com	7/12/2017		
+Carleen	Brinkley	1820 Surf and Sand Dr		Bullhead City	AZ	86442	1/27/1962	108941351			9282992417	carleendrinkley@gmail.com	7/12/2017		
+Mary	Macara	907 Cedar Ct		Port Washington	WI	53074	10/6/1960				2623885616	maryhmacara@gmail.com	7/12/2017		
+Robert	Guest Jr	1841 Babbling Brk NW		Acworth 	GA	30102	6/24/1948				7705291751		7/12/2017		
+Sharon	Deadmond	2516 30th Ave Ct		Moline	IL	61265	8/26/1943	938189247-00			3097970463	sniffles43@gmail.com	7/12/2017		
+Robert	Woodley	5196 Innesbrooke Ct		Hamburg	NY	14075	5/29/1951	936694242			7164324847	bud529@aol.com	7/12/2017		
+Deborah 	Beavers	10612 Lake Pl		Zebulon	NC	27597	4/8/1951	924766205-00			9192699315	kbcbeavers@aol.com	7/13/2017		
+Wanda	Lucht	"7805 E Culver St,"		Mesa	AZ	85207	9/27/1942	8630071			4809869517	wandalucht@aol.com	7/14/2017		
+Gary	Lucht	"7805 E Culver St,"		Mesa	AZ	85207	7/20/1940	8713097			4809869517	wandalucht@aol.com	7/14/2017		
+Vickie	Conner	"14331 Lourdes Dr,"		Huoston	TX	77049	2/14/1968	917598952-00			8324576288	vpennington1968@yahoo.com	7/14/2017		
+Joseph 	Mozjesic	"2435 W Indian School Rd,"	lot 34	Phoenix City	AZ	85015	9/23/1948	8535036-01			4805290984		7/14/2017		
+Gail 	Dolan	"3619 Bomar Rd,"		Douglasville	GA	30135	6/17/1942				7703783149	bobandgaildolan@bellsouth/net	7/14/2017		
+deborah 	butler	"130 Albert Grimsley Dr,,"		Cochran	GA	31014	9/7/1951				4782309692	debbiecbutler@hotmail.com	7/14/2017		
+Janette	Page	7112  Pan American E  Freeway NE	405	Albuquerque	NM	87109	10/8/1948	13651			5059774444	jpage37@yahoo.com	7/17/2017		
+Janet	Spagner	712 McAdams St		Greenville	IL	62246	2/16/1943	121810			6186642687	2nanajan@sbcglobal.net	7/17/2017		
+Debora	Barr	P.O Box 193		Cornville	AZ	86325	9/16/1952				6022062268	lakeboatin09@hotmail.com	7/18/2017		
+Homer	Barret	113 Hale Mountain Ct		Hiram	GA	30141	12/29/1948	12472	yes	yes	7705059030	homerbarrett@live.com	7/18/2017		
+Linda Anne	Valentino	10630 Tuttle 		Trevor	WI	53179	11/28/1945	12810	yes	yes	2628629228	lindaannev@gmail.com	7/18/2017		
