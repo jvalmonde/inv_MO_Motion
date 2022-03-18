@@ -1,0 +1,8 @@
+--================ Merges all raf into one data set
+CREATE OR REPLACE TABLE INV_motion.GRA252_Key_Accounts_Characteristics_raf AS 
+SELECT mbr.*, r15.SilverTotalScore Silver15, r16.SilverTotalScore Silver16, r17.SilverTotalScore Silver17, r18.SilverTotalScore Silver18
+FROM INV_motion.GRA252_Key_Accounts_Characteristics mbr
+LEFT JOIN INV_motion.GRA252_raf_2015 r15 ON mbr.indv_sys_id = r15.UniqueMemberID
+LEFT JOIN INV_motion.GRA252_raf_2016 r16 ON mbr.indv_sys_id = r16.UniqueMemberID
+LEFT JOIN INV_motion.GRA252_raf_2017 r17 ON mbr.indv_sys_id = r17.UniqueMemberID
+LEFT JOIN INV_motion.GRA252_raf_2018 r18 ON mbr.indv_sys_id = r18.UniqueMemberID

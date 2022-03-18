@@ -1,0 +1,71 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage[margin=1in]{geometry}
+\usepackage{pdflscape}
+\usepackage{colortbl}
+\usepackage[table]{xcolor}
+\definecolor{lightgray}{gray}{0.9}
+\author{}
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\title{All Savers Motion Wave 2 Power Calculation: GP0284}
+\maketitle
+\clearpage
+
+<<>>=
+library(data.table)
+library(savvy)
+
+allM_dat=data.table(read.odbc("Devsql14pdb_abw",dbQuery='select * from [pdb_abw].[dbo].[GP0284_MemberRegistrations]'))
+tmp=allM_dat[Group=='Mail Recipient',.N,by=LookupRuleGroupid][,list(N)]
+pcp_rate=mean(allM_dat[TreatmentName=='Control' & Group=='Mail Recipient' & (is.na(registeredDate) | registeredDate>='2016-04-14')]$IsRegistered)
+tmp[,c('ID','treat'):=list(1:nrow(tmp),rep(c('Control','Treatment')))]
+tmp[treat=='Control',guess:=rbinom(1,N,pcp_rate),by=ID] # control
+tmp[treat=='Treatment',guess:=rbinom(1,N,pcp_rate),by=ID] # treatment
+tmp[,Prop:=guess/N]
+coef(summary(glm(guess~treat,data=tmp,family='poisson')))[2,4]
+sd_data=sd(tmp$Prop)
+sd_data
+
+
+tmp2=data.table(N=seq(5,800,5))
+power.sim=function(N.bus,members=tmp$N,diff_rate=.05,seed=9287575,nsim=1000){
+  set.seed(seed)
+  pval.comp=numeric()
+  for(i in 1:nsim){
+    tmp3=data.table(N=sample(members,N.bus*2,,replace=TRUE))
+    tmp3[,c('ID','treat'):=list(1:nrow(tmp3),rep(c('Control','Treatment')))]
+    tmp3[treat=='Control',guess:=rbinom(1,N,pcp_rate),by=ID] # control
+    tmp3[treat=='Treatment',guess:=rbinom(1,N,pcp_rate+diff_rate),by=ID] # treatment
+    pval.comp[i]=coef(summary(glm(guess~treat+offset(log(N)),data=tmp3,family='poisson')))[2,4]
+  }
+  return(mean(pval.comp<.05))
+}
+
+
+date()
+tmp2[113:160,c('Diff_.01','Diff_.02','Diff_.03','Diff_.05','Diff_.1'):=list(power.sim(N,tmp$N,.01,nsim=6000),power.sim(N,tmp$N,.02,nsim=6000),power.sim(N,tmp$N,.03,nsim=6000),power.sim(N,tmp$N,.05,nsim=6000),power.sim(N,tmp$N,.1,nsim=6000)),by=N]
+date()
+
+pdf('/work/dhalterman/AllSaversMotionGP0284/Power_Wave2.pdf')
+ggplot(tmp2,aes(x=N,y=Diff_.05))+
+  geom_line(aes(color='Mean Diff of 0.05'))+
+  geom_line(aes(y=Diff_.1,color='Mean Diff of 0.1'))+
+  geom_line(aes(y=Diff_.01,color='Mean Diff of 0.01'))+
+  geom_line(aes(y=Diff_.02,color='Mean Diff of 0.02'))+
+  geom_line(aes(y=Diff_.03,color='Mean Diff of 0.03'))+
+  xlab('Number of Companies per Treatment')+ylab('Power')+
+  scale_color_discrete(name="")+
+  scale_x_continuous(breaks=seq(0,800,50),labels=seq(0,800,50))+
+  scale_y_continuous(breaks=seq(0,1,.1),labels=seq(0,1,.1))+
+  theme(legend.position='bottom')
+dev.off()
+
+saveRDS(tmp2,'~/GP0284-Research-MotionRegistration/PowerCurve2.RDS')
+
+@
+
+\end{document}

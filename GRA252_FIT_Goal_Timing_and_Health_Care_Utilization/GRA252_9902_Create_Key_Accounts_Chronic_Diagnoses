@@ -1,0 +1,26 @@
+CREATE OR REPLACE TABLE INV_motion.GRA252_Key_Accounts_Chronic_Diagnoses AS
+
+SELECT 
+     mbr.indv_sys_id
+    ,mbr.enrolled_id
+    ,mbr.program_start_dt
+    ,MIN(DATE_DIFF(dt.full_dt,mbr.birth_date,DAY)/365.25) age_at_dx
+    ,MIN(dt.full_dt) first_dx_date
+    ,dx.diag_cd
+    ,dx.diag_full_desc
+
+FROM INV_motion.GRA252_Dim_Participants mbr
+JOIN ( SELECT Indv_Sys_Id, Diag_1_Cd_Sys_Id diag_cd_sys_id, Dt_Sys_Id FROM MiniHPDM.Fact_Claims
+         UNION ALL SELECT Indv_Sys_Id, Diag_2_Cd_Sys_Id, Dt_Sys_Id FROM MiniHPDM.Fact_Claims
+         UNION ALL SELECT Indv_Sys_Id, Diag_3_Cd_Sys_Id, Dt_Sys_Id FROM MiniHPDM.Fact_Claims
+      ) AS claims ON mbr.indv_sys_id = claims.Indv_Sys_Id
+JOIN MiniHPDM.Dim_Date dt ON claims.Dt_Sys_Id = dt.dt_sys_id
+JOIN MiniHPDM.Dim_Diagnosis_Code dx ON dx.diag_cd_sys_id = claims.diag_cd_sys_id
+
+WHERE TRIM(UPPER(dx.chrnc_flg_nm)) ="CHRONIC DX"
+
+GROUP BY mbr.indv_sys_id
+    ,mbr.enrolled_id
+    ,mbr.program_start_dt
+    ,dx.diag_cd
+    ,dx.diag_full_desc

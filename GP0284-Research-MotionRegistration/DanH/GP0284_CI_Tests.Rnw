@@ -1,0 +1,93 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage[margin=1in]{geometry}
+\usepackage{pdflscape}
+\author{}
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\title{All Savers Motion, GP0284: Business Level}
+\maketitle
+\clearpage
+
+<<results=hide,echo=FALSE>>=
+library(data.table)
+library(savvy)
+library(xtable)
+library(survival)
+
+all_dat=data.table(read.odbc("Devsql14pdb_abw",dbQuery='select * from [pdb_abw].[dbo].[GP0284_MemberRegistrations]'))
+# all_dat=all_dat[Group=='Mail Recipient']
+all_dat=all_dat[Treatment!='c2']
+# all_dat=all_dat[is.na(registeredDate) | registeredDate>='2016-04-14']
+setkeyv(all_dat,c('registeredDate'))
+
+all_dat[,'OthersRegistered':=as.factor(ifelse(GroupRegistrationRateatStart==0 | is.na(GroupRegistrationRateatStart),'No','Yes'))]
+all_dat[,c('registeredDate','MemberEffectiveDate','GroupFirstStartDate','Birthdate'):=list(as.Date(registeredDate,tz=''),as.Date(MemberEffectiveDate,tz=''),as.Date(GroupFirstStartDate,tz=''),as.Date(Birthdate,tz=''))]
+all_dat[,age:=round(as.numeric(difftime(as.Date(Sys.time(),tz=""),Birthdate)/364.25),0),by=Birthdate]
+all_dat[,BinAge:=ifelse(age>=38,'Older','Younger')]
+all_dat[,Registered:=ifelse(!is.na(registeredDate),1,0)]
+all_dat[,c('TreatmentName','TreatmentMethod','TreatmentFormat','TreatmentDestination'):=list(factor(TreatmentName,levels=c('Control','You won/Letter/Work','Comic (tribal appeal)/Postcard/Work','Tap negative energy/Postcard/Work','Easy money/Letter/Work','Tap negative energy/Letter/Home','Comic (tribal appeal)/Letter/Home','You won/Postcard/Home','Easy money/Postcard/Home')),factor(TreatmentMethod,levels=c('Control','Easy money','You won','Tap negative energy','Comic (tribal appeal)')),
+                                                                             factor(TreatmentFormat,levels=c('Control','Letter','Postcard')),
+                                                                             factor(TreatmentDestination,levels=c('Control','Home','Work')))]
+all_dat[,BenefitEndDate:=MemberEffectiveDate+60]
+all_dat=all_dat[is.na(MemberEligibilityEndDate)]
+
+tmp1=round(difftime('2016-04-14',as.Date(Sys.time(),tz=""),units='days'),0)
+tmp=data.table(Dates=seq(as.Date('2016-04-14')+tmp1,as.Date(Sys.time(),tz=""),by="1 day"),Value=0)
+
+all_dat2=all_dat[Group=='Mail Recipient']
+all_dat2=all_dat2[is.na(registeredDate) | registeredDate>='2016-04-14']
+
+ggplot(all_dat2[,.N,by=LookupRuleGroupid],aes(x=N))+
+  geom_histogram(binwidth=1)+
+  xlab('Number of Members')+ylab('Number of Companies')
+
+tmp=all_dat2[,list(sum(Registered),.N,sum(Registered)/.N,sum(Gendercode=='M'),sum(BinAge=='Older')),by=c('LookupRuleGroupid','TreatmentMethod','OthersRegistered','GroupRegistrationRateatStart')]
+setnames(tmp,names(tmp),c('GroupID','TreatmentMethod','OthersRegistered','GroupRegistrationRateatStart','Registered','Total','Proportion','NumMale','NumOlder'))
+tmp=tmp[,list(GroupID,Registered,Total,Proportion,NumMale/sum(Total),NumOlder/sum(Total),sum(Total)),by=c('TreatmentMethod','OthersRegistered','GroupRegistrationRateatStart')]
+setnames(tmp,c('V5','V6','V7'),c('PropMale','PropOlder','TreatmentTotal'))
+
+lm1=glm(Registered~TreatmentMethod,data=all_dat2,family='binomial')
+summary(lm1)
+
+lm2=lm(Proportion~-1+TreatmentMethod,data=tmp,weights=Total/TreatmentTotal)
+summary(lm2)
+hist(resid(lm2))
+c(.093-1.96*.01341,.093,.093+1.96*.01341)
+
+glm1=glm(Registered~TreatmentMethod+offset(log(Total)),data=tmp,family='quasipoisson')
+summary(glm1)
+hist(fitted(glm1))
+c(exp(-2.43587-1.96*.0995),exp(-2.43587),exp(-2.43587+1.96*.0995))
+
+library(MASS)
+glm2=glm.nb(Registered~TreatmentName+PropMale+PropOlder+GroupRegistrationRateatStart+offset(log(Total)),init.theta=1.7,data=tmp)
+summary(glm2)
+hist(fitted(glm2))
+
+prop.test(c(60,37),c(566,567))
+
+library(lme4)
+glmm1=glmer(Registered~TreatmentMethod+BinAge+Gendercode+(1|LookupRuleGroupid),data=all_dat2,family='binomial')
+all_dat2[,glmm1_fitted:=fitted(glmm1)]
+all_dat2[,mean(glmm1_fitted),by=TreatmentMethod]
+summary(glmm1)
+re=ranef(glmm1)
+re=data.table(BID=as.integer(rownames(re[[1]])),RE=re[[1]])
+setnames(re,'RE.(Intercept)','RE')
+setkeyv(re,'BID') ; setkeyv(all_dat2,'LookupRuleGroupid')
+all_dat2=all_dat2[re]
+all_dat2[,glmm1_fitted:=fitted(glmm1)]
+
+
+glmm2=glmer(Registered~TreatmentMethod+offset(log(Total))+(1|GroupID),data=tmp,family='poisson')
+summary(glmm2)
+hist(fitted(glmm2))
+sglmm2=coef(summary(glmm2))
+cbind(exp(sglmm2[,1]-1.96*sglmm2[,2]),exp(sglmm2[,1]),exp(sglmm2[,1]+1.96*sglmm2[,2]))
+@
+
+\end{document}

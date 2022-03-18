@@ -1,0 +1,680 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage[margin=1in]{geometry}
+\usepackage{pdflscape}
+\usepackage{colortbl}
+\usepackage[table]{xcolor}
+\definecolor{lightgray}{gray}{0.9}
+\author{}
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\title{PCP Selection Utilization Analysis: Discussion}
+\maketitle
+\clearpage
+
+\section{Details of the Data}
+\begin{itemize}
+\item Medicare FFS Claims data (MINI\_OV)\\
+\item supplemented with Stars data mart (provides Assigned and Associated MPIN)\\
+\item Claims are from the year 2014\\ 
+\end{itemize}
+
+
+\section{Terminology/Definitions}
+\begin{itemize}
+\item Match=1 : The Assigned MPIN (chosen by the member or assigned to the member) and Associated MPIN (where the member actually had primary care services) are the same\\
+\item Match=0 : Either there is not an Assigned MPIN, or the Assigned MPIN and the Associated MPIN did not match\\
+\item Assigned : The member had a MPIN assigned to them either by choice or give to them\\ 
+\item Sticker : The member only had 1 PCP\\
+\item Mover : The member had more than 1 PCP, but "moved" from one to the other\\
+\item Divider : Had more than 1 PCP, but "divide" visits between them (e.g. had 2 PCPs at the same time)\\
+\end{itemize}
+
+<<results=hide,echo=FALSE>>=
+library(data.table)
+library(savvy)
+library(xtable)
+
+all_dat=data.table(read.odbc("Devsql10pdb_PCPSelection",dbQuery='select * from [pdb_PCPSelection].[dbo].[MbrProv_10]'))
+all_dat=all_dat[!is.na(SavvyHICN) & !is.na(Provider_MPIN)]
+setnames(all_dat,c('Splitter','Switcher'),c('Divider','Mover'))
+member_dat=data.table(read.odbc("Devsql10pdb_PCPSelection",dbQuery='select * from [pdb_PCPSelection].[dbo].[MbrClass_10]'))
+setnames(member_dat,c('Splitter','Switcher'),c('Divider','Mover'))
+member_dat[,Group:=list(paste(Match,'|',Mover,'|',Divider,'|',Sticker,sep=""))]
+member_dat[,Assigned:=ifelse(!is.na(Assigned_MPIN),1,0)]
+member_dat[,"Group":=ifelse(Sticker==1,'Sticker',ifelse(Mover==1,'Mover',ifelse(Divider==1,'Divider','Unknown')))]
+member_dat[,Group:=factor(Group,levels=c('Unknown','Sticker','Divider','Mover'))]
+
+member_dat[,Associated_MPIN2:=Associated_MPIN]
+setkeyv(member_dat,c('SavvyHICN','Associated_MPIN2')) ; setkeyv(all_dat,c('SavvyHICN','Provider_MPIN'))
+member_dat=all_dat[,list(SavvyHICN,Provider_MPIN,QLTY_FLAG,EFNCY_FLAG)][member_dat,nomatch=NA]
+member_dat[,dups:=list(duplicated(SavvyHICN))]
+member_dat=member_dat[dups==FALSE]
+member_dat[,dups:=NULL]
+@
+
+<<PCPExp,results=hide,echo=FALSE>>=member_dat
+setkeyv(member_dat,'SavvyHICN') ; setkeyv(all_dat,'SavvyHICN') 
+pcp_dat=all_dat[member_dat[,list(SavvyHICN,Assigned_MPIN,Associated_MPIN,Match)],nomatch=0][PCP_Flag==1]
+pcp_dat2=pcp_dat[,.N,by=SavvyHICN]
+member_dat2=member_dat[pcp_dat2]
+member_dat2[,PCP_Seen:=ifelse(N==1,'1 PCP',ifelse(N<6,"2 -5 PCPs","6+ PCPs"))]
+setnames(member_dat2,'N','PCPs')
+member_dat2[,PCP_Seen_V2:=ifelse(PCPs==1,'1 PCP',ifelse(PCPs<4,"2 -3 PCPs",ifelse(PCPs<6,"4-5 PCPs","6+")))]
+pcp_dat3=pcp_dat[!is.na(Associated_MPIN),list(DR_SrvcCnt[Provider_MPIN==Associated_MPIN],sum(DR_SrvcCnt),Network_Flag[Provider_MPIN==Associated_MPIN]),by=SavvyHICN]
+setnames(pcp_dat3,c('V1','V2','V3'),c('Visits_Associated','Visits_Total','Network_Flag'))
+member_dat2=member_dat2[pcp_dat3,nomatch=0]
+member_dat2[is.na(Visits_Associated),Visits_Associated:=0]
+pcp_dat4=all_dat[member_dat[,list(SavvyHICN,Assigned_MPIN,Associated_MPIN,Match)],nomatch=0]
+pcp_dat4=pcp_dat4[,.N,by=SavvyHICN]
+member_dat2=member_dat2[pcp_dat4,nomatch=0]
+setnames(member_dat2,'N','NumDRs')
+member_dat2[,c('QLTY_FLAG','EFNCY_FLAG'):=list(factor(ifelse(QLTY_FLAG==1,'Yes',ifelse(QLTY_FLAG==0,'No','Unk'))),factor(ifelse(EFNCY_FLAG==1,'Yes',ifelse(EFNCY_FLAG==0,'No','Unk'))))]
+member_dat2[is.na(QLTY_FLAG),QLTY_FLAG:='Unk']
+member_dat2[is.na(EFNCY_FLAG),EFNCY_FLAG:='Unk']
+# member_dat2[EFNCY_FLAG=='Yes',QLTY_FLAG:='No']
+member_dat2[,PremiumDesignation:=ifelse(QLTY_FLAG=='Yes' & EFNCY_FLAG=='Yes','Premium',ifelse(QLTY_FLAG=='Yes' & EFNCY_FLAG=='No','Quality','None'))]
+member_dat2[,dups:=list(duplicated(SavvyHICN))]
+
+tmp1=all_dat[member_dat2][Provider_MPIN==Associated_MPIN,list(Specialty,Age,Group),by=SavvyHICN][,list(.N,min(Age),max(Age),sum(Group=='Sticker'),sum(Group=='Divider'),sum(Group=='Mover')),by=Specialty][order(-N)]
+setnames(tmp1,names(tmp1),c('Specialty','N','Min_Age','Max_Age','Num_Stickers','Num_Dividers','Num_Movers'))
+tmp2=all_dat[member_dat2][Provider_MPIN==Assigned_MPIN,list(Specialty,Age,Group),by=SavvyHICN][,list(.N,min(Age),max(Age),sum(Group=='Sticker'),sum(Group=='Divider'),sum(Group=='Mover')),by=Specialty][order(-N)]
+setnames(tmp2,names(tmp2),c('Specialty','N','Min_Age','Max_Age','Num_Stickers','Num_Dividers','Num_Movers'))
+# library(openxlsx)
+# setwd('/work/dhalterman/GP0261_PCPSelection')
+# MedicarePCPs <- createWorkbook()
+# addWorksheet(MedicarePCPs, "Actual")
+# writeData(MedicarePCPs,1,tmp1,rowNames=FALSE)
+# addWorksheet(MedicarePCPs, "Assigned")
+# writeData(MedicarePCPs,2,tmp2,rowNames=FALSE)
+# saveWorkbook(MedicarePCPs,file='MedicarePCPs.xlsx',overwrite=TRUE)
+
+@
+
+\clearpage
+\section{Descriptive Summary}
+<<results=hide,echo=FALSE>>=
+match_tab=member_dat[,list(.N,mean(Assigned),mean(Match[Assigned==1])),keyby=c('Group')]
+setnames(match_tab,c('V2','V3'),c('Proportion Assigned','Proportion Match | Assigned'))
+xtab_match=xtable(match_tab,caption='Proportion of Individuals with Match and Assigned, by Group',digits=c(0,0,0,3,3))
+align(xtab_match)="lc|c|cc"
+
+type_tab=member_dat[,list(.N,mean(Mover),mean(Divider),mean(Sticker)),by=c('Match','Assigned')]
+setnames(type_tab,c('V2','V3','V4'),c('Proportion Mover','Proportion Divider','Proportion Sticker'))
+type_tab[,'Proportion Unknown':=list(1-sum(.SD)),by=c('Match','Assigned'),.SDcols=c(4:6)]
+setkeyv(type_tab,c('Assigned','Match'))
+xtab_type=xtable(type_tab,caption='Proportion of Individuals that are Mover, Divider, Sticker by Match',digits=c(0,0,0,0,3,3,3,3))
+align(xtab_type)="lcc|c|cccc"
+
+mean_tab1=member_dat[,list(.N,mean(Total_IP_Spend,na.rm=TRUE),mean(Total_OP_Spend,na.rm=TRUE),mean(Total_DR_Spend,na.rm=TRUE),mean(Total_ER_Spend,na.rm=TRUE),mean(Total_Spend,na.rm=TRUE),mean(RAF,na.rm=TRUE)),keyby=c('Group')]
+setnames(mean_tab1,names(mean_tab1),c('Group','N','IP Spend','OP Spend','DR Spend','ER Spend','Total','Mean RAF'))
+xtab_mean1=xtable(mean_tab1,caption='Average Spend by Group',digits=c(0,0,0,0,0,0,0,0,2))
+median_tab1=member_dat[,list(.N,quantile(Total_IP_Spend,.5,na.rm=TRUE),quantile(Total_OP_Spend,.5,na.rm=TRUE),quantile(Total_DR_Spend,.5,na.rm=TRUE),quantile(Total_ER_Spend,.5,na.rm=TRUE),quantile(Total_Spend,.5,na.rm=TRUE),quantile(RAF,.5,na.rm=TRUE)),keyby=c('Group')]
+setnames(median_tab1,names(median_tab1),c('Group','N','IP Spend','OP Spend','DR Spend','ER Spend','Total','Median RAF'))
+xtab_median1=xtable(median_tab1,caption='Median Spend by Group',digits=c(0,0,0,0,0,0,0,0,2))
+@
+
+<<Tables_summary,results=tex,echo=FALSE>>=
+row_add=paste("\\hline Overall&",nrow(member_dat),'&',round(mean(member_dat$Assigned),3),'&',round(mean(member_dat[Assigned==1]$Match),3),"\\\\")
+print(xtab_match, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE), add.to.row=list(pos=list(4),command=row_add))
+row_add=paste("\\hline \\multicolumn{2}{r|}{Overall}&",nrow(member_dat),'&',round(mean(member_dat$Mover),3),"&",round(mean(member_dat$Divider),3),'&',round(mean(member_dat$Sticker),3),'&',round(nrow(member_dat[Mover==0 & Sticker==0 & Divider==0])/nrow(member_dat),3),"\\\\")
+print(xtab_type, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE), add.to.row=list(pos=list(3),command=row_add))
+@
+
+<<Tables,results=tex,echo=FALSE>>=
+print(xtab_mean1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+print(xtab_median1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+<<results=hide,echo=FALSE>>=
+hcc_dat=data.table(read.odbc('Devsql10pdb_PCPSelection',dbQuery='select * from pdb_PCPSelection.dbo.HCC_Descriptions'))
+setnames(hcc_dat,'TermLabel','Label')
+setkeyv(hcc_dat,c('Term'))
+tmp=member_dat[,list(c(round(unlist(lapply(.SD,mean)),5)),names(member_dat)[28:130]),by=Group,.SDcols=names(member_dat)[28:130]]
+setnames(tmp,names(tmp),c('Group','Prop','HCC'))
+setkeyv(tmp,c('HCC'))
+tmp=hcc_dat[tmp]
+tmp[is.na(Label),Label:=Term]
+
+setkeyv(tmp,c('Group','Prop'))
+tmp[,Rank:=length(Term):1,by=Group]
+tmp2=tmp[Rank<=20]
+setkeyv(tmp2,c('Group','Rank'))
+setnames(tmp2,names(tmp2),c('HCC','HCC Label','Group','Proportion','Rank'))
+# View(tmp2)
+tmp3=tmp2[Group!='Unknown',list(Rank[Group=='Sticker'],paste(Rank[Group=='Sticker'],' (',round(Proportion[Group=='Sticker'],3),')',sep=""),paste(Rank[Group=='Mover'],' (',round(Proportion[Group=='Mover'],3),')',sep=""),paste(Rank[Group=='Divider'],' (',round(Proportion[Group=='Divider'],3),')',sep="")),by=c('HCC','HCC Label')]
+setnames(tmp3,c('V1','V2','V3','V4'),c('StickerRank','Sticker','Mover','Divider'))
+tmp3[Sticker==' ()',Sticker:=NA]
+tmp3[Mover==' ()',Mover:=NA]
+tmp3[Divider==' ()',Divider:=NA]
+xtab_hcc=xtable(tmp3[order(StickerRank),lapply(.SD,as.character),.SDcols=c('HCC','HCC Label','Sticker','Mover','Divider')],caption='HCC Rank by Group',digits=c(0,0,0,0,0,0))
+@
+
+<<Table_HCC,results=tex,echo=FALSE>>=
+print(xtab_hcc, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE),size="\\tiny")
+@
+
+<<Specialist,results=hide,echo=FALSE>>=
+setkeyv(member_dat2,c('SavvyHICN')) ; setkeyv(all_dat,c('SavvyHICN'))
+tmp=member_dat2[,list(SavvyHICN,Group)][all_dat[PCP_Flag!=1,list(SavvyHICN,Specialty,DR_SrvcCnt)],nomatch=0]
+tmp2=tmp[!is.na(Specialty),.N,by=c('Group','Specialty')][,list(Specialty,rank(-N)),by=Group][V2<=20]
+setkeyv(tmp2,c('Group','V2'))
+tmp2=tmp2[,list(V2[Group=='Sticker'],V2[Group=='Mover'],V2[Group=='Divider']),by=Specialty]
+setnames(tmp2,names(tmp2),c('Specialty','Stickers','Movers','Dividers'))
+# tmp2
+xtab_special=xtable(tmp2,caption='Specialist Rank by Group',digits=c(0,0,0,0,0))
+
+# setkeyv(member_dat2,c('SavvyHICN')) ; setkeyv(all_dat,c('SavvyHICN'))
+# tmp=member_dat2[,list(SavvyHICN,Group)][all_dat[PCP_Flag!=1,list(SavvyHICN,Specialty,DR_SrvcCnt)],nomatch=0]
+# tmp2=tmp[!is.na(Specialty),sum(DR_SrvcCnt),by=c('Group','Specialty')][,list(Specialty,rank(-V1)),by=Group][V2<=20]
+# setkeyv(tmp2,c('Group','V2'))
+# tmp2=tmp2[,list(Specialty[Group=='Sticker'],Specialty[Group=='Divider'],Specialty[Group=='Mover'])]
+# setnames(tmp2,names(tmp2),c('Stickers','Dividers','Movers'))
+# View(tmp2)
+@
+
+<<Table_Special,results=tex,echo=FALSE>>=
+print(xtab_special, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+<<results=hide,echo=FALSE>>=
+tmp=member_dat2[,list(mean(QLTY_FLAG=='Yes'),mean(QLTY_FLAG=='No'),mean(EFNCY_FLAG=='Yes'),mean(EFNCY_FLAG=='No')),by=Group]
+setnames(tmp,names(tmp),c('Group','AVG QLTY_Yes','AVG QLTY_No','AVG EFNCY_Yes','AVG EFNCY_No'))
+# View(tmp)
+xtab_Premium=xtable(tmp,caption='Average Quality and Efficent PCP by Group',digits=c(0,0,3,3,3,3))
+@
+
+<<Table_Premium,results=tex,echo=FALSE>>=
+print(xtab_Premium, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+<<ClusterServiceCounts,results=hide,echo=FALSE>>=
+set.seed(2907554)
+member_dat2[,VisitCluster:=list(kmeans(cbind((Total_IP_SrvcCnt-mean(Total_IP_SrvcCnt))/sd(Total_IP_SrvcCnt),(Total_OP_SrvcCnt-mean(Total_OP_SrvcCnt))/sd(Total_OP_SrvcCnt),(Total_DR_SrvcCnt-mean(Total_DR_SrvcCnt))/sd(Total_DR_SrvcCnt),(Total_ER_SrvcCnt-mean(Total_ER_SrvcCnt))/sd(Total_ER_SrvcCnt),(Total_PCP_SrvcCnt-mean(Total_PCP_SrvcCnt))/sd(Total_PCP_SrvcCnt)),3)$cluster)]
+member_dat2[,VisitCluster:=factor(ifelse(VisitCluster==1,'Low',ifelse(VisitCluster==2,'High','Medium')),levels=c('Low','Medium','High'))]
+member_dat2[,list(mean(Total_IP_SrvcCnt),mean(Total_OP_SrvcCnt),mean(Total_DR_SrvcCnt),mean(Total_ER_SrvcCnt),mean(Total_PCP_SrvcCnt),mean(Total_RX_Scripts)),by=VisitCluster]
+tmp=member_dat2[,list(.N,mean(Total_IP_SrvcCnt),mean(Total_OP_SrvcCnt),mean(Total_DR_SrvcCnt),mean(Total_ER_SrvcCnt),mean(Total_PCP_SrvcCnt),mean(Total_RX_Scripts)),by=VisitCluster]
+setnames(tmp,names(tmp),c('VisitCluster','N','AVG IP','AVG OP','AVG DR','AVG ER','AVG PCP','AVG RX'))
+setkeyv(tmp,'VisitCluster')
+xtab_Visit1=xtable(tmp,caption='Average Service Counts by Cluster',digits=c(0,0,0,3,3,3,3,3,3))
+# View(tmp[order(VisitCluster)])
+
+tmp2=member_dat2[,list(.N,mean(Total_IP_SrvcCnt),mean(Total_OP_SrvcCnt),mean(Total_DR_SrvcCnt),mean(Total_ER_SrvcCnt),mean(Total_PCP_SrvcCnt),mean(Total_RX_Scripts)),by=c('VisitCluster','Group')]
+setnames(tmp2,names(tmp2),c('VisitCluster','Group','N','AVG IP','AVG OP','AVG DR','AVG ER','AVG PCP','AVG RX'))
+setkeyv(tmp2,c('VisitCluster','Group'))
+# View(tmp2[order(VisitCluster)])
+xtab_Visit2=xtable(tmp2,caption='Average Service Counts by Cluster and Group',digits=c(0,0,0,0,3,3,3,3,3,3))
+@
+
+<<Table_cluster,results=tex,echo=FALSE>>=
+print(xtab_Visit1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+print(xtab_Visit2, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+<<Tables2,results=hide,echo=FALSE>>=
+mean_tab2=member_dat2[,list(.N,mean(Total_IP_Spend,na.rm=TRUE),mean(Total_OP_Spend,na.rm=TRUE),mean(Total_DR_Spend,na.rm=TRUE),mean(Total_ER_Spend,na.rm=TRUE),mean(Total_Spend,na.rm=TRUE),mean(RAF,na.rm=TRUE)),keyby=c('VisitCluster','Group')]
+setnames(mean_tab2,names(mean_tab2),c('VisitCluster','Group','N','IP Spend','OP Spend','DR Spend','ER Spend','Total','Mean RAF'))
+xtab_mean2=xtable(mean_tab2,caption='Average Spend by Visit Cluster and Group',digits=c(0,0,0,0,0,0,0,0,0,2))
+median_tab2=member_dat2[,list(.N,quantile(Total_IP_Spend,.5,na.rm=TRUE),quantile(Total_OP_Spend,.5,na.rm=TRUE),quantile(Total_DR_Spend,.5,na.rm=TRUE),quantile(Total_ER_Spend,.5,na.rm=TRUE),quantile(Total_Spend,.5,na.rm=TRUE),quantile(RAF,.5,na.rm=TRUE)),keyby=c('VisitCluster','Group')]
+setnames(median_tab2,names(median_tab2),c('VisitCluster','Group','N','IP Spend','OP Spend','DR Spend','ER Spend','Total','Median RAF'))
+xtab_median2=xtable(median_tab2,caption='Median Spend by Visit Cluster and Group',digits=c(0,0,0,0,0,0,0,0,0,2))
+@
+
+<<PrintTables2,results=tex,echo=FALSE>>=
+print(xtab_mean2, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+print(xtab_median2, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+\clearpage
+\section{Utilization Spend Model Summary}
+<<results=hide,echo=FALSE>>=
+lm_total=lm(log(Total_Spend)~Match+Group+VisitCluster+log(RAF)+Gender+QLTY_FLAG+EFNCY_FLAG,data=member_dat2[Total_Spend>0 & Assigned==1])
+sum.total=summary(lm_total)$coef
+sum.total=cbind(sum.total,exp(sum.total[,1]))
+sum.total[7,5]=NA
+colnames(sum.total)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab_total=xtable(sum.total,caption='Model Summary for Log Total Spend, Given Spend>0 and Assigned=1',digits=c(0,3,3,3,3,3))
+hist(resid(lm_total))
+
+lm_ip=lm(log(Total_IP_Spend)~Match+Group+VisitCluster+log(RAF)+Gender+QLTY_FLAG+EFNCY_FLAG,data=member_dat2[Total_IP_Spend>0 & Assigned==1])
+sum.ip=summary(lm_ip)$coef
+sum.ip=cbind(sum.ip,exp(sum.ip[,1]))
+sum.ip[7,5]=NA
+colnames(sum.ip)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab_ip=xtable(sum.ip,caption='Model Summary for Log IP Spend, Given Spend>0 and Assigned=1',digits=c(0,3,3,3,3,3))
+hist(resid(lm_ip))
+
+lm_op=lm(log(Total_OP_Spend)~Match+Group+VisitCluster+log(RAF)+Gender+QLTY_FLAG+EFNCY_FLAG,data=member_dat2[Total_OP_Spend>0 & Assigned==1])
+sum.op=summary(lm_op)$coef
+sum.op=cbind(sum.op,exp(sum.op[,1]))
+sum.op[7,5]=NA
+colnames(sum.op)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab_op=xtable(sum.op,caption='Model Summary for Log OP Spend, Given Spend>0 and Assigned=1',digits=c(0,3,3,3,3,3))
+hist(resid(lm_op))
+
+lm_dr=lm(log(Total_DR_Spend)~Match+Group+VisitCluster+log(RAF)+Gender+QLTY_FLAG+EFNCY_FLAG,data=member_dat2[Total_DR_Spend>0 & Assigned==1])
+sum.dr=summary(lm_dr)$coef
+sum.dr=cbind(sum.dr,exp(sum.dr[,1]))
+sum.dr[7,5]=NA
+colnames(sum.dr)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab_dr=xtable(sum.dr,caption='Model Summary for Log DR Spend, Given Spend>0 and Assigned=1',digits=c(0,3,3,3,3,3))
+hist(resid(lm_dr))
+
+lm_er=lm(log(Total_ER_Spend)~Match+Group+VisitCluster+log(RAF)+Gender+QLTY_FLAG+EFNCY_FLAG,data=member_dat2[Total_ER_Spend>.11 & Assigned==1])
+sum.er=summary(lm_er)$coef
+sum.er=cbind(sum.er,exp(sum.er[,1]))
+sum.er[7,5]=NA
+colnames(sum.er)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab_er=xtable(sum.er,caption='Model Summary for Log ER Spend, Given Spend>0 and Assigned=1',digits=c(0,3,3,3,3,3))
+hist(resid(lm_er))
+
+lm_rx=lm(log(Total_RX_Spend)~Match+Group+VisitCluster+log(RAF)+Gender+QLTY_FLAG+EFNCY_FLAG,data=member_dat2[Total_RX_Spend>0 & Assigned==1])
+sum.rx=summary(lm_rx)$coef
+sum.rx=cbind(sum.rx,exp(sum.rx[,1]))
+sum.rx[7,5]=NA
+colnames(sum.rx)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab_rx=xtable(sum.rx,caption='Model Summary for Log RX Spend, Given Spend>0 and Assigned=1',digits=c(0,3,3,3,3,3))
+hist(resid(lm_rx))
+
+lm_pcp=lm(log(Total_PCP_Spend)~Match+Group+VisitCluster+log(RAF)+Gender+QLTY_FLAG+EFNCY_FLAG,data=member_dat2[Total_PCP_Spend>0 & Assigned==1])
+sum.pcp=summary(lm_pcp)$coef
+sum.pcp=cbind(sum.pcp,exp(sum.pcp[,1]))
+sum.pcp[7,5]=NA
+colnames(sum.pcp)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab_pcp=xtable(sum.pcp,caption='Model Summary for Log PCP Spend, Given Spend>0 and Assigned=1',digits=c(0,3,3,3,3,3))
+hist(resid(lm_pcp))
+@
+
+<<TotalSum,echo=FALSE,results=tex>>=
+print(xtab_total, caption.placement = "top",add.to.row=list(pos=list(11),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to a Female, Sticker, Non-Match, VisitCluster=Low, QLTY=No, EFNCY=No, with RAF=1}\\\\')))
+@
+
+<<IPSum,echo=FALSE,results=tex>>=
+print(xtab_ip, caption.placement = "top",add.to.row=list(pos=list(11),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to a Female, Sticker, Non-Match, VisitCluster=Low, QLTY=No, EFNCY=No, with RAF=1}\\\\')))
+@
+
+<<OPSum,echo=FALSE,results=tex>>=
+print(xtab_op, caption.placement = "top",add.to.row=list(pos=list(11),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to a Female, Sticker, Non-Match, VisitCluster=Low, QLTY=No, EFNCY=No, with RAF=1}\\\\')))
+@
+
+<<DRSum,echo=FALSE,results=tex>>=
+print(xtab_dr, caption.placement = "top",add.to.row=list(pos=list(11),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to a Female, Sticker, Non-Match, VisitCluster=Low, QLTY=No, EFNCY=No, with RAF=1}\\\\')))
+@
+
+<<ERSum,echo=FALSE,results=tex>>=
+print(xtab_er, caption.placement = "top",add.to.row=list(pos=list(11),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to a Female, Sticker, Non-Match, VisitCluster=Low, QLTY=No, EFNCY=No, with RAF=1}\\\\')))
+@
+
+<<RXSum,echo=FALSE,results=tex>>=
+print(xtab_rx, caption.placement = "top",add.to.row=list(pos=list(11),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to a Female, Sticker, Non-Match, VisitCluster=Low, QLTY=No, EFNCY=No, with RAF=1}\\\\')))
+@
+
+<<PCPSum,echo=FALSE,results=tex>>=
+print(xtab_pcp, caption.placement = "top",add.to.row=list(pos=list(11),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to a Female, Sticker, Non-Match, VisitCluster=Low, QLTY=No, EFNCY=No, with RAF=1}\\\\')))
+@
+
+% \clearpage
+% \section{Utilization Visit Analysis Summaries}
+<<results=hide,echo=FALSE>>=
+lm_ip=lm(log(Total_IP_SrvcCnt)~Match+Group+log(RAF)+Gender+QLTY_FLAG+EFNCY_FLAG,data=member_dat2[Total_IP_SrvcCnt>0 & Assigned==1])
+sum.ip=summary(lm_ip)$coef
+sum.ip=cbind(sum.ip,exp(sum.ip[,1]))
+sum.ip[5,5]=NA
+colnames(sum.ip)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab_ip=xtable(sum.ip,caption='Model Summary for Log IP Visits, Given Visits>0 and Assigned=1',digits=c(0,3,3,3,3,3))
+hist(resid(lm_ip))
+
+lm_op=lm(log(Total_OP_SrvcCnt)~Match+Group+log(RAF)+Gender+QLTY_FLAG+EFNCY_FLAG,data=member_dat2[Total_OP_SrvcCnt>0 & Assigned==1])
+sum.op=summary(lm_op)$coef
+sum.op=cbind(sum.op,exp(sum.op[,1]))
+sum.op[5,5]=NA
+colnames(sum.op)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab_op=xtable(sum.op,caption='Model Summary for Log OP Visit, Given Visits>0 and Assigned=1',digits=c(0,3,3,3,3,3))
+hist(resid(lm_op))
+
+lm_dr=lm(log(Total_DR_SrvcCnt)~Match+Group+log(RAF)+Gender+QLTY_FLAG+EFNCY_FLAG,data=member_dat2[Total_DR_SrvcCnt>0 & Assigned==1])
+sum.dr=summary(lm_dr)$coef
+sum.dr=cbind(sum.dr,exp(sum.dr[,1]))
+sum.dr[5,5]=NA
+colnames(sum.dr)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab_dr=xtable(sum.dr,caption='Model Summary for Log DR Visits, Given Visits>0 and Assigned=1',digits=c(0,3,3,3,3,3))
+hist(resid(lm_dr))
+
+lm_er=lm(log(Total_ER_SrvcCnt)~Match+Group+log(RAF)+Gender+QLTY_FLAG+EFNCY_FLAG,data=member_dat2[Total_ER_SrvcCnt>0 & Assigned==1])
+sum.er=summary(lm_er)$coef
+sum.er=cbind(sum.er,exp(sum.er[,1]))
+sum.er[5,5]=NA
+colnames(sum.er)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab_er=xtable(sum.er,caption='Model Summary for Log ER Visits, Given Visits>0 and Assigned=1',digits=c(0,3,3,3,3,3))
+hist(resid(lm_er))
+
+lm_rx=lm(log(Total_RX_Scripts)~Match+Group+log(RAF)+Gender+QLTY_FLAG+EFNCY_FLAG,data=member_dat2[Total_RX_Scripts>0 & Assigned==1])
+sum.rx=summary(lm_rx)$coef
+sum.rx=cbind(sum.rx,exp(sum.rx[,1]))
+sum.rx[5,5]=NA
+colnames(sum.rx)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab_rx=xtable(sum.rx,caption='Model Summary for Log RX Scripts, Given Scripts>0 and Assigned=1',digits=c(0,3,3,3,3,3))
+hist(resid(lm_rx))
+
+lm_pcp=lm(log(Total_PCP_SrvcCnt)~Match+Group+log(RAF)+Gender+QLTY_FLAG+EFNCY_FLAG,data=member_dat2[Total_PCP_SrvcCnt>0 & Assigned==1])
+sum.pcp=summary(lm_pcp)$coef
+sum.pcp=cbind(sum.pcp,exp(sum.pcp[,1]))
+sum.pcp[5,5]=NA
+colnames(sum.pcp)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab_pcp=xtable(sum.pcp,caption='Model Summary for Log PCP Visits, Given Visits>0 and Assigned=1',digits=c(0,3,3,3,3,3))
+hist(resid(lm_pcp))
+
+# tmp=member_dat2[,list(factor(c('Total','IP','OP','DR','ER','RX','PCP'),levels=c('Total','IP','OP','DR','ER','RX','PCP')),c(Total_Spend,Total_IP_Spend,Total_OP_Spend,Total_DR_Spend,Total_ER_Spend,Total_RX_Spend,Total_PCP_Spend),Age,Gender,RAF,Match,Assigned,Group),by=SavvyHICN]
+# setnames(tmp,c('V1','V2'),c('Category','Spend'))
+# tmp[Spend<=0,Spend:=NA]
+# tmp[Category=='ER' & Spend<1,Spend:=NA]
+# library(nlme)
+# lme1=lme(log(Spend)~-1+Match*Category+Assigned*Category+Group*Category+log(RAF)*Category+Age*Category+Gender*Category,random=~Category|factor(Assigned),data=tmp[!is.na(Spend)])
+# summary(lme1)$coefficients
+# coef(lme1)
+# hist(resid(lme1))
+@
+
+% <<IPVisits,echo=FALSE,results=tex>>=
+% print(xtab_ip, caption.placement = "top",add.to.row=list(pos=list(8),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to Sticker, Female, Non-Match, QLTY=0, EFNCY=0, with RAF=1}\\\\')))
+% @
+% 
+% <<OPVisits,echo=FALSE,results=tex>>=
+% print(xtab_op, caption.placement = "top",add.to.row=list(pos=list(8),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to Sticker, Female, Non-Match, QLTY=0, EFNCY=0, with RAF=1}\\\\')))
+% @
+% 
+% <<DRVisits,echo=FALSE,results=tex>>=
+% print(xtab_dr, caption.placement = "top",add.to.row=list(pos=list(8),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to Sticker, Female, Non-Match, QLTY=0, EFNCY=0, with RAF=1}\\\\')))
+% @
+% 
+% <<ERVisits,echo=FALSE,results=tex>>=
+% print(xtab_er, caption.placement = "top",add.to.row=list(pos=list(8),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to Sticker, Female, Non-Match, QLTY=0, EFNCY=0, with RAF=1}\\\\')))
+% @
+% 
+% <<RXVisits,echo=FALSE,results=tex>>=
+% print(xtab_rx, caption.placement = "top",add.to.row=list(pos=list(8),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to Sticker, Female, Non-Match, QLTY=0, EFNCY=0, with RAF=1}\\\\')))
+% @
+% 
+% <<PCPVisits,echo=FALSE,results=tex>>=
+% print(xtab_pcp, caption.placement = "top",add.to.row=list(pos=list(8),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to Sticker, Female, Non-Match, QLTY=0, EFNCY=0, with RAF=1}\\\\')))
+% @
+
+\clearpage
+\section{Additional Analyses}
+<<results=hide,echo=FALSE>>=
+member_dat2[,PremiumDesignation:=ifelse(QLTY_FLAG=='Yes' & EFNCY_FLAG=='Yes','Premium',ifelse(QLTY_FLAG=='Yes' & EFNCY_FLAG=='No','Quality','None'))]
+tmp=member_dat2[QLTY_FLAG!='Unk' & !(QLTY_FLAG=='No' & EFNCY_FLAG=='Yes'),list(sum(Match==1),sum(Match==0)),by=c('QLTY_FLAG','EFNCY_FLAG')]
+tmp[,V3:=c('Premium','QLTY','None')]
+tmp[,c('QLTY_FLAG','EFNCY_FLAG'):=NULL]
+setnames(tmp,names(tmp),c('Match','Non-Match','Designation'))
+setcolorder(tmp,c('Designation','Match','Non-Match'))
+Prem1.xtab=xtable(tmp,caption='Premium Designation vs Match',digits=c(0,0,0,0))
+pval1=round(chisq.test(tmp[,.SD,.SDcols=c('Match','Non-Match')])$p.value,3)
+pval1=ifelse(pval1<0.001,"<0.001",pval1)
+c1=paste('\\hline \\multicolumn{3}{l}{The Chi-Square test p-value:',pval1,'}\\\\',sep="")
+
+tmp=member_dat2[QLTY_FLAG!='Unk' & !(QLTY_FLAG=='No' & EFNCY_FLAG=='Yes'),list(sum(Sticker==1),sum(Mover==1),sum(Divider==1)),by=c('QLTY_FLAG','EFNCY_FLAG')]
+tmp[,V4:=c('Premium','QLTY','None')]
+tmp[,c('QLTY_FLAG','EFNCY_FLAG'):=NULL]
+setnames(tmp,names(tmp),c('Sticker','Mover','Divider','Designation'))
+setcolorder(tmp,c('Designation','Sticker','Mover','Divider'))
+Prem2.xtab=xtable(tmp,caption='Premium Designation vs Group',digits=c(0,0,0,0,0))
+pval2=round(chisq.test(tmp[,.SD,.SDcols=c('Sticker','Mover','Divider')])$p.value,3)
+pval2=ifelse(pval2<0.001,"<0.001",pval2)
+c2=paste('\\hline \\multicolumn{3}{l}{The Chi-Square test p-value:',pval2,'}\\\\',sep="")
+
+
+glm1=glm(Match~PremiumDesignation,data=member_dat2,family='binomial')
+sum1=summary(glm1)$coef
+sum1=cbind(sum1,exp(sum1[,1]))
+colnames(sum1)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab1=xtable(sum1,caption='Model Summary for Likelihood of Match: Model 1',digits=c(0,3,3,3,3,3))
+
+
+glm2=glm(Match~PremiumDesignation+Gender+log(RAF)+Group,data=member_dat2,family='binomial')
+sum2=summary(glm2)$coef
+sum2=cbind(sum2,exp(sum2[,1]))
+sum2[5,5]=NA
+colnames(sum2)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab2=xtable(sum2,caption='Model Summary for Likelihood of Match: Model 2',digits=c(0,3,3,3,3,3))
+
+
+glm3=glm(Match~PremiumDesignation+Gender+log(RAF)+Group+VisitCluster,data=member_dat2,family='binomial')
+sum3=summary(glm3)$coef
+sum3=cbind(sum3,exp(sum3[,1]))
+colnames(sum3)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab3=xtable(sum3,caption='Model Summary for Likelihood of Match: Model 3',digits=c(0,3,3,3,3,3))
+
+member_dat2[,Group:=factor(Group)]
+library(VGAM)
+mn1=vglm(Group~PremiumDesignation,data=member_dat2,family=multinomial(refLevel=1))
+sum_mn1=summary(mn1)@coef3
+sum_mn1=cbind(sum_mn1,exp(sum_mn1[,1]))
+colnames(sum_mn1)=c('Estimate','Std.Error','z value','p-value','Exp Estimate')
+rownames(sum_mn1)=paste(unlist(strsplit(rownames(sum_mn1),':'))[2*seq(0,length(rownames(sum_mn1))-1)+1],rep(c('Divider','Mover'),3),sep=':')
+xtab_mn1=xtable(sum_mn1,caption='Model Summary for Likelihood of Group vs Sticker',digits=c(0,3,3,3,3,3))
+
+mn2=vglm(Group~PremiumDesignation+Match+Gender+log(RAF),data=member_dat2,family=multinomial(refLevel=1))
+sum_mn2=summary(mn2)@coef3
+sum_mn2=cbind(sum_mn2,exp(sum_mn2[,1]))
+colnames(sum_mn2)=c('Estimate','Std.Error','z value','p-value','Exp Estimate')
+rownames(sum_mn2)=paste(unlist(strsplit(rownames(sum_mn2),':'))[2*seq(0,length(rownames(sum_mn2))-1)+1],rep(c('Divider','Mover'),6),sep=':')
+xtab_mn2=xtable(sum_mn2,caption='Model Summary for Likelihood of Group vs Sticker',digits=c(0,3,3,3,3,3))
+
+mn3=vglm(Group~PremiumDesignation+Match+Gender+log(RAF)+VisitCluster,data=member_dat2[Total_Spend>0],family=multinomial(refLevel=1))
+sum_mn3=summary(mn3)@coef3
+sum_mn3=cbind(sum_mn3,exp(sum_mn3[,1]))
+colnames(sum_mn3)=c('Estimate','Std.Error','z value','p-value','Exp Estimate')
+rownames(sum_mn3)=paste(unlist(strsplit(rownames(sum_mn3),':'))[2*seq(0,length(rownames(sum_mn3))-1)+1],rep(c('Divider','Mover'),8),sep=':')
+xtab_mn3=xtable(sum_mn3,caption='Model Summary for Likelihood of Group vs Sticker',digits=c(0,3,3,3,3,3))
+@
+
+\subsection{Bivariate Chi-Square}
+<<Prem1,results=tex,echo=FALSE>>=
+print(Prem1.xtab,caption.placement = "top",add.to.row=list(pos=list(3),command=c1))
+@
+
+<<Prem2,results=tex,echo=FALSE>>=
+print(Prem2.xtab,caption.placement = "top",add.to.row=list(pos=list(3),command=c2))
+@
+
+\subsection{Logistic Regression Models - Match}
+<<Mod1,echo=FALSE,results=tex>>=
+print(xtab1, caption.placement = "top",add.to.row=list(pos=list(3),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to Normal PCP}\\\\')))
+@
+
+<<Mod2,echo=FALSE,results=tex>>=
+print(xtab2, caption.placement = "top",add.to.row=list(pos=list(7),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to Normal PCP, Sticker, Female, RAF=1}\\\\')))
+@
+
+<<Mod3,echo=FALSE,results=tex>>=
+print(xtab3, caption.placement = "top",add.to.row=list(pos=list(9),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to Normal PCP, Sticker, Female, Low Visit Cluster, RAF=1}\\\\')))
+@
+
+\clearpage
+\subsection{Logistic Regression Models - Group}
+<<Mod_mn1,echo=FALSE,results=tex>>=
+print(xtab_mn1, caption.placement = "top",add.to.row=list(pos=list(6),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to Sticker, Normal PCP, Non-Match}\\\\')))
+@
+
+<<Mod_mn2,echo=FALSE,results=tex>>=
+print(xtab_mn2, caption.placement = "top",add.to.row=list(pos=list(12),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to Normal PCP, Sticker, Female, Non-Match, RAF=1}\\\\')))
+@
+
+<<Mod_mn3,echo=FALSE,results=tex>>=
+print(xtab_mn3, caption.placement = "top",add.to.row=list(pos=list(16),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to Normal PCP, Sticker, Female, Non-Match, Low Visit Cluster, RAF=1}\\\\')))
+@
+
+\clearpage
+\subsection{Predicting 2015 Total Spend}
+<<results=hide,echo=FALSE>>=
+member_dat_2015=data.table(read.odbc("Devsql10pdb_PCPSelection",dbQuery='select SavvyHICN, Total_Spend AS Total_Spend_2015 from [pdb_PCPSelection].[dbo].[MbrClass_10_2015]'))
+setkeyv(member_dat_2015,'SavvyHICN') ; setkeyv(member_dat2,'SavvyHICN')
+member_dat2=member_dat2[member_dat_2015,nomatch=0]
+
+lm_total=lm(log(Total_Spend_2015)~log(Total_Spend)+Match+Group+VisitCluster+log(RAF)+Gender+QLTY_FLAG+EFNCY_FLAG,data=member_dat2[Total_Spend>0 & Total_Spend_2015>0 & Assigned==1])
+sum.total=summary(lm_total)$coef
+sum.total=cbind(sum.total,exp(sum.total[,1]))
+colnames(sum.total)=c('Estimate','Std.Error','t-value','p-value','Exp Estimate')
+xtab_total=xtable(sum.total,caption='2015 Prediction Model Summary for Log Total Spend, Given Spend>0 and Assigned=1',digits=c(0,3,3,3,3,3))
+# hist(resid(lm_total))
+
+library(randomForest)
+# date()
+# rf1=randomForest(Total_Spend_2015~Age+Total_IP_Spend+Total_OP_Spend+Total_DR_Spend+Total_ER_Spend+Total_PCP_Spend+Total_RX_Spend+Total_Spend+Match+Group+VisitCluster+RAF+Gender+QLTY_FLAG+EFNCY_FLAG+Total_IP_SrvcCnt+Total_OP_SrvcCnt+Total_ER_SrvcCnt+Total_DR_SrvcCnt+Total_PCP_SrvcCnt+Total_RX_Scripts+PCPs+NumDRs,data=member_dat2[!is.na(Total_Spend_2015) & Assigned==1],ntree=1000,mtry=5,nodesize=1000,importance=TRUE)
+# date()
+# saveRDS(rf1,"~/GP0312-Research-PCPSelection/DanH/RF1_PCP_Med_2014.RDS")
+rf1=readRDS("~/GP0312-Research-PCPSelection/DanH/RF1_PCP_Med_2014.RDS")
+
+rf1
+varImpPlot(rf1)
+rf1_imp=data.table(Variable=rownames(importance(rf1)),importance1=importance(rf1)[,1],importance2=importance(rf1)[,2])
+rf1_imp[order(-importance1)]
+
+# date()
+# rf3=randomForest(Total_Spend_2015~Age+Total_IP_Spend+Total_OP_Spend+Total_DR_Spend+Total_ER_Spend+Total_PCP_Spend+Total_RX_Spend+Total_Spend+Match+Group+VisitCluster+RAF+Gender+QLTY_FLAG+EFNCY_FLAG+Total_IP_SrvcCnt+Total_OP_SrvcCnt+Total_ER_SrvcCnt+Total_DR_SrvcCnt+Total_PCP_SrvcCnt+Total_RX_Scripts+PCPs+NumDRs,data=member_dat2[!is.na(Total_Spend_2015) & Assigned==1],ntree=200,mtry=5,nodesize=1000,importance=TRUE)
+# date()
+# saveRDS(rf3,"~/GP0312-Research-PCPSelection/DanH/RF3_PCP_Med_2014.RDS")
+rf3=readRDS("~/GP0312-Research-PCPSelection/DanH/RF3_PCP_Med_2014.RDS")
+
+to.dendrogram <- function(dfrep,rownum=1,height.increment=0.1){
+  
+  if(dfrep[rownum,'status'] == -1){
+    rval <- list()
+    
+    attr(rval,"members") <- 1
+    attr(rval,"height") <- 0.0
+    attr(rval,"label") <- dfrep[rownum,'prediction']
+    attr(rval,"leaf") <- TRUE
+    
+  }else{##note the change "to.dendrogram" and not "to.dendogram"
+    left <- to.dendrogram(dfrep,dfrep[rownum,'left daughter'],height.increment)
+    right <- to.dendrogram(dfrep,dfrep[rownum,'right daughter'],height.increment)
+    rval <- list(left,right)
+    
+    attr(rval,"members") <- attr(left,"members") + attr(right,"members")
+    attr(rval,"height") <- max(attr(left,"height"),attr(right,"height")) + height.increment
+    attr(rval,"leaf") <- FALSE
+    attr(rval,"edgetext") <- paste(dfrep[rownum,'split var'],dfrep[rownum,'split point'],sep='<=')
+  }
+  
+  class(rval) <- "dendrogram"
+  
+  return(rval)
+}
+
+tree <- getTree(rf3,1,labelVar=TRUE)
+
+d <- to.dendrogram(tree,height.increment=.05)
+# str(d)
+# pdf('~/GP0312-Research-PCPSelection/DanH/RF_Plot.pdf',width=11,height=11)
+# plot(d,center=TRUE,leaflab='none',edgePar=list(t.cex=1,p.col=NA,p.lty=0),axes=FALSE)
+# varImpPlot(rf1)
+# dev.off()
+@
+
+<<Predict2015,echo=FALSE,results=tex>>=
+print(xtab_total, caption.placement = "top",add.to.row=list(pos=list(12),command=c('\\hline \\multicolumn{6}{l}{Intercept refers to Normal PCP, Sticker, Female, Low Visit Cluster, RAF=1, Total Spend 2014=1,Match=0}\\\\')))
+@
+
+<<results=hide,echo=FALSE,fig=TRUE>>=
+varImpPlot(rf1)
+@
+
+\clearpage
+<<results=hide,echo=FALSE,fig=TRUE,width=8.5,height=12>>=
+plot(d,center=TRUE,leaflab='none',edgePar=list(t.cex=1,p.col=NA,p.lty=0),axes=FALSE)
+@
+
+\clearpage
+\subsection{HCC Groupings}
+<<results=hide,echo=FALSE>>=
+# library(savvy2)
+# set.seed(29889722)
+# d1=date()
+# nmf1=run_repeat.BLOCKPIVOT(as.matrix(member_dat2[,.SD,.SDcols=names(member_dat2)[28:130]]),k=5,max_iter=100,num_trial=10)
+# d2=date()
+# d1
+# d2
+# saveRDS(nmf1,"~/GP0312-Research-PCPSelection/DanH/NMF_PCP_Med_2014.RDS")
+nmf1=readRDS("~/GP0312-Research-PCPSelection/DanH/NMF_PCP_Med_2014.RDS")
+
+H=nmf1[[2]]
+H2=data.table(H)
+H2[,c('Variable','Num'):=list(names(member_dat2)[28:130],1:103)]
+setkeyv(H2,'Variable') ; setkeyv(hcc_dat,'Term')
+H2=hcc_dat[H2,nomatch=0]
+H2[,Term:=as.character(Term)]
+H2[,c('V1','V2','V3','V4','V5'):=list(V1/sum(V1),V2/sum(V2),V3/sum(V3),V4/sum(V4),V5/sum(V5))]
+H2[order(-V1)][1:10]
+H2[order(-V2)][1:10]
+H2[order(-V3)][1:10]
+H2[order(-V4)][1:10]
+H2[order(-V5)][1:10]
+
+# W=nmf1[[1]]
+# stdW=(W-colMeans(W))*1/apply(W,2,sd)
+# groups=8
+# set.seed(23908754)
+# km1=data.table(kmeans(stdW,groups)$cluster,1:nrow(W))
+# km1=km1[order(V1)]
+# ylabs=c(rep('',nrow(W)))
+# ylabs[c(1,unlist(cumsum(km1[,.N,by=V1]$N)))[1:groups]]=as.character(1:groups)
+
+W=data.table(nmf1[[1]])
+stdW=copy(W)
+stdW[,c('V1','V2','V3','V4','V5'):=list((V1-mean(V1))/sd(V1),(V2-mean(V2))/sd(V2),(V3-mean(V3))/sd(V3),(V4-mean(V4))/sd(V4),(V5-mean(V5))/sd(V5))]
+groups=8
+set.seed(23908754)
+km1=data.table(kmeans(stdW,groups)$cluster)
+stdW[,km1:=km1$V1]
+stdW=stdW[order(km1)]
+ylabs=c(rep('',nrow(W)))
+ylabs[c(1,unlist(cumsum(km1[,.N,by=V1]$N)))[1:groups]]=as.character(1:groups)
+
+
+tmp=data.table(x=as.factor(rep(1:5,each=nrow(H2))),y=rep(1:nrow(H2),5),c(unlist(H2[,3:7,with=FALSE])),c(unlist(H2[,Term])))
+HCC_plot=ggplot(tmp,aes(x=x,y=y,fill=V3))+geom_raster(interpolate=FALSE)+
+  scale_y_continuous(breaks=seq(1,nrow(H2),1),labels=tmp$V4[1:nrow(H2)])+
+#   scale_fill_continuous(name="")+
+  ylab('HCC')+xlab('Factor Component')+
+  theme(legend.position='bottom')
+
+# tmp=data.table(x=as.factor(rep(1:5,each=nrow(stdW))),y=rep(1:nrow(stdW),5),c(unlist(stdW[,1:5,with=FALSE])))
+# member_plot=ggplot(tmp,aes(x=x,y=y,fill=V3))+geom_raster()+
+#   scale_y_continuous(breaks=seq(1,nrow(stdW),1),labels=ylabs)+
+#   scale_fill_continuous(name="")+
+#   ylab('Member Group')+xlab('Factor Component')+
+#   theme(legend.position='bottom')
+
+# members=5000
+# set.seed(2097574)
+# index=sample(1:nrow(stdW),members)
+# tmp=data.table(x=as.factor(rep(1:5,each=members)),y=rep(1:members,5),c(unlist(stdW[index][order(km1)][,1:5,with=FALSE])))
+# ylabs=c(rep('',members))
+# ylabs[c(1,unlist(cumsum(stdW[index,.N,keyby=km1]$N)))[1:groups]]=as.character(1:groups)
+# member_plot=ggplot(tmp,aes(x=x,y=y,fill=V3))+geom_raster()+
+#   scale_y_continuous(breaks=seq(1,members,1),labels=ylabs)+
+#   scale_fill_continuous(name="")+
+#   ylab('Member Group')+xlab('Factor Component')+
+#   theme(legend.position='bottom')+
+#   geom_hline(yintercept=c(1,unlist(cumsum(stdW[index,.N,keyby=km1]$N)))[1:groups],color='red')
+@
+
+Component 1: Diabetes without Complication ; Diabetes with Chronic Complications\\
+Component 2: Chronic Obstructive Pulmonary Disease\\
+Component 3: Vascular Disease\\
+Component 4: Specified Heart Arrhythmias\\
+Component 5: Congestive Heart Failure ; Acute Renal Failure\\
+<<results=hide,echo=FALSE,fig=TRUE,width=8,height=8>>=
+HCC_plot
+@
+
+% <<results=hide,echo=FALSE,fig=TRUE,width=8,height=8>>=
+% # library(pheatmap)
+% # pheatmap
+% heatmap(stdW[km1$V2,],Colv=NA,Rowv=NA,scale='none',labRow=ylabs,cexRow=0.2 + 1/log10(groups),xlab='Component',ylab='Member Groups',useRaster=TRUE)
+% @
+\end{document}

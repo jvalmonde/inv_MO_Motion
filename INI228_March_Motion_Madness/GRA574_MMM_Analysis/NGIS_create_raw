@@ -1,0 +1,112 @@
+USE [DERMSL_Prod]
+
+IF OBJECT_ID('tempdb..#RAW') IS NOT NULL
+    DROP TABLE #RAW
+
+SELECT 
+   CASE --Eliminates duplicate records for people who signed up twice
+    WHEN mmbr.[MEMBERID] = 120280 THEN 120183
+    WHEN mmbr.[MEMBERID] = 13969 THEN 8037
+    WHEN mmbr.[MEMBERID] = 154634 THEN 6755
+    WHEN mmbr.[MEMBERID] = 154975 THEN 10115
+    WHEN mmbr.[MEMBERID] = 155109 THEN 155262
+    WHEN mmbr.[MEMBERID] = 159245 THEN 160951
+    WHEN mmbr.[MEMBERID] = 178400 THEN 177020
+    WHEN mmbr.[MEMBERID] = 22003 THEN 13619
+    WHEN mmbr.[MEMBERID] = 225965 THEN 177020
+    WHEN mmbr.[MEMBERID] = 35514 THEN 8040
+    WHEN mmbr.[MEMBERID] = 64752 THEN 20851
+    WHEN mmbr.[MEMBERID] = 6750 THEN 6755
+    WHEN mmbr.[MEMBERID] = 6751 THEN 6755
+    WHEN mmbr.[MEMBERID] = 6752 THEN 6755
+    WHEN mmbr.[MEMBERID] = 6776 THEN 6755
+    WHEN mmbr.[MEMBERID] = 6796 THEN 6716
+    WHEN mmbr.[MEMBERID] = 8017 THEN 7487
+    WHEN mmbr.[MEMBERID] = 9021 THEN 7510
+    WHEN mmbr.[MEMBERID] = 9445 THEN 8040
+    WHEN mmbr.[MEMBERID] = 9915 THEN 10212
+    ELSE mmbr.[MEMBERID]
+   END AS [MEMBERID]
+  ,mmbr.[LOOKUPClientID]
+  ,mrg.[LOOKUPRuleGroupID]
+  ,mmbr.[Gender]
+  ,mmbr.[ZipCode]
+  ,mmbr.[BirthDate]
+  ,mmbr.[IsDependentFlag]
+  ,mmbr.[ActiveMEMBERFlag]
+  ,mmbr.[IncentiveFlag]
+  ,mmbr.[ProgramStartDate]
+  ,mmbr.[CancelledDateTime]
+  
+  ,ei.IncentiveDate
+  ,ei.TotalBouts
+  ,ei.TotalSteps
+  ,ei.IncentiveAmount
+  ,ei.isAchieved
+  ,ei.isCounted
+  
+  ,RTRIM(LTRIM(LOWER(rl.RuleName))) RuleName
+  ,rl.RuleDescription
+  ,rl.TotalStepsMin
+  ,rl.TotalMinutes
+  ,rl.IncentiveAmount potential_incentive_amount
+  ,rl.TotalBouts reqd_bouts
+  ,rl.MinsBetweenBouts
+
+INTO #RAW FROM [MEMBER] mmbr
+     LEFT JOIN [MEMBEREarnedIncentives] ei ON mmbr.[MEMBERID] = ei.[MEMBERID]
+     LEFT JOIN [LOOKUPRule] rl ON ei.LOOKUPRuleID = rl.LOOKUPRuleID
+     LEFT JOIN [MEMBERRuleGroup] mrg ON mmbr.[MEMBERID] = mrg.[MEMBERID]
+
+  WHERE mrg.LookupRuleGroupID  IN (44) AND FORMAT(IncentiveDate, 'yyyyMM') BETWEEN '201501' AND '201904';
+
+
+SELECT
+   [MEMBERID] memberID
+  ,[IsDependentFlag]
+  ,[Gender]
+  ,[BirthDate]
+  ,[ZipCode]
+  ,[ProgramStartDate] MotionStartDate
+  ,[CancelledDateTime] MotionEndDate
+  ,'SavvySherpa' AS ClientName
+  ,[IncentiveDate] AS step_date
+
+  ,MAX(CASE WHEN RuleName = 'frequency' THEN TotalStepsMin ELSE NULL END) AS f_reqd_bout_steps
+  ,MAX(CASE WHEN RuleName = 'frequency' THEN reqd_bouts ELSE NULL END) AS f_reqd_bouts
+  ,MAX(CASE WHEN RuleName = 'frequency' THEN TotalStepsMin ELSE NULL END) AS f_reqd_bout_minutes
+  ,MAX(CASE WHEN RuleName = 'frequency' THEN MinsBetweenBouts ELSE NULL END) AS f_reqd_bout_interval
+  ,MAX(CASE WHEN RuleName = 'frequency' THEN potential_incentive_amount ELSE NULL END) AS f_potential_incentive
+  ,MAX(CASE WHEN RuleName = 'frequency' THEN IncentiveAmount ELSE NULL END) AS f_earned_incentive
+  ,MAX(CASE WHEN RuleName = 'frequency' THEN CAST(isAchieved AS INT) ELSE NULL END) AS f_achieved_flag
+
+  ,MAX(CASE WHEN RuleName = 'intensity' THEN TotalStepsMin ELSE NULL END) AS i_reqd_bout_steps
+  ,MAX(CASE WHEN RuleName = 'intensity' THEN TotalStepsMin ELSE NULL END) AS i_reqd_bout_minutes
+  ,MAX(CASE WHEN RuleName = 'intensity' THEN potential_incentive_amount ELSE NULL END) AS i_potential_incentive
+  ,MAX(CASE WHEN RuleName = 'intensity' THEN IncentiveAmount ELSE NULL END) AS i_earned_incentive
+  ,MAX(CASE WHEN RuleName = 'intensity' THEN CAST(isAchieved AS INT) ELSE NULL END) AS i_achieved_flag
+
+  ,MAX(CASE WHEN RuleName = 'tenacity' THEN TotalStepsMin ELSE NULL END) AS t_reqd_bout_steps
+  ,MAX(CASE WHEN RuleName = 'tenacity' THEN potential_incentive_amount ELSE NULL END) AS t_potential_incentive
+  ,MAX(CASE WHEN RuleName = 'tenacity' THEN IncentiveAmount ELSE NULL END) AS t_earned_incentive
+  ,MAX(CASE WHEN RuleName = 'tenacity' THEN CAST(isAchieved AS INT) ELSE NULL END) AS t_achieved_flag
+
+  ,SUM(CAST(isAchieved AS INT)) cnt_achieved
+  ,SUM(IncentiveAmount) ttl_earned_incentive
+  ,MAX(CASE WHEN RuleName = 'frequency' THEN IncentiveAmount ELSE NULL END)
+   + MAX(CASE WHEN RuleName = 'intensity' THEN IncentiveAmount ELSE NULL END)
+   + MAX(CASE WHEN RuleName = 'tenacity' THEN IncentiveAmount ELSE NULL END) AS ttl_earned_incentive_fit
+  ,SUM(potential_incentive_amount) ttl_potential_incentive
+  ,MAX(TotalSteps) ttl_steps
+
+
+FROM #RAW
+
+GROUP BY [MEMBERID] 
+  ,[IsDependentFlag]
+  ,[Gender]
+  ,[BirthDate]
+  ,[ZipCode]
+  ,[ProgramStartDate] 
+  ,[CancelledDateTime] 
+  ,[IncentiveDate]  

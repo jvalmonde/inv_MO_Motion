@@ -1,0 +1,520 @@
+<?xml version="1.0"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:refId="Package"
+  DTS:CreationDate="11/15/2016 7:44:22 AM"
+  DTS:CreationName="Microsoft.Package"
+  DTS:CreatorComputerName="MINDATA05"
+  DTS:CreatorName="SAVVYSHERPA\lthorne"
+  DTS:Description="SSIS Package Description"
+  DTS:DTSID="{1C337CB4-7742-4E46-92B6-A1423A6C4519}"
+  DTS:ExecutableType="Microsoft.Package"
+  DTS:LastModifiedProductVersion="13.0.1601.5"
+  DTS:LocaleID="1033"
+  DTS:MaxErrorCount="0"
+  DTS:ObjectName="DeployASMYearMo"
+  DTS:VersionGUID="{530EB6BD-6FE4-40E0-BB67-16B86F6ED7CC}">
+  <DTS:Property
+    DTS:Name="PackageFormatVersion">8</DTS:Property>
+  <DTS:ConnectionManagers>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[DestinationConnectionOLEDB]"
+      DTS:CreationName="OLEDB"
+      DTS:DTSID="{41167D30-C7B2-4647-BC82-5125F5D3DBEC}"
+      DTS:ObjectName="DestinationConnectionOLEDB">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectionString="Data Source=dbs-derm-prd-02.derm.triomotionfit.com;User ID=lthorne;Initial Catalog=pdb_DermReporting;Provider=SQLNCLI11;Auto Translate=false;">
+          <DTS:Password
+            DTS:Name="Password"
+            Sensitive="1"
+            Encrypted="1">AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAQexbQ/zRJEGcElp+syF0SwAAAAAIAAAARABUAFMAAAADZgAAwAAAABAAAACCRiHISlB6Ke2wV4jzR332AAAAAASAAACgAAAAEAAAAF9yEejKn7AlXIXAI86JAxIYAAAAJ20J207qgYnD7zzdA1eXXdBzhgTKhZJ0FAAAAAAwWBn1kaUkqMLlYqnCgbO30Cx6</DTS:Password>
+        </DTS:ConnectionManager>
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[SourceConnectionOLEDB]"
+      DTS:CreationName="OLEDB"
+      DTS:DTSID="{302854D8-A858-4FB6-B2B9-2C947807039F}"
+      DTS:ObjectName="SourceConnectionOLEDB">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectionString="Data Source=devsql10;Initial Catalog=pdb_Allsavers_Research;Provider=SQLNCLI11;Integrated Security=SSPI;Auto Translate=false;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+  </DTS:ConnectionManagers>
+  <DTS:Variables />
+  <DTS:Executables>
+    <DTS:Executable
+      DTS:refId="Package\Data Flow Task 1"
+      DTS:CreationName="Microsoft.Pipeline"
+      DTS:DelayValidation="True"
+      DTS:DTSID="{552D5E8B-6759-4661-BC91-7AE17EA41108}"
+      DTS:ExecutableType="Microsoft.Pipeline"
+      DTS:FailPackageOnFailure="True"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Data Flow Task 1"
+      DTS:TaskContact="Performs high-performance data extraction, transformation and loading;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <pipeline
+          defaultBufferSize="3145728"
+          version="1">
+          <components>
+            <component
+              refId="Package\Data Flow Task 1\Destination - ASM_YearMo"
+              componentClassID="Microsoft.OLEDBDestination"
+              contactInfo="OLE DB Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;4"
+              description="OLE DB Destination"
+              name="Destination - ASM_YearMo"
+              usesDispositions="true"
+              validateExternalMetadata="False"
+              version="4">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset">[dbo].[ASM_YearMo]</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">3</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepIdentity">false</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the columns containing null will have null inserted in the destination. If false, columns containing null will have their default values inserted at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepNulls">false</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies options to be used with fast load.  Applies only if fast load is turned on."
+                  name="FastLoadOptions">TABLOCK,CHECK_CONSTRAINTS</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies when commits are issued during data insertion.  A value of 0 specifies that one commit will be issued at the end of data insertion.  Applies only if fast load is turned on."
+                  name="FastLoadMaxInsertCommitSize">2147483647</property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[DestinationConnectionOLEDB]"
+                  connectionManagerRefId="Package.ConnectionManagers[DestinationConnectionOLEDB]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <inputs>
+                <input
+                  refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input]"
+                  errorOrTruncationOperation="Insert"
+                  errorRowDisposition="FailComponent"
+                  hasSideEffects="true"
+                  name="Destination Input">
+                  <inputColumns>
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].Columns[OrderID]"
+                      cachedDataType="i4"
+                      cachedName="OrderID"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].ExternalColumns[OrderID]"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[OrderID]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].Columns[YearMo]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="6"
+                      cachedName="YearMo"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].ExternalColumns[YearMo]"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[YearMo]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].Columns[Year_Name]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="4"
+                      cachedName="Year_Name"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].ExternalColumns[Year_Name]"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[Year_Name]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].Columns[Month_Name]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="16"
+                      cachedName="Month_Name"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].ExternalColumns[Month_Name]"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[Month_Name]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].Columns[Year_Mo]"
+                      cachedDataType="i4"
+                      cachedName="Year_Mo"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].ExternalColumns[Year_Mo]"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[Year_Mo]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].Columns[Quarter_Nbr]"
+                      cachedDataType="i4"
+                      cachedName="Quarter_Nbr"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].ExternalColumns[Quarter_Nbr]"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[Quarter_Nbr]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].Columns[DaysInMonth]"
+                      cachedDataType="i4"
+                      cachedName="DaysInMonth"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].ExternalColumns[DaysInMonth]"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[DaysInMonth]" />
+                  </inputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].ExternalColumns[OrderID]"
+                      dataType="i4"
+                      name="OrderID" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].ExternalColumns[YearMo]"
+                      codePage="1252"
+                      dataType="str"
+                      length="6"
+                      name="YearMo" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].ExternalColumns[Year_Name]"
+                      codePage="1252"
+                      dataType="str"
+                      length="4"
+                      name="Year_Name" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].ExternalColumns[Month_Name]"
+                      codePage="1252"
+                      dataType="str"
+                      length="16"
+                      name="Month_Name" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].ExternalColumns[Year_Mo]"
+                      dataType="i4"
+                      name="Year_Mo" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].ExternalColumns[Quarter_Nbr]"
+                      dataType="i4"
+                      name="Quarter_Nbr" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input].ExternalColumns[DaysInMonth]"
+                      dataType="i4"
+                      name="DaysInMonth" />
+                  </externalMetadataColumns>
+                </input>
+              </inputs>
+              <outputs>
+                <output
+                  refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Outputs[OLE DB Destination Error Output]"
+                  exclusionGroup="1"
+                  isErrorOut="true"
+                  name="OLE DB Destination Error Output"
+                  synchronousInputId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Destination - ASM_YearMo.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Destination - ASM_YearMo.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Destination - ASM_YearMo.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+            <component
+              refId="Package\Data Flow Task 1\Source - ASM_YearMo"
+              componentClassID="Microsoft.OLEDBSource"
+              contactInfo="OLE DB Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;7"
+              description="OLE DB Source"
+              name="Source - ASM_YearMo"
+              usesDispositions="true"
+              version="7">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset">[dbo].[ASM_YearMo]</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor"></property>
+                <property
+                  dataType="System.String"
+                  description="The variable that contains the SQL command to be executed."
+                  name="SqlCommandVariable"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">0</property>
+                <property
+                  dataType="System.String"
+                  description="The mappings between the parameters in the SQL command and variables."
+                  name="ParameterMapping"></property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\Data Flow Task 1\Source - ASM_YearMo.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[SourceConnectionOLEDB]"
+                  connectionManagerRefId="Package.ConnectionManagers[SourceConnectionOLEDB]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <outputs>
+                <output
+                  refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output]"
+                  name="OLE DB Source Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[OrderID]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].ExternalColumns[OrderID]"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[OrderID]"
+                      name="OrderID"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[YearMo]"
+                      codePage="1252"
+                      dataType="str"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].ExternalColumns[YearMo]"
+                      length="6"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[YearMo]"
+                      name="YearMo"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[Year_Name]"
+                      codePage="1252"
+                      dataType="str"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].ExternalColumns[Year_Name]"
+                      length="4"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[Year_Name]"
+                      name="Year_Name"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[Month_Name]"
+                      codePage="1252"
+                      dataType="str"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].ExternalColumns[Month_Name]"
+                      length="16"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[Month_Name]"
+                      name="Month_Name"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[Year_Mo]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].ExternalColumns[Year_Mo]"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[Year_Mo]"
+                      name="Year_Mo"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[Quarter_Nbr]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].ExternalColumns[Quarter_Nbr]"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[Quarter_Nbr]"
+                      name="Quarter_Nbr"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[DaysInMonth]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].ExternalColumns[DaysInMonth]"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].Columns[DaysInMonth]"
+                      name="DaysInMonth"
+                      truncationRowDisposition="FailComponent" />
+                  </outputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].ExternalColumns[OrderID]"
+                      dataType="i4"
+                      name="OrderID" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].ExternalColumns[YearMo]"
+                      codePage="1252"
+                      dataType="str"
+                      length="6"
+                      name="YearMo" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].ExternalColumns[Year_Name]"
+                      codePage="1252"
+                      dataType="str"
+                      length="4"
+                      name="Year_Name" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].ExternalColumns[Month_Name]"
+                      codePage="1252"
+                      dataType="str"
+                      length="16"
+                      name="Month_Name" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].ExternalColumns[Year_Mo]"
+                      dataType="i4"
+                      name="Year_Mo" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].ExternalColumns[Quarter_Nbr]"
+                      dataType="i4"
+                      name="Quarter_Nbr" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output].ExternalColumns[DaysInMonth]"
+                      dataType="i4"
+                      name="DaysInMonth" />
+                  </externalMetadataColumns>
+                </output>
+                <output
+                  refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output]"
+                  isErrorOut="true"
+                  name="OLE DB Source Error Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[OrderID]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[OrderID]"
+                      name="OrderID" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[YearMo]"
+                      codePage="1252"
+                      dataType="str"
+                      length="6"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[YearMo]"
+                      name="YearMo" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[Year_Name]"
+                      codePage="1252"
+                      dataType="str"
+                      length="4"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[Year_Name]"
+                      name="Year_Name" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[Month_Name]"
+                      codePage="1252"
+                      dataType="str"
+                      length="16"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[Month_Name]"
+                      name="Month_Name" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[Year_Mo]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[Year_Mo]"
+                      name="Year_Mo" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[Quarter_Nbr]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[Quarter_Nbr]"
+                      name="Quarter_Nbr" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[DaysInMonth]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[DaysInMonth]"
+                      name="DaysInMonth" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+          </components>
+          <paths>
+            <path
+              refId="Package\Data Flow Task 1.Paths[OLE DB Source Output]"
+              endId="Package\Data Flow Task 1\Destination - ASM_YearMo.Inputs[Destination Input]"
+              name="OLE DB Source Output"
+              startId="Package\Data Flow Task 1\Source - ASM_YearMo.Outputs[OLE DB Source Output]" />
+          </paths>
+        </pipeline>
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\Preparation SQL Task 1"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:DTSID="{48DF72C2-EB60-4F17-AEB4-B23477B04486}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:FailPackageOnFailure="True"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Preparation SQL Task 1"
+      DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2014; © 2014 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{41167D30-C7B2-4647-BC82-5125F5D3DBEC}"
+          SQLTask:SqlStatementSource="CREATE TABLE [dbo].[ASM_YearMo] (&#xA;[OrderID] int NOT NULL,&#xA;[YearMo] char(6),&#xA;[Year_Name] char(4),&#xA;[Month_Name] varchar(16),&#xA;[Year_Mo] int,&#xA;[Quarter_Nbr] int,&#xA;[DaysInMonth] int&#xA;)&#xA;GO&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+  </DTS:Executables>
+  <DTS:PrecedenceConstraints>
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[{E608ED12-96C1-42E4-B295-62F12A632FB6\}]"
+      DTS:CreationName=""
+      DTS:DTSID="{E608ED12-96C1-42E4-B295-62F12A632FB6}"
+      DTS:From="Package\Preparation SQL Task 1"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="{E608ED12-96C1-42E4-B295-62F12A632FB6}"
+      DTS:To="Package\Data Flow Task 1" />
+  </DTS:PrecedenceConstraints>
+</DTS:Executable>

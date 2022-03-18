@@ -1,0 +1,464 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage[margin=1in]{geometry}
+\usepackage{pdflscape}
+\usepackage{colortbl}
+\usepackage[table]{xcolor}
+\definecolor{lightgray}{gray}{0.9}
+\author{}
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\title{All Savers Motion - Phase 3 Campaign 1: GP0284}
+\maketitle
+\clearpage
+
+<<results=hide,echo=FALSE>>=
+library(data.table)
+library(savvy)
+library(xtable)
+library(survival)
+library(lme4)
+library(MASS)
+
+all_dat=data.table(read.odbc("Devsql14pdb_AllSavers",dbQuery='select * from [pdb_AllSaversRegistration].[dbo].[Directmail_Phase3_Campaign1Results]',as.is=TRUE))
+all_dat[,c('RuleGroupName','FirstName','Lastname','AddressLine','City','StateCode','Zipcode','TotalEligibles','RegistrationRate','GroupAge','AgentLastname','PolicyID','AdminInsured','AdminContactGender','AdminPhone','AdminEmail','AdminContact','Admin_AvgStepsforEnrolledDays','AdminAllwAmtPM','GroupStreet','GroupStreet2','GroupCity','GroupState','GroupZip','GroupSICCode','Rn','Sic','AdminFirstname','CEOFirstname','CEO','AdminContact_FullName'):=NULL]
+
+all_dat[,c('isregistered','RegisteredFlag'):=list(as.integer(isregistered),as.integer(RegisteredFlag))]
+all_dat[,age:=round(as.numeric(difftime(as.Date(Sys.time(),tz=""),Birthdate)/364.25),0),by=Birthdate]
+all_dat[,BinAge:=ifelse(age>=38,'Older','Younger')]
+all_dat[,c('EffectiveDate'):=list(as.Date(EffectiveDate,tz=''))]
+
+all_dat=all_dat[RegisteredBeforemailing==0]
+all_dat[,c('RegistrationDate','EffectiveDate','GroupEffectiveDate','Birthdate','DateBenefitsEnd'):=list(as.Date(RegistrationDate,tz=''),as.Date(EffectiveDate,tz=''),as.Date(GroupEffectiveDate,tz=''),as.Date(Birthdate,tz=''),as.Date(DateBenefitsEnd,tz=''))]
+all_dat[,c('TreatmentMember','TreatmentCEO','TreatmentBC'):=list(ifelse(Treat%in%c('Member/BC/CEO','Member','Member/BC','Member/CEO'),'Yes','No'),ifelse(Treat%in%c('Member/BC/CEO','Member/CEO','BC/CEO','CEO'),'Yes','No'),ifelse(Treat%in%c('Member/BC/CEO','BC','Member/BC','BC/CEO'),'Yes','No'))]
+all_dat[Treat=='Control',c('TreatmentMember','TreatmentCEO','TreatmentBC'):='Control']
+all_dat[,Treat:=factor(Treat,levels=c('Control','Member/BC/CEO','Member/CEO','Member/BC','BC/CEO','Member','BC','CEO'))]
+all_dat[,TreatmentMember:=factor(TreatmentMember,levels=c('Control','Yes','No'))]
+all_dat[,TreatmentCEO:=factor(TreatmentCEO,levels=c('Control','Yes','No'))]
+all_dat[,TreatmentBC:=factor(TreatmentBC,levels=c('Control','Yes','No'))]
+all_dat[,BenefitEndDate:=EffectiveDate+60]
+all_dat[,JulyOrAug:=ifelse(EffectiveDate<'2016-08-01','July','Aug')]
+all_dat[,OthersReg:=ifelse(Registered>0,'Yes','No')]
+
+tmp=data.table(Dates=seq(as.Date("2016-08-15"),as.Date(Sys.time(),tz=""),by="1 day"),Value=0)
+@
+
+The following figure shows how the proportion of registered members for each of the treatments has changed since the mailing. The table gives the current value of each treatment.\\ 
+\\
+<<Treatment,echo=FALSE,results=hide,fig=TRUE>>=
+by_vars1=c('RegistrationDate','Treat')
+by_vars2=c('Treat')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(RegistrationDate,tmp$Dates[!tmp$Dates%in%RegistrationDate]),
+                               c(N,tmp$Value[!tmp$Dates%in%RegistrationDate])),by=by_vars2][order(V1)][,list(V1,
+                               c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(Treat)]
+setnames(ttt1,names(ttt1),c(by_vars2,'RegistrationDate','Registered','N','Proportion'))
+
+ggplot(ttt1,aes(x=RegistrationDate,y=Proportion,color=Treat))+
+  geom_point()+
+  geom_line()+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by Treatment Name")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom',legend.text = element_text(size = 8))+guides(col = guide_legend(nrow = 3))
+
+ttt2=ttt1[RegistrationDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,RegistrationDate:=NULL]
+
+tmp2=all_dat[,list(sum(RegisteredFlag),.N),by=c('LookupRuleGroupid','Treat')]
+
+glm1=glm(V1~Treat+offset(log(N)),data=tmp2,family='quasipoisson')
+# glm1=glm(cbind(V1,N)~Treat,data=tmp2,family='binomial')
+summary(glm1)
+p1=coef(summary(glm1))[2,4]
+p2=coef(summary(glm1))[3,4]
+p3=coef(summary(glm1))[4,4]
+p4=coef(summary(glm1))[5,4]
+p5=coef(summary(glm1))[6,4]
+p6=coef(summary(glm1))[7,4]
+p7=coef(summary(glm1))[8,4]
+ 
+ttt2[,'P-value vs Control':=c(NA,p1,p2,p3,p4,p5,p6,p7)]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by Treatment Name as of ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3,3))
+
+@
+
+<<TreatmentTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+\clearpage
+The following figure shows how the proportion of registered members for each of the treatment methods has changed since the mailing. The table gives the current value of each treatment method.\\
+\\
+<<TreatmentMember,results=hide,echo=FALSE,fig=TRUE>>=
+by_vars1=c('RegistrationDate','TreatmentMember')
+by_vars2=c('TreatmentMember')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(RegistrationDate,tmp$Dates[!tmp$Dates%in%RegistrationDate]),
+                                    c(N,tmp$Value[!tmp$Dates%in%RegistrationDate])),by=by_vars2][order(V1)][,list(V1,
+                                    c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(TreatmentMember)]
+setnames(ttt1,names(ttt1),c(by_vars2,'RegistrationDate','Registered','N','Proportion'))
+
+ggplot(ttt1,aes(x=RegistrationDate,y=Proportion,color=TreatmentMember))+
+  geom_point()+
+  geom_line()+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by Treatment Member")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom')
+
+ttt2=ttt1[RegistrationDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,RegistrationDate:=NULL]
+
+tmp2=all_dat[,list(sum(RegisteredFlag),.N),by=c('LookupRuleGroupid','TreatmentMember')]
+
+glm1=glm(V1~TreatmentMember+offset(log(N)),data=tmp2,family='quasipoisson')
+p1=coef(summary(glm1))[2,4]
+p2=coef(summary(glm1))[3,4]
+
+ttt2[,'P-value vs Control':=c(NA,p1,p2)]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by Treatment Method as of ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3,3))
+@
+
+<<TreatmentMemberTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+\clearpage
+The following figure shows how the proportion of registered members for each of the treatment formats has changed since the mailing. The table gives the current value of each treatment format.\\ 
+\\
+<<TreatmentBC,results=hide,echo=FALSE,fig=TRUE>>=
+by_vars1=c('RegistrationDate','TreatmentBC')
+by_vars2=c('TreatmentBC')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(RegistrationDate,tmp$Dates[!tmp$Dates%in%RegistrationDate]),
+                                    c(N,tmp$Value[!tmp$Dates%in%RegistrationDate])),by=by_vars2][order(V1)][,list(V1,
+                                    c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(TreatmentBC)]
+setnames(ttt1,names(ttt1),c(by_vars2,'RegistrationDate','Registered','N','Proportion'))
+
+ggplot(ttt1,aes(x=RegistrationDate,y=Proportion,color=TreatmentBC))+
+  geom_point()+
+  geom_line()+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by Treatment BC")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom')
+
+ttt2=ttt1[RegistrationDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,RegistrationDate:=NULL]
+
+tmp2=all_dat[,list(sum(RegisteredFlag),.N),by=c('LookupRuleGroupid','TreatmentBC')]
+
+glm1=glm(V1~TreatmentBC+offset(log(N)),data=tmp2,family='quasipoisson')
+p1=coef(summary(glm1))[2,4]
+p2=coef(summary(glm1))[3,4]
+
+ttt2[,'P-Value vs Control':=c(NA,p1,p2)]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by Treatment Format as of ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3,3))
+@
+
+<<TreatmentBCTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+\clearpage
+The following figure shows how the proportion of registered members for each of the treatment formats has changed since the mailing. The table gives the current value of each treatment format.\\ 
+\\
+<<TreatmentCEO,results=hide,echo=FALSE,fig=TRUE>>=
+by_vars1=c('RegistrationDate','TreatmentCEO')
+by_vars2=c('TreatmentCEO')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(RegistrationDate,tmp$Dates[!tmp$Dates%in%RegistrationDate]),
+                                    c(N,tmp$Value[!tmp$Dates%in%RegistrationDate])),by=by_vars2][order(V1)][,list(V1,
+                                    c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(TreatmentCEO)]
+setnames(ttt1,names(ttt1),c(by_vars2,'RegistrationDate','Registered','N','Proportion'))
+
+ggplot(ttt1,aes(x=RegistrationDate,y=Proportion,color=TreatmentCEO))+
+  geom_point()+
+  geom_line()+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by Treatment CEO")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom')
+
+ttt2=ttt1[RegistrationDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,RegistrationDate:=NULL]
+
+tmp2=all_dat[,list(sum(RegisteredFlag),.N),by=c('LookupRuleGroupid','TreatmentCEO')]
+
+glm1=glm(V1~TreatmentCEO+offset(log(N)),data=tmp2,family='quasipoisson')
+p1=coef(summary(glm1))[2,4]
+p2=coef(summary(glm1))[3,4]
+
+ttt2[,'P-Value vs Control':=c(NA,p1,p2)]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by Treatment CEO as of ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3,3))
+@
+
+<<TreatmentCEOTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+\clearpage
+The following figure shows how the proportion of registered members for if others had registered in the company since the mailing. The table gives the current value of each.\\ 
+\\
+<<OthersReg,results=hide,echo=FALSE,fig=TRUE>>=
+by_vars1=c('RegistrationDate','OthersReg')
+by_vars2=c('OthersReg')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(RegistrationDate,tmp$Dates[!tmp$Dates%in%RegistrationDate]),
+                                    c(N,tmp$Value[!tmp$Dates%in%RegistrationDate])),by=by_vars2][order(V1)][,list(V1,
+                                    c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(OthersReg)]
+setnames(ttt1,names(ttt1),c(by_vars2,'RegistrationDate','Registered','N','Proportion'))
+
+ggplot(ttt1,aes(x=RegistrationDate,y=Proportion,color=OthersReg))+
+  geom_point()+
+  geom_line()+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by Others Registered in Group")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom')
+
+ttt2=ttt1[RegistrationDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,RegistrationDate:=NULL]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by Others Registered in Group as of ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3))
+@
+
+<<OthersRegTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+\clearpage
+The following figure shows how the proportion of registered members for gender since the mailing. The table gives the current value of each.\\ 
+\\
+<<GenderCode,results=hide,echo=FALSE,fig=TRUE>>=
+by_vars1=c('RegistrationDate','GenderCode')
+by_vars2=c('GenderCode')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(RegistrationDate,tmp$Dates[!tmp$Dates%in%RegistrationDate]),
+                                    c(N,tmp$Value[!tmp$Dates%in%RegistrationDate])),by=by_vars2][order(V1)][,list(V1,
+                                    c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(GenderCode)]
+setnames(ttt1,names(ttt1),c(by_vars2,'RegistrationDate','Registered','N','Proportion'))
+
+ggplot(ttt1,aes(x=RegistrationDate,y=Proportion,color=GenderCode))+
+  geom_point()+
+  geom_line()+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by Gender")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom')
+
+ttt2=ttt1[RegistrationDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,RegistrationDate:=NULL]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by Gender as of ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3))
+@
+
+<<GenderCodeTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+\clearpage
+The following figure shows how the proportion of registered members for age groups (age<38) since the mailing. The table gives the current value of each.\\ 
+\\
+<<BinAge,results=hide,echo=FALSE,fig=TRUE>>=
+by_vars1=c('RegistrationDate','BinAge')
+by_vars2=c('BinAge')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(RegistrationDate,tmp$Dates[!tmp$Dates%in%RegistrationDate]),
+                                    c(N,tmp$Value[!tmp$Dates%in%RegistrationDate])),by=by_vars2][order(V1)][,list(V1,
+                                    c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(BinAge)]
+setnames(ttt1,names(ttt1),c(by_vars2,'RegistrationDate','Registered','N','Proportion'))
+
+ggplot(ttt1,aes(x=RegistrationDate,y=Proportion,color=BinAge))+
+  geom_point()+
+  geom_line()+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by Age>=38 and Age<38")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom')
+
+ttt2=ttt1[RegistrationDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,RegistrationDate:=NULL]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by Binary Age as of ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3))
+@
+
+<<BinAgeTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+\clearpage
+The following figure shows how the proportion of registered members for May and June Effectives since the mailing. The table gives the current value of each.\\ 
+\\
+<<JulyOrAug,results=hide,echo=FALSE,fig=TRUE>>=
+by_vars1=c('RegistrationDate','JulyOrAug')
+by_vars2=c('JulyOrAug')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(RegistrationDate,tmp$Dates[!tmp$Dates%in%RegistrationDate]),
+                                    c(N,tmp$Value[!tmp$Dates%in%RegistrationDate])),by=by_vars2][order(V1)][,list(V1,
+                                    c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(JulyOrAug)]
+setnames(ttt1,names(ttt1),c(by_vars2,'RegistrationDate','Registered','N','Proportion'))
+
+ggplot(ttt1,aes(x=RegistrationDate,y=Proportion,color=JulyOrAug))+
+  geom_point()+
+  geom_line()+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by July and August Effectives")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom')
+
+ttt2=ttt1[RegistrationDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,RegistrationDate:=NULL]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by July and August Effectives ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3))
+@
+
+<<BinAgeTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+\clearpage
+\begin{landscape}
+The following table shows the estimated proportions for each treatment with the blocking factors (age, gender, and others registered).\\
+\\
+<<DOEtable,results=hide,echo=FALSE>>=
+by_vars1=c('RegistrationDate','Treat','BinAge','OthersReg','GenderCode')
+by_vars2=c('Treat','BinAge','OthersReg','GenderCode')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(RegistrationDate,tmp$Dates[!tmp$Dates%in%RegistrationDate]),
+                                    c(N,tmp$Value[!tmp$Dates%in%RegistrationDate])),by=by_vars2][order(V1)][,list(V1,
+                                    c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(Treat)]
+setnames(ttt1,names(ttt1),c('Treatment','Age','OthersReg','Gender','RegistrationDate','Registered','N','Proportion'))
+
+ttt2=ttt1[RegistrationDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,RegistrationDate:=NULL]
+
+col1=ttt2[OthersReg=='Yes' & Gender=='M' & Age=='Older',c(as.character(round(Proportion,3)),paste(Registered,'/',N,sep="")),by=Treatment]$V1
+col2=ttt2[OthersReg=='Yes' & Gender=='M' & Age=='Younger',c(as.character(round(Proportion,3)),paste(Registered,'/',N,sep="")),by=Treatment]$V1
+col3=ttt2[OthersReg=='Yes' & Gender=='F' & Age=='Older',c(as.character(round(Proportion,3)),paste(Registered,'/',N,sep="")),by=Treatment]$V1
+col4=ttt2[OthersReg=='Yes' & Gender=='F' & Age=='Younger',c(as.character(round(Proportion,3)),paste(Registered,'/',N,sep="")),by=Treatment]$V1
+col5=ttt2[OthersReg=='No' & Gender=='M' & Age=='Older',c(as.character(round(Proportion,3)),paste(Registered,'/',N,sep="")),by=Treatment]$V1
+col6=ttt2[OthersReg=='No' & Gender=='M' & Age=='Younger',c(as.character(round(Proportion,3)),paste(Registered,'/',N,sep="")),by=Treatment]$V1
+col7=ttt2[OthersReg=='No' & Gender=='F' & Age=='Older',c(as.character(round(Proportion,3)),paste(Registered,'/',N,sep="")),by=Treatment]$V1
+col8=ttt2[OthersReg=='No' & Gender=='F' & Age=='Younger',c(as.character(round(Proportion,3)),paste(Registered,'/',N,sep="")),by=Treatment]$V1
+col9=all_dat[,c(as.character(round(sum(RegisteredFlag)/.N,3)),paste(sum(RegisteredFlag),'/',.N,sep="")),keyby=c('Treat')]$V1
+
+tot=ttt2[,list(as.character(round(sum(Registered)/sum(N),3)),paste(sum(Registered),'/',sum(N),sep="")),by=c('OthersReg','Gender','Age')]
+tot[,c('OthersReg','Gender','Age'):=list(factor(OthersReg,levels=c('Yes','No')),factor(Gender,levels=c('M','F')),factor(Age,levels=c('Older','Younger')))]
+setkeyv(tot,c('OthersReg','Gender','Age'))
+tot.row1=paste("\\hline&&Total&",paste(tot$V1,collapse="&"),'&',round(sum(all_dat$RegisteredFlag)/nrow(all_dat),3),'\\\\',sep="")
+tot.row2=paste("&&&",paste(tot$V2,collapse="&"),'&',sum(all_dat$RegisteredFlag),'/',nrow(all_dat),'\\\\',sep="")
+
+DOEtable=all_dat[,c(.N,.N),keyby=c('Treat','TreatmentMember','TreatmentBC','TreatmentCEO')]
+DOEtable[,V1:=NULL]
+DOEtable[,c('Group 1','Group 2','Group 3','Group 4','Group 5','Group 6','Group 7','Group 8','Total'):=list(col1,col2,col3,col4,col5,col6,col7,col8,col9)]
+DOEtable[,Treat:=NULL]
+DOEtable[,c('TreatmentMember','TreatmentBC','TreatmentCEO'):=list(as.character(TreatmentMember),as.character(TreatmentBC),as.character(TreatmentCEO))]
+DOEtable[(1:nrow(DOEtable)%%2)==0,c('TreatmentMember','TreatmentBC','TreatmentCEO'):=list(NA,NA,NA)]
+
+setnames(DOEtable,names(DOEtable),c('\\textbf{Member}','\\textbf{BC}','\\textbf{CEO}','\\textbf{Group 1}','\\textbf{Group 2}','\\textbf{Group 3}','\\textbf{Group 4}','\\textbf{Group 5}','\\textbf{Group 6}','\\textbf{Group 7}','\\textbf{Group 8}','\\textbf{Total}'))
+
+xtab.DOE1=xtable(DOEtable,digits=c(0,0,0,0,0,0,0,0,0,0,0,0,0),caption =paste("Results by Treatment and Blocking Factors as of ",as.character(as.Date(Sys.time(),tz=""))))
+@
+
+<<DOEtableprint,results=tex,echo=FALSE>>=
+align(xtab.DOE1) <- "llll|llllllll|r"
+print(xtab.DOE1,caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE),sanitize.text.function=function(x){x},hline.after=c(-1, 0,nrow(xtab.DOE1)), 
+       add.to.row=list(pos=list(-1,-1,-1,0,1,4,5,8,9,12,13,16,16),
+                                  command=c("\\hline \\multicolumn{3}{l|}{Block 1:Others registered at the same company?}&Yes&Yes&Yes&Yes&No&No&No&No&\\\\",
+                                            "\\multicolumn{3}{l|}{Block 2:Gender}&Male&Male&Female&Female&Male&Male&Female&Female&\\\\",
+                                            "\\multicolumn{3}{l|}{Block 3:Age}&$\\geq 38$&<38&$\\geq 38$&<38&$\\geq 38$&<38&$\\geq 38$&<38&\\\\",
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            tot.row1,
+                                            tot.row2)))
+@
+\end{landscape}
+\clearpage
+The following two tables seem to suggest there is a company effect of some kind. Meaning that these companies could have some sort of "peer pressure" or "its the cool thing" effect on our registration rates. This could support the idea of getting the CEO on board to make it "cool" or "peer pressure" to register. Or the company does a better job of letting the employees know what the motion program is all about.\\
+\\
+The following table shows how the top 7 companies we mailed to have done compared to the rest of the companies. These are only companies that DID have others registered at the time of the mailing.
+<<CompanyLevel1,results=hide,echo=FALSE>>=
+# View(all_dat[,list(sum(RegisteredFlag),.N,sum(RegisteredFlag)/.N),by=c('LookupRuleGroupid','Treat')][order(-N)])
+row.ind=nrow(all_dat[OthersReg=='Yes',.N,by=LookupRuleGroupid])
+tmp1=all_dat[OthersReg=='Yes',list(sum(RegisteredFlag),.N,sum(RegisteredFlag)/.N),by=c('LookupRuleGroupid','GroupEffectiveDate','Treat')][order(-V1)][1:7]
+tmp2=all_dat[OthersReg=='Yes',list(sum(RegisteredFlag),.N,sum(RegisteredFlag)/.N),by=c('LookupRuleGroupid','GroupEffectiveDate','Treat')][order(-V1)][8:row.ind,list(sum(V1),sum(N),sum(V1)/sum(N))]
+tmp1=tmp1[,list(c(LookupRuleGroupid,'Combined Top 7',paste('All Others (',row.ind-7,')',sep="")),c(as.character(GroupEffectiveDate),NA,NA),c(as.character(Treat),'Combined Top 7',paste('All Others (',row.ind-7,')',sep="")),c(V1,sum(V1),tmp2$V1),c(N,sum(N),tmp2$V2),c(V3,sum(V1)/sum(N),tmp2$V3))]
+setnames(tmp1,names(tmp1),c('CompanyID','GroupDate','Treatment','Registered','Total','Proportion'))
+xtab1=xtable(tmp1,caption =paste("Results by Company, with Registered"),digits=c(0,0,0,0,0,0,3))
+@
+
+<<CompanyLevel1Table,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE),hline.after=c(-1,0,7,9))
+@
+
+The following table shows how the top 7 companies we mailed to have done compared to the rest of the companies. These are only companies that DID NOT have others registered at the time of the mailing.
+<<CompanyLevel2,results=hide,echo=FALSE>>=
+# View(all_dat[,list(sum(RegisteredFlag),.N,sum(RegisteredFlag)/.N),by=c('LookupRuleGroupid','Treat')][order(-N)])
+row.ind=nrow(all_dat[OthersReg=='No',.N,by=LookupRuleGroupid])
+tmp1=all_dat[OthersReg=='No',list(sum(RegisteredFlag),.N,sum(RegisteredFlag)/.N),by=c('LookupRuleGroupid','GroupEffectiveDate','Treat')][order(-V1)][1:7]
+tmp2=all_dat[OthersReg=='No',list(sum(RegisteredFlag),.N,sum(RegisteredFlag)/.N),by=c('LookupRuleGroupid','GroupEffectiveDate','Treat')][order(-V1)][8:row.ind,list(sum(V1),sum(N),sum(V1)/sum(N))]
+tmp1=tmp1[,list(c(LookupRuleGroupid,'Combined Top 7',paste('All Others (',row.ind-7,')',sep="")),c(as.character(GroupEffectiveDate),NA,NA),c(as.character(Treat),'Combined Top 7',paste('All Others (',row.ind-7,')',sep="")),c(V1,sum(V1),tmp2$V1),c(N,sum(N),tmp2$V2),c(V3,sum(V1)/sum(N),tmp2$V3))]
+setnames(tmp1,names(tmp1),c('CompanyID','GroupDate','Treatment','Registered','Total','Proportion'))
+xtab1=xtable(tmp1,caption =paste("Results by Company, without Registered"),digits=c(0,0,0,0,0,0,3))
+@
+
+<<CompanyLevel2Table,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE),hline.after=c(-1,0,7,9))
+@
+
+\clearpage
+% \section{Survival Curves}
+% The following figure is the "Survival" curves. The event of interest is registering. So how many days from the members effective date to the 60 day benefit end date until members registered.\\
+% \\
+<<SurvivalTest.overall,results=hide,echo=FALSE>>=
+all_dat[,id:=1:nrow(all_dat)]
+all_dat[,registered2:=RegisteredFlag]
+all_dat[,StartTime:=as.numeric(round(difftime('2016-06-14',EffectiveDate,units='days'),0))]
+all_dat[,EndTime:=StartTime+as.numeric(round(difftime(BenefitEndDate,'2016-06-14',units='days'),0))]
+all_dat[,Time2:=as.numeric(round(difftime(RegistrationDate,EffectiveDate,units='days'),0))]
+all_dat[is.na(Time2),registered2:=0]
+all_dat[,registered2:=factor(registered2)]
+all_dat[,Time2:=list(min(c(Time2+1,as.numeric(round(difftime(as.Date(Sys.time(),tz=""),EffectiveDate,units='days'),0))),na.rm=TRUE)),by=id]
+md=max(all_dat$Time2)
+
+fit.Registered=summary(survfit(Surv(StartTime,Time2, registered2==1)~TreatmentMember, data= all_dat),time=0:md)
+# summary(fit.Registered,time=0:60)
+# survdiff(Surv(TimetoRegister, event=RegisteredFlag==1)~TreatmentMember, data= all_dat) 
+# summary(m1 <- coxph(Surv(TimetoRegister, event=RegisteredFlag==1)~TreatmentMember, data= all_dat)) 
+
+sdata.time<-data.frame(time=fit.Registered$time, surv=fit.Registered$surv, lower=fit.Registered$lower, upper=fit.Registered$upper)
+sdata.time$Group<-fit.Registered$strata
+sdata.time$surv <- sdata.time$surv * 100
+sdata.time$lower <- sdata.time$lower * 100
+sdata.time$upper <- sdata.time$upper * 100
+sdata.time$Group=substr(sdata.time$Group,17,50)
+md=max(all_dat$Time2)
+p1=ggplot(sdata.time,aes(x=time,y=surv,color=Group,group=Group))+
+  geom_line()+
+  geom_vline(aes(xintercept=60),linetype=2,alpha=.5,size=.5)+
+  scale_y_continuous(breaks=seq(80,100,5),labels=seq(80,100,5),limits=c(80,100))+
+  scale_x_continuous(breaks=seq(0,md,5),labels=seq(0,md,5),limits=c(0,md))+
+  xlab('Time Since Member Effective Date')+ylab('1-Registration (%)')+
+  theme(axis.line = element_line(color = 'black'),legend.position="bottom",legend.text = element_text(size = 8))+guides(col = guide_legend(nrow = 3))
+
+
+tmp=all_dat[,list(sum(registered2==1),.N),by=c('Time2','Treat')][order(Time2)]
+tmp2=all_dat[,.N,by=Treat]
+tmp2=tmp2[,list(rep(Treat,each=length(min(tmp$Time2):max(tmp$Time2))),min(tmp$Time2):max(tmp$Time2),0)]
+setnames(tmp2,names(tmp2),c('Treatment','Time2','Value'))
+setkeyv(tmp2,c('Time2','Treatment')) ; setkeyv(tmp,c('Time2','Treat'))
+tmp=tmp[tmp2]
+tmp=tmp[is.na(V1),c('V1','N'):=list(as.integer(Value),as.integer(Value))]
+tmp[,Value:=NULL]
+tmp=tmp[,list(Time2,cumsum(V1)),by=c('Treat')]
+tmp[,Treatment:=as.character(Treat)]
+p2=ggplot(tmp,aes(x=Time2,y=V2,color=Treatment))+
+  geom_line()+
+#   geom_point()+
+  scale_y_continuous(breaks=seq(0,max(tmp$V2)+5,10),labels=seq(0,max(tmp$V2)+5,10))+
+  scale_x_continuous(breaks=seq(10,max(tmp$Time2),10),labels=seq(10,max(tmp$Time2),10))+
+  xlab('Time Since Member Effective Date')+ylab('Number of Cumulative Members Registered')+
+  theme(axis.line = element_line(color = 'black'),legend.position="bottom",legend.text = element_text(size = 8))+guides(col = guide_legend(nrow = 3))
+@
+
+% <<echo=FALSE,results=hide,fig=TRUE>>=
+% print(p1)
+% @
+
+How many days after the members effective date began until the member registered? The figure shows the count of members that registered from that date.\\
+\\
+<<echo=FALSE,results=hide,fig=TRUE>>=
+print(p2)
+@
+
+\end{document}

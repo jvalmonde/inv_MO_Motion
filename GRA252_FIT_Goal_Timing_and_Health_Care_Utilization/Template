@@ -1,0 +1,13 @@
+> #### Author: Susan Mehle
+> #### Description: Check the Diagnosis dataset for the individual to see what HCC should be assigned after checking MCE criteria as well as other Age/Gender criteria for HCC assignment.
+> ####  Other Code
+>   * NGIS - [RA_Commercial_2016] Stored Procedure [dbo].[spRAFDiagInput]
+> 
+> #####  Input
+>   * research-00: INV_motion.raf_Model
+>   * research-00: INV_motion.raf_ModelCategory
+>   * research-00: INV_motion.raf_Model
+>   * research-00: NV_motion.GRA252_raf_Person
+> 
+> ####  Output
+>   * research-00: INV_motion.RA_Com_A_IdentifyModelCategory

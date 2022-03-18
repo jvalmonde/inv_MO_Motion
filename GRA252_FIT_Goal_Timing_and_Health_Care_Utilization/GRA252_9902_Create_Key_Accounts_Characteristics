@@ -1,0 +1,47 @@
+CREATE OR REPLACE TABLE INV_motion.GRA252_Key_Accounts_Characteristics AS
+
+WITH chr_dx AS
+(SELECT 
+     mbr.indv_sys_id
+    ,mbr.enrolled_id
+    ,MAX(
+         CASE WHEN claims.diag_cd_sys_id IN (SELECT diag_cd_sys_id FROM MiniHPDM.Dim_Diagnosis_Code WHERE TRIM(UPPER(chrnc_flg_nm)) ="CHRONIC DX")
+              AND dt.full_dt < mbr.program_start_dt
+              THEN 1 ELSE 0 END
+         ) AS chronic_flag_pre
+    ,MAX(
+         CASE WHEN claims.diag_cd_sys_id IN (SELECT diag_cd_sys_id FROM MiniHPDM.Dim_Diagnosis_Code WHERE TRIM(UPPER(chrnc_flg_nm)) ="CHRONIC DX")
+              AND dt.full_dt >= mbr.program_start_dt
+              THEN 1 ELSE 0 END
+         ) AS chronic_flag_post         
+FROM INV_motion.GRA252_Dim_Participants mbr
+JOIN ( SELECT Indv_Sys_Id, Diag_1_Cd_Sys_Id diag_cd_sys_id, Dt_Sys_Id FROM MiniHPDM.Fact_Claims
+         UNION ALL SELECT Indv_Sys_Id, Diag_2_Cd_Sys_Id, Dt_Sys_Id FROM MiniHPDM.Fact_Claims
+         UNION ALL SELECT Indv_Sys_Id, Diag_3_Cd_Sys_Id, Dt_Sys_Id FROM MiniHPDM.Fact_Claims
+      ) AS claims ON mbr.indv_sys_id = claims.Indv_Sys_Id
+JOIN MiniHPDM.Dim_Date dt ON claims.Dt_Sys_Id = dt.dt_sys_id
+
+WHERE mbr.enrolled_id IS NOT NULL
+GROUP BY mbr.indv_sys_id, mbr.enrolled_id)
+
+SELECT 
+ mbr.indv_sys_id
+,mbr.eligible_id
+,mbr.enrolled_id
+,mbr.sbscr_ind
+,DATE_DIFF(CASE WHEN mbr.Fst_Dt<'2015-01-01' THEN DATE('2015-01-01') ELSE mbr.Fst_Dt END,mbr.birth_date,DAY)/365.25 age_plan_enrollment
+,DATE_DIFF(mbr.program_start_dt,mbr.birth_date,DAY)/365.25 age_motion_enrollment
+,mbr.has_mm_match plan_match
+,CASE WHEN mbr.enrolled_id IS NULL THEN 0 ELSE 1 END AS motion_enrolled_flag
+,mbr.birth_date dob
+,mbr.Fst_Dt
+,mbr.End_Dt
+,mbr.program_start_dt
+,mbr.program_end_dt
+,mbr.PlanMM2015 + mbr.PlanMM2016 + mbr.PlanMM2017 + mbr.PlanMM2018 AS plan_months
+,DATE_DIFF(mbr.program_start_dt, mbr.program_end_dt, MONTH) AS motion_months
+,chronic_flag_pre
+,chronic_flag_post
+
+FROM INV_motion.GRA252_Dim_Participants mbr
+LEFT JOIN chr_dx ON mbr.indv_sys_id = chr_dx.indv_sys_id;

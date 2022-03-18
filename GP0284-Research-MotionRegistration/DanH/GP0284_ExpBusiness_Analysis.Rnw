@@ -1,0 +1,363 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage[margin=1in]{geometry}
+\usepackage{pdflscape}
+\author{}
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\title{All Savers Motion, Business Level: GP0284}
+\maketitle
+\clearpage
+
+<<results=hide,echo=FALSE>>=
+library(data.table)
+library(savvy)
+library(xtable)
+library(survival)
+
+all_dat=data.table(read.odbc("Devsql14pdb_abw",dbQuery='select * from [pdb_abw].[dbo].[GP0284_MemberRegistrations]'))
+# all_dat=all_dat[Group=='Mail Recipient']
+all_dat=all_dat[Treatment!='c2']
+# all_dat=all_dat[is.na(registeredDate) | registeredDate>='2016-04-14']
+setkeyv(all_dat,c('registeredDate'))
+
+all_dat[,'OthersRegistered':=as.factor(ifelse(GroupRegistrationRateatStart==0 | is.na(GroupRegistrationRateatStart),'No','Yes'))]
+all_dat[,c('registeredDate','MemberEffectiveDate','GroupFirstStartDate','Birthdate'):=list(as.Date(registeredDate,tz=''),as.Date(MemberEffectiveDate,tz=''),as.Date(GroupFirstStartDate,tz=''),as.Date(Birthdate,tz=''))]
+all_dat[,age:=round(as.numeric(difftime(as.Date(Sys.time(),tz=""),Birthdate)/364.25),0),by=Birthdate]
+all_dat[,BinAge:=ifelse(age>=38,'Older','Younger')]
+all_dat[,Registered:=ifelse(!is.na(registeredDate),1,0)]
+all_dat[,c('TreatmentMethod','TreatmentFormat','TreatmentDestination'):=list(factor(TreatmentMethod,levels=c('Control','Easy money','You won','Tap negative energy','Comic (tribal appeal)')),
+                                                                             factor(TreatmentFormat,levels=c('Control','Letter','Postcard')),
+                                                                             factor(TreatmentDestination,levels=c('Control','Home','Work')))]
+all_dat[,BenefitEndDate:=MemberEffectiveDate+60]
+all_dat=all_dat[is.na(MemberEligibilityEndDate)]
+
+# all_dat=all_dat[GroupFirstStartDate=='2016-03-01']
+
+tmp1=round(difftime('2016-04-14',as.Date(Sys.time(),tz=""),units='days'),0)
+tmp=data.table(Dates=seq(as.Date('2016-04-14')+tmp1,as.Date(Sys.time(),tz=""),by="1 day"),Value=0)
+
+@
+
+<<Treatment,echo=FALSE,results=hide,fig=TRUE>>=
+by_vars1=c('registeredDate','TreatmentName')
+by_vars2=c('TreatmentName')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(registeredDate,tmp$Dates[!tmp$Dates%in%registeredDate]),
+                               c(N,tmp$Value[!tmp$Dates%in%registeredDate])),by=by_vars2][order(V1)][,list(V1,
+                               c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(TreatmentName)]
+setnames(ttt1,names(ttt1),c(by_vars2,'registeredDate','Registered','N','Proportion'))
+
+# tmp1=round(difftime('2016-04-14',as.Date(Sys.time(),tz=""),units='days'),0)
+
+ggplot(ttt1[registeredDate>=tmp[1]$Date],aes(x=registeredDate,y=Proportion,color=TreatmentName))+
+  geom_point()+
+  geom_line()+
+  geom_vline(data=data.frame(xint=as.Date('2016-04-14')),aes(xintercept=as.numeric(xint)))+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by Treatment Name")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom',legend.text = element_text(size = 8))+guides(col = guide_legend(nrow = 3))
+
+ttt2=ttt1[registeredDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,registeredDate:=NULL]
+
+p1=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentName=='You won/Letter/Work',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentName=='You won/Letter/Work',.N]),alternative='less')$p.value
+
+p2=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentName=='Comic (tribal appeal)/Postcard/Work',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentName=='Comic (tribal appeal)/Postcard/Work',.N]),alternative='less')$p.value
+
+p3=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentName=='Tap negative energy/Postcard/Work',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentName=='Tap negative energy/Postcard/Work',.N]),alternative='less')$p.value
+
+p4=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentName=='Tap negative energy/Letter/Home',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentName=='Tap negative energy/Letter/Home',.N]),alternative='less')$p.value
+
+p5=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentName=='Comic (tribal appeal)/Letter/Home',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentName=='Comic (tribal appeal)/Letter/Home',.N]),alternative='less')$p.value
+
+p6=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentName=='You won/Postcard/Home',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentName=='You won/Postcard/Home',.N]),alternative='less')$p.value
+
+p7=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentName=='Easy money/Letter/Work',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentName=='Easy money/Letter/Work',.N]),alternative='less')$p.value
+
+p8=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentName=='Easy money/Postcard/Home',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentName=='Easy money/Postcard/Home',.N]),alternative='less')$p.value
+
+p9=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentName!='Control',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentName!='Control',.N]),alternative='less')$p.value
+
+ttt2[,'P-value vs Control':=c(p5,p2,NA,p7,p8,p4,p3,p1,p6)]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by Treatment Name as of ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3,3))
+@
+
+<<TreatmentTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+<<TreatmentFormat,results=hide,echo=FALSE,fig=TRUE>>=
+by_vars1=c('registeredDate','TreatmentFormat')
+by_vars2=c('TreatmentFormat')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(registeredDate,tmp$Dates[!tmp$Dates%in%registeredDate]),
+                                    c(N,tmp$Value[!tmp$Dates%in%registeredDate])),by=by_vars2][order(V1)][,list(V1,
+                                    c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(TreatmentFormat)]
+setnames(ttt1,names(ttt1),c(by_vars2,'registeredDate','Registered','N','Proportion'))
+
+ggplot(ttt1[registeredDate>=tmp[1]$Date],aes(x=registeredDate,y=Proportion,color=TreatmentFormat))+
+  geom_point()+
+  geom_line()+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by Treatment Format")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom')
+
+ttt2=ttt1[registeredDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,registeredDate:=NULL]
+
+p1=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentFormat=='Letter',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentFormat=='Letter',.N]),alternative='less')$p.value
+
+p2=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentFormat=='Postcard',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentFormat=='Postcard',.N]),alternative='less')$p.value
+
+ttt2[,'P-Value vs Control':=c(NA,p1,p2)]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by Treatment Format as of ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3,3))
+@
+
+<<TreatmentFormatTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+<<TreatmentDestination,results=hide,echo=FALSE,fig=TRUE>>=
+by_vars1=c('registeredDate','TreatmentDestination')
+by_vars2=c('TreatmentDestination')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(registeredDate,tmp$Dates[!tmp$Dates%in%registeredDate]),
+                                    c(N,tmp$Value[!tmp$Dates%in%registeredDate])),by=by_vars2][order(V1)][,list(V1,
+                                    c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(TreatmentDestination)]
+setnames(ttt1,names(ttt1),c(by_vars2,'registeredDate','Registered','N','Proportion'))
+
+ggplot(ttt1[registeredDate>=tmp[1]$Date],aes(x=registeredDate,y=Proportion,color=TreatmentDestination))+
+  geom_point()+
+  geom_line()+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by Treatment Destination")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom')
+
+ttt2=ttt1[registeredDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,registeredDate:=NULL]
+
+p1=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentDestination=='Work',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentDestination=='Work',.N]),alternative='less')$p.value
+
+p2=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentDestination=='Home',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentDestination=='Home',.N]),alternative='less')$p.value
+
+ttt2[,'P-Value vs Control':=c(NA,p2,p1)]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by Treatment Destination as of ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3,3))
+@
+
+<<TreatmentDestinationTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+<<TreatmentMethod,results=hide,echo=FALSE,fig=TRUE>>=
+by_vars1=c('registeredDate','TreatmentMethod')
+by_vars2=c('TreatmentMethod')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(registeredDate,tmp$Dates[!tmp$Dates%in%registeredDate]),
+                                    c(N,tmp$Value[!tmp$Dates%in%registeredDate])),by=by_vars2][order(V1)][,list(V1,
+                                    c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(TreatmentMethod)]
+setnames(ttt1,names(ttt1),c(by_vars2,'registeredDate','Registered','N','Proportion'))
+
+ggplot(ttt1[registeredDate>=tmp[1]$Date],aes(x=registeredDate,y=Proportion,color=TreatmentMethod))+
+  geom_point()+
+  geom_line()+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by Treatment Method")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom')
+
+ttt2=ttt1[registeredDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,registeredDate:=NULL]
+
+p1=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentMethod=='You won',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentMethod=='You won',.N]),alternative='less')$p.value
+
+p2=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentMethod=='Comic (tribal appeal)',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentMethod=='Comic (tribal appeal)',.N]),alternative='less')$p.value
+
+p3=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentMethod=='Tap negative energy',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentMethod=='Tap negative energy',.N]),alternative='less')$p.value
+
+p4=prop.test(c(all_dat[TreatmentName=='Control',sum(Registered)],all_dat[TreatmentMethod=='Easy money',sum(Registered)]),c(all_dat[TreatmentName=='Control',.N],all_dat[TreatmentMethod=='Easy money',.N]),alternative='less')$p.value
+
+ttt2[,'P-value vs Control':=c(NA,p4,p1,p3,p2)]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by Treatment Method as of ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3,3))
+@
+
+<<TreatmentMethodTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+<<OthersRegistered,results=hide,echo=FALSE,fig=TRUE>>=
+by_vars1=c('registeredDate','OthersRegistered')
+by_vars2=c('OthersRegistered')
+ttt1=all_dat[TreatmentName!='Control',.N,by=by_vars1][,list(c(registeredDate,tmp$Dates[!tmp$Dates%in%registeredDate]),
+                                    c(N,tmp$Value[!tmp$Dates%in%registeredDate])),by=by_vars2][order(V1)][,list(V1,
+                                    c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(OthersRegistered)]
+setnames(ttt1,names(ttt1),c(by_vars2,'registeredDate','Registered','N','Proportion'))
+
+ggplot(ttt1[registeredDate>=tmp[1]$Date],aes(x=registeredDate,y=Proportion,color=OthersRegistered))+
+  geom_point()+
+  geom_line()+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by Others Registered in Group")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom')
+
+ttt2=ttt1[registeredDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,registeredDate:=NULL]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by Others Registered in Group as of ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3))
+@
+
+<<OthersRegisteredTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+<<Gendercode,results=hide,echo=FALSE,fig=TRUE>>=
+by_vars1=c('registeredDate','Gendercode')
+by_vars2=c('Gendercode')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(registeredDate,tmp$Dates[!tmp$Dates%in%registeredDate]),
+                                    c(N,tmp$Value[!tmp$Dates%in%registeredDate])),by=by_vars2][order(V1)][,list(V1,
+                                    c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(Gendercode)]
+setnames(ttt1,names(ttt1),c(by_vars2,'registeredDate','Registered','N','Proportion'))
+
+ggplot(ttt1[registeredDate>=tmp[1]$Date],aes(x=registeredDate,y=Proportion,color=Gendercode))+
+  geom_point()+
+  geom_line()+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by Gender")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom')
+
+ttt2=ttt1[registeredDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,registeredDate:=NULL]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by Gender as of ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3))
+@
+
+<<GendercodeTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+<<BinAge,results=hide,echo=FALSE,fig=TRUE>>=
+by_vars1=c('registeredDate','BinAge')
+by_vars2=c('BinAge')
+ttt1=all_dat[,.N,by=by_vars1][,list(c(registeredDate,tmp$Dates[!tmp$Dates%in%registeredDate]),
+                                    c(N,tmp$Value[!tmp$Dates%in%registeredDate])),by=by_vars2][order(V1)][,list(V1,
+                                    c(cumsum(V2[!is.na(V1)]),0),sum(V2)),by=by_vars2][!is.na(V1),list(V1,V2,V3,V2/V3),by=c(by_vars2)][order(BinAge)]
+setnames(ttt1,names(ttt1),c(by_vars2,'registeredDate','Registered','N','Proportion'))
+
+ggplot(ttt1[registeredDate>=tmp[1]$Date],aes(x=registeredDate,y=Proportion,color=BinAge))+
+  geom_point()+
+  geom_line()+
+  ylab('Proportion Registered')+xlab('Date')+ggtitle("Proportion by Age>=38 and Age<38")+
+  scale_color_discrete(name="")+
+  theme(legend.position='bottom')
+
+ttt2=ttt1[registeredDate==as.character(as.Date(Sys.time(),tz=""))]
+ttt2[,registeredDate:=NULL]
+xtab1=xtable(ttt2[order(-Proportion)],caption =paste("Results by Binary Age as of ",as.character(as.Date(Sys.time(),tz=""))),digits=c(0,0,0,0,3))
+@
+
+<<BinAgeTable,results=tex, echo=FALSE>>=
+print(xtab1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE))
+@
+
+<<Tests,results=hide,echo=FALSE>>=
+glm1=glm(Registered~TreatmentMethod+TreatmentDestination+BinAge+OthersRegistered+Gendercode,data=all_dat,family='binomial')
+summary(glm1)
+
+glm2=glm(Registered~TreatmentMethod+BinAge+OthersRegistered+Gendercode,data=all_dat,family='binomial')
+summary(glm2)
+
+glm3=glm(Registered~TreatmentDestination+BinAge+OthersRegistered+Gendercode,data=all_dat,family='binomial')
+summary(glm3)
+
+glm4=glm(Registered~TreatmentFormat+BinAge+OthersRegistered+Gendercode,data=all_dat,family='binomial')
+summary(glm4)
+
+glm5=glm(Registered~BinAge+OthersRegistered+Gendercode,data=all_dat,family='binomial')
+summary(glm5)
+
+glm6=glm(Registered~TreatmentName+BinAge+OthersRegistered+Gendercode,data=all_dat,family='binomial')
+summary(glm6)
+
+glm7=glm(Registered~I(TreatmentName!='Control')+BinAge+OthersRegistered+Gendercode,data=all_dat,family='binomial')
+summary(glm7)
+
+
+
+
+ttt1=matrix(c(rep(1,9),0,1,1,rep(0,9),1,1,rep(0,11),1,1,rep(0,5),1,1,rep(0,3),1,0,1,0,0,1,0,1,0,0,1,0,1,1,0,1,0,0,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0),ncol=9,nrow=9)
+qr(ttt1[,c(2:7,8)])
+
+X=data.table(expand.grid(c("EasyMoney",'Comic','YouWon','TapNeg'),c('work','home'),c('Postcard','Letter')))
+setnames(X,names(X),c('X3','X2','X1'))
+setcolorder(X,c('X3','X1','X2'))
+
+X[,list(X3,X1,X2,(as.numeric(X1)+as.numeric(X2)+as.numeric(X3))%%2)][V4==1][order(X3)]
+X[,list(X3,X1,X2,(as.numeric(X1)+as.numeric(X2)+as.numeric(X3))%%2)][V4==0][order(X3)]
+all_dat[,.N,by=TreatmentName][order(TreatmentName)]
+@
+\clearpage
+\section{Survival Curves}
+<<SurvivalTest.overall,results=hide,echo=FALSE>>=
+all_dat[,registered2:=IsRegistered]
+all_dat[,Time2:=as.numeric(round(difftime(registeredDate,MemberEffectiveDate,units='days'),0))]
+all_dat[is.na(Time2),Time2:=as.numeric(round(difftime(as.Date(Sys.time(),tz=""),MemberEffectiveDate,units='days'),0))]
+all_dat[,StartTime:= -1]
+all_dat=all_dat[Time2>=0]
+
+fit.Registered=survfit(Surv(StartTime,Time2, registered2)~TreatmentMethod, data= all_dat)
+tmp.dat=all_dat[TreatmentName!='Control']
+tmp.dat[,TreatmentMethod:=factor(TreatmentMethod)]
+summary(m1 <- coxph(Surv(StartTime,Time2, registered2)~TreatmentMethod*BinAge*Group+TreatmentMethod*OthersRegistered*Group, data=tmp.dat)) 
+
+sdata.time<-data.frame(time=fit.Registered$time, surv=fit.Registered$surv, lower=fit.Registered$lower, upper=fit.Registered$upper)
+sdata.time$strata<-rep(names(fit.Registered$strata), fit.Registered$strata)
+sdata.time$surv <- sdata.time$surv * 100
+sdata.time$lower <- sdata.time$lower * 100
+sdata.time$upper <- sdata.time$upper * 100
+colnames(sdata.time)[5] <- "Group"
+sdata.time$Group=substr(sdata.time$Group,17,50)
+
+p1=ggplot(sdata.time,aes(x=time,y=surv,color=Group,group=Group))+
+  geom_line()+
+  geom_line()+
+  theme(axis.line = element_line(color = 'black'))+
+#   scale_y_continuous(breaks=seq(80,100,5),labels=seq(80,100,5),limits=c(80,100))+
+  scale_x_continuous(breaks=seq(0,60,5),labels=seq(0,60,5),limits=c(0,60))+
+  xlab('Time Since Member Effective Date')+ylab('1-Registration (%)')+
+  theme(legend.position="bottom",legend.text = element_text(size = 8))+guides(col = guide_legend(nrow = 3))
+print(p1)
+@
+
+<<echo=FALSE,results=hide,fig=TRUE>>=
+print(p1)
+@
+
+% <<results=hide,echo=FALSE>>=
+% all_dat2=all_dat[Group=='Mail Recipient']
+% all_dat2=all_dat2[is.na(registeredDate) | registeredDate>='2016-04-14']
+% 
+% tmp=all_dat2[,list(sum(Registered),.N,sum(Registered)/.N),by=c('LookupRuleGroupid','TreatmentName','OthersRegistered')]
+% setnames(tmp,names(tmp),c('GroupID','TreatmentName','OthersRegistered','Registered','Total','Proportion'))
+% tmp=tmp[,list(GroupID,Registered,Total,Proportion,sum(Total)),by=c('TreatmentName','OthersRegistered')]
+% setnames(tmp,'V5','TreatmentTotal')
+% 
+% lm1=lm(Proportion~TreatmentName*OthersRegistered,data=tmp,weight=Total/TreatmentTotal)
+% summary(lm1)
+% 
+% tmp=all_dat2[,list(sum(Registered),.N,sum(Registered)/.N),by=c('LookupRuleGroupid','TreatmentMethod')]
+% setnames(tmp,names(tmp),c('GroupID','TreatmentMethod','Registered','Total','Proportion'))
+% tmp=tmp[,list(GroupID,Registered,Total,Proportion,sum(Total)),by=c('TreatmentMethod')]
+% setnames(tmp,'V5','TreatmentTotal')
+% lm1=lm(Proportion~TreatmentMethod,data=tmp,weight=Total/TreatmentTotal)
+% summary(lm1)
+% library(lme4)
+% lmer1=lmer(Proportion~TreatmentMethod + (1|TreatmentMethod),data=tmp,weights=Total/TreatmentTotal)
+% summary(lmer1)
+% 
+% lme1=lme(Proportion~TreatmentMethod,random=~1|TreatmentMethod,data=tmp,weights)
+% summary(lme1)
+% 
+% 
+% prop.test(c(58,36),c(566,567))
+% 
+% hist(tmp[TreatmentName=='Easy money/Letter/Work']$Registered)
+% 
+% @
+
+\end{document}

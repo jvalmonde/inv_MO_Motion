@@ -1,0 +1,229 @@
+---
+title: "Campaign 2 Report"
+output: pdf_document
+---
+
+## Campaign 2
+
+We mailed surveys out to 2,767 non-responders (F=800, M=1967). So far, we received 150 recorded responses. Below shows the age density plot by gender, and also a summary response table for each treatment.
+
+```{r, message=FALSE,echo=FALSE}
+library(savvy)
+library(data.table)
+library(magrittr)
+library(knitr)
+library(dplyr)
+library(plyr)
+library(multcomp)
+
+```
+
+```{r, echo=FALSE}
+all_dat=data.table(read.odbc("devsql10",dbQuery='select * from [pdb_PCPSelection].[dbo].[Treatment_Responses_v2]',as.is=TRUE))
+all_dat<-all_dat[,age:=as.numeric(format(Sys.Date(),"%Y"))-BirthYear]
+all_dat<-subset(all_dat,C1F1!="Other")
+
+all_dat$C1Trt<-with(all_dat,paste(C1F1,C1F2))
+all_dat$C2Trt<-with(all_dat, paste(C2F1,C2F2,C2F3))
+
+names<-c('GenderCode', 'C1F1','C1F2','C2F1','C2F2','C2F3','C1_Response','C2_Response','HSA','Campaign','C1Trt','C2Trt')
+all_dat%<>%mutate_each_(funs(factor(.)),names)
+
+C2<-subset(all_dat,Campaign==2)
+
+```
+
+
+```{r,echo=FALSE}
+C2res<-subset(C2,C2_Response==1)
+C2temp <- ddply(C2res, "GenderCode", summarise, age.mean=mean(age))
+
+
+a1<-ggplot(C2res, aes(age, fill=GenderCode))+geom_bar(position="dodge")+ geom_vline(data=C2temp, aes(xintercept=age.mean,  colour=GenderCode),linetype="dashed", size=1)
+a1
+
+
+
+```
+
+The figure show the age distributions by responders and non-responders in Campaign 2.
+
+```{r, echo=FALSE}
+C2$C2_Response<-as.factor(C2$C2_Response)
+a2<-ggplot(C2, aes(age, fill=C2_Response))+geom_bar(position="dodge")
+a2
+```
+
+
+Most responses came from treatments "Incentive PQ Loss"" and "no-incentive PQ Loss".
+
+```{r, echo=FALSE}
+t1<-addmargins(table(C2res$C2Trt,C2res$HSA))
+#kable(t1)
+```
+
+|                    |No HSA| HSA| Sum|
+|:-------------------|-----:|---:|---:|
+|Incentive A Gain    |    16|   0|  16|
+|Incentive A Loss    |    18|   0|  18|
+|Incentive PQ Gain   |    21|   0|  21|
+|Incentive PQ Loss   |    26|   0|  26|
+|noIncentive A Gain  |    15|   3|  18|
+|noIncentive A Loss  |    13|   4|  17|
+|noIncentive PQ Gain |     8|   0|   8|
+|noIncentive PQ Loss |    23|   3|  26|
+|Sum                 |   140|  10| 150|
+
+Among those who replied, the majority of the members have established relationships their providers.
+
+```{r,echo=FALSE}
+C2res<-subset(C2,C2_Response==1)
+t2<-table(C2res$SurveyResponse)
+ 
+
+```
+
+|                                              |  # | 
+|:---------------------------------------------|---:|
+|1) I have an established relationship...      | 123|
+|2) I've visited this physician...             |  10|
+|3) I've received care at this clinic before...|   3|
+|4) This is a totally new doctor...            |  13|  
+|5) None                                       |   1|
+
+
+
+```{r,echo=FALSE}
+t3<-table(C2res$SurveyResponse2)
+```
+
+Amost 50% of those members learned about their physicians more than 5 years ago.
+
+|                             |  # | 
+|:----------------------------|---:|
+|1) Today                     |   6|
+|2) Within the last 6 months  |  20|
+|3) 6 months to 1 year ago    |  11|
+|4) 1-5 years ago             |  38|  
+|5) More than 5 years ago     |  73|
+|6) None                      |   2|
+
+
+After running some different models and infering from backward selection result, I decided to use the following model that generates the best result (smallest AIC). Based on the Anova table, we can conclude that Gender,Age are Incentive are all significat factors, whereas HSA, Gain/Loss and the interaction between PQ/A and Gain/Loss are marginally significant. 
+
+
+```{r,echo=FALSE}
+C2_noHSA<-subset(C2,HSA=="No")
+#m3<-glm(C2_Response~age+GenderCode+HSA+C2F1+C2F2+C2F3+C2F2*C2F3,data=C2,family="binomial")#final model
+#out3<-anova(m3,test="Chisq")
+
+m3_noHSA<-glm(C2_Response~age+GenderCode+C2F1+C2F2+C2F3+C2F2*C2F3,data=C2_noHSA,family="binomial")
+out3_noHSA<-anova(m3_noHSA,test="Chisq")
+#mt<-glm(C2_Response~age+GenderCode+HSA+C2F1+C2F2+C2F3,data=C2,family="binomial")
+kable(out3_noHSA)
+kable(summary(m3_noHSA)$coef,digits=2)
+
+
+#m1<-glm(C2_Response~age+GenderCode+C2F1+C2F2+C2F3,data=C2,family="binomial")
+#kable(anova(m1,test="Chisq"))
+#kable(summary(m1)$coef,digits=2)
+#m2<-glm(C2_Response~age+GenderCode+C2F1+C2F2+C2F3+C2F1*C2F3,data=C2,family="binomial")
+#anova(m2,test="Chisq")
+#anova(m1,m2,test="LRT")
+
+#m6<-glm(C2_Response~age+GenderCode+age*GenderCode+C2F1+C2F2+C2F3+C2F2*C2F3,data=C2,family="binomial")#final model
+#out6<-anova(m6,test="Chisq")#Interaction between age and gender is not significant
+#anova(m1,m3,test="LRT")
+#m4<-glm(C2_Response~age+GenderCode+C2F1+C2F2+C2F3+C2F1*C2F2+C2F1*C2F3+C2F2*C2F3+C2F1*C2F2*C2F3,data=C2,family="binomial")
+#anova(m4,test="Chisq")
+#anova(m1,m4,test="LRT") 
+#summary(m4)
+#step(m4,direction="backward")
+```
+
+
+What we can learn base on our sample is that each additional year of age increases the odds of reply by 4%. The  odds of of getting responses from male over the odds of getting presonses from female is 0.6, which means males are less likely to reply compare to females. The incentive group is more likely to reply compare to the non-incentive group.  
+
+The following figure shows that the effect of loss aversion on the odds of receiving a response letters is greater for "PQ"" than for "A". 
+
+```{r,echo=FALSE}
+res<-predict(m3_noHSA,type="response")
+C2_noHSA$res<-res
+interaction.plot(C2_noHSA$C2F2,C2_noHSA$C2F3,response = res,fixed=TRUE)
+#out5<-summary(glht(m5, mcp(C2Trt="Tukey")))
+```
+
+## Comparison between Campaign 1 and Campaign 2
+
+Comparing between campaign 1 and 2, the majority of the members who replied in either campaign have established relationships with their providers.
+
+```{r,echo=FALSE}
+tot<-subset(all_dat, C1F1!="Other"&C1_Response==1|C2_Response==1)
+
+t3<-table(tot$SurveyResponse,tot$Campaign)
+kable(addmargins(t3))
+
+```
+
+From campaign 1, we learned that PQ/Loss and A/Loss received the most responses. 
+
+
+```{r, echo=FALSE}
+
+C1res<-subset(all_dat,C1_Response==1)
+kable(as.data.frame(table(C1res$C1Trt)))
+
+```
+
+Age, gender and the interaction term of the two factors were significant. The only signicant treatment pairwise comparison was when we compare between PQ/Loss and IQ/Loss. And the interaction between the factors are significant, meaning that members respond to loss differently condtional on what we emphasize in the letter. 
+
+```{r, echo=FALSE}
+l1<-glm(C1_Response~GenderCode+age+C1F1+C1F2+C1F1*C1F2, data=all_dat,family="binomial")
+
+#kable(anova(l1,test="Chisq"))
+pairwise_noHSA<-glm(C2_Response~age+GenderCode+C2Trt, data=C2_noHSA, family="binomial")
+
+out4<-summary(glht(pairwise_noHSA, mcp(C2Trt="Tukey")))
+```
+
+|           | Df|    Deviance| Resid. Df| Resid. Dev|  Pr(>Chi)|
+|:----------|--:|-----------:|---------:|----------:|---------:|
+|GenderCode |  1|  20.0277594|      3088|   2045.513| 0.0000076|
+|age        |  1| 128.8321974|      3087|   1916.680| 0.0000000|
+|C1F1       |  2|   4.4512407|      3085|   1912.229| 0.1080004|
+|C1F2       |  1|   0.1878715|      3084|   1912.041| 0.6646941|
+|C1F1:C1F2  |  2|   7.0962304|      3082|   1904.945| 0.0287788|
+
+
+```{r,echo=FALSE}
+out_l1<-summary(l1)
+kable(out_l1$coef,digits=2)
+```
+
+
+```{r, echo=FALSE}
+res2<-predict(l1,type="response")
+interaction.plot(all_dat$C1F1,all_dat$C1F2,response = res2,fixed=TRUE)
+```
+
+```{r, echo=FALSE}
+cross1<-subset(all_dat, C2F1=="noIncentive" & C1F1!="IQ" )
+cross1$trt1[cross1$C1F1=="PQ" & cross1$C1F2=="GS"]<-"PQGS"
+cross1$trt1[cross1$C1F1=="PQ" & cross1$C1F2=="LA"]<-"PQLA"
+cross1$trt1[cross1$C1F1=="A" & cross1$C1F2=="GS"]<-"AGS"
+cross1$trt1[cross1$C1F1=="A" & cross1$C1F2=="LA"]<-"ALA"
+cross1$trt2[cross1$C2F2=="PQ" & cross1$C2F3=="Gain"]<-"PQGS"
+cross1$trt2[cross1$C2F2=="PQ" & cross1$C2F3=="Loss"]<-"PQLA"
+cross1$trt2[cross1$C2F2=="A" & cross1$C2F3=="Gain"]<-"AGS"
+cross1$trt2[cross1$C2F2=="A" & cross1$C2F3=="Loss"]<-"ALA"
+cross1$trt1<-as.factor(cross1$trt1)
+cross1$trt2<-as.factor(cross1$trt2)
+#table(cross1$trt1, cross1$trt2)
+cross1$seq[cross1$trt1==cross1$trt2]<-"same"
+cross1$seq[cross1$trt1!=cross1$trt2]<-"different"
+cross1$seq<-as.factor(cross1$seq)
+cross2<-subset(cross1,C2_Response==1)
+#table(cross2$trt1, cross2$trt2)
+c1<-glm(C2_Response~seq,data=cross1,family = binomial())
+```
+

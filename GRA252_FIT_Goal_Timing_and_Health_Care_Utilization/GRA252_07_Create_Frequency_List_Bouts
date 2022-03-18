@@ -1,0 +1,14 @@
+CREATE OR REPLACE TABLE INV_motion.GRA252_Frequency_List_Bouts AS
+
+SELECT 
+ enrolled_id
+,steps_date
+,rqd_frqncy_minutes
+,rqd_frqncy_bouts
+,rqd_frqncy_interval
+,MIN(steps_dt) steps_dt
+,1 AS seq
+
+FROM INV_motion.GRA252_Frequency_List lst
+
+GROUP BY enrolled_id,steps_date,rqd_frqncy_minutes,rqd_frqncy_bouts,rqd_frqncy_interval

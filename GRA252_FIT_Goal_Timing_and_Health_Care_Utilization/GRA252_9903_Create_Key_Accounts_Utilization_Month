@@ -1,0 +1,86 @@
+CREATE OR REPLACE TABLE INV_motion.GRA252_Key_Accounts_Utilization_Month AS
+/*
+Field name	Type	Mode	Description
+indv_sys_id	INTEGER	NULLABLE	A system-generated ID that can be used to identify member on the claims records
+eligible_id	INTEGER	NULLABLE	A system-generated ID to correspond for a unique record for each eligible member for the Motion program.
+enrolled_id	INTEGER	NULLABLE	A system-generated ID to correspond for a unique record for each enrolled member in the Motion program.
+sbscr_ind	INTEGER	NULLABLE	Indicates whether the Member is the subscriber or not
+gender	STRING	NULLABLE	A code identifying the gender of the member
+birth_date	DATE	NULLABLE	The member's date of birth
+st_cd	STRING	NULLABLE	The member's state
+zip_cd	STRING	NULLABLE	The member's zip code
+program_start_dt	DATE	NULLABLE	Date the member enrolled in the motion program
+program_end_dt	DATE	NULLABLE	Date the member left the motion program
+has_mm_match	INTEGER	NULLABLE	The member id can be matched to claims data
+Fst_Dt	DATE	NULLABLE	Date first became a member in the plan
+End_Dt	DATE	NULLABLE	Date the member left the plan
+PlanMM2015	INTEGER	NULLABLE	The number of months in year 2015 that the member is enrolled
+PlanMM2016	INTEGER	NULLABLE	The number of months in year 2016 that the member is enrolled
+PlanMM2017	INTEGER	NULLABLE	The number of months in year 2017 that the member is enrolled
+PlanMM2018	INTEGER	NULLABLE	The number of months in year 2018 that the member is enrolled
+util_yr_mo	INTEGER	NULLABLE	Year and month of the claim date
+motion_enrolled_flag	INTEGER	NULLABLE	Enrolled in the motion program
+plan_enrolled_flag	INTEGER	NULLABLE	Is a plan member
+active_flag	BOOLEAN	NULLABLE	Active in the motion program
+hlth_pln_srvc_typ_lvl_1_nm	STRING	NULLABLE	The primary classification level of service(s) rendered
+hlth_pln_srvc_typ_lvl_2_nm	STRING	NULLABLE	The secondary classification level of service(s) rendered
+hlth_pln_srvc_typ_lvl_3_nm	STRING	NULLABLE	The tertiary classification level of service(s) rendered
+ttl_bill_amt	FLOAT	NULLABLE	The amount billed by a provider or facility
+ttl_allw_amt	FLOAT	NULLABLE	The portion of submitted charges covered under plan benefits This amount is after discounts and not covered/excluded expenses, and before employee and member responsibility (e.g., benefit limitations, copay amounts, etc.)
+ttl_coins_amt	FLOAT	NULLABLE	The amount (usually calculated as a percent of the provider's submitted charges) the member pays for a specific service as defined in their benefit plan
+ttl_copay_amt	FLOAT	NULLABLE	The fixed amount the member pays for a specific service as defined in their benefit plan
+ttl_ded_amt	FLOAT	NULLABLE	The set amount a member pays for services until they reach a specified limit (usually defined on an annual basis)
+ttl_deriv_amt	FLOAT	NULLABLE	Derived Allowed Amount is calculated as follows: (Coinsurance Amount + Copay Amount + Deductible Amount + Net Paid Amount)
+ttl_net_pd_amt	FLOAT	NULLABLE	The actual amount paid to the provider for the service performed after all deductions and calculations are performed. This does not include the amount paid fee for service on a capitated service
+ttl_oop_amt	FLOAT	NULLABLE	OOP Amount is calculated as follows: (Coinsurance Amount + Copay Amount + Deductible Amount)
+*/
+
+WITH mbr AS (SELECT 
+              mbr.*
+             ,dt.year_mo util_yr_mo
+             ,CASE WHEN dt.full_dt BETWEEN mbr.program_start_dt AND mbr.program_end_dt THEN 1 ELSE 0 END AS motion_enrolled_flag
+             ,CASE WHEN dt.full_dt BETWEEN mbr.Fst_Dt AND mbr.End_Dt THEN 1 ELSE 0 END AS plan_enrolled_flag
+ 
+             FROM INV_motion.GRA252_Dim_Participants mbr, MiniHPDM.Dim_Date dt
+             WHERE dt.full_dt BETWEEN DATE('2015-01-01') AND DATE('2018-12-31') AND dt.day_nbr = 1),
+
+   is_act AS (SELECT fsd.enrolled_id, fsd.year_mo act_yr_mo, MAX(fsd.active_flag) active_flag
+             FROM INV_motion.GRA252_Key_Accounts_FIT_Steps_Day fsd
+             GROUP BY fsd.enrolled_id, fsd.year_mo),
+
+   claim AS (SELECT cl.indv_sys_id
+             ,dt.year_mo claim_yr_mo
+             ,cl.hlth_pln_srvc_typ_cd_sys_id
+             ,SUM(cl.bil_amt) ttl_bill_amt
+             ,SUM(cl.allw_amt) ttl_allw_amt
+             ,SUM(cl.coins_amt ) ttl_coins_amt
+             ,SUM(cl.copay_amt ) ttl_copay_amt
+             ,SUM(cl.ded_amt ) ttl_ded_amt
+             ,SUM(cl.deriv_amt ) ttl_deriv_amt
+             ,SUM(cl.net_pd_amt ) ttl_net_pd_amt
+             ,SUM(cl.oop_amt ) ttl_oop_amt
+             FROM MiniHPDM.Fact_Claims cl 
+             JOIN MiniHPDM.Dim_Date dt ON cl.dt_sys_id = dt.dt_sys_id
+             JOIN mbr ON CAST(cl.indv_sys_id AS INT64) = CAST(mbr.indv_sys_id AS INT64) AND dt.year_mo = mbr.util_yr_mo
+             
+             GROUP BY cl.indv_sys_id,dt.year_mo,cl.hlth_pln_srvc_typ_cd_sys_id
+             HAVING SUM(cl.allw_amt) > 0)
+              
+SELECT 
+   mbr.*
+  ,is_act.active_flag
+  ,claim.hlth_pln_srvc_typ_cd_sys_id
+  ,dhstc.hlth_pln_srvc_typ_lvl_1_nm, dhstc.hlth_pln_srvc_typ_lvl_2_nm, dhstc.hlth_pln_srvc_typ_lvl_3_nm
+  ,claim.ttl_bill_amt
+  ,claim.ttl_allw_amt
+  ,claim.ttl_coins_amt 
+  ,claim.ttl_copay_amt 
+  ,claim.ttl_ded_amt 
+  ,claim.ttl_deriv_amt 
+  ,claim.ttl_net_pd_amt 
+  ,claim.ttl_oop_amt 
+  
+FROM mbr
+     LEFT JOIN is_act ON mbr.enrolled_id = is_act.enrolled_id AND mbr.util_yr_mo = is_act.act_yr_mo
+     LEFT JOIN claim ON mbr.indv_sys_id = claim.indv_sys_id AND mbr.util_yr_mo = claim.claim_yr_mo
+     LEFT JOIN MiniHPDM.Dim_HP_Service_Type_Code dhstc ON claim.hlth_pln_srvc_typ_cd_sys_id = dhstc.hlth_pln_srvc_typ_cd_sys_id

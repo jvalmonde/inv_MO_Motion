@@ -1,0 +1,26 @@
+CREATE OR REPLACE TABLE INV_motion.GRA252_Key_Accounts_Utilization_Month_plus AS
+
+
+WITH steps AS (SELECT DISTINCT savvy_id, CAST(xref.Indv_Sys_Id AS INT64) Indv_Sys_Id
+               FROM INV_motion.GRA252_Key_Accounts_FIT_Steps_Day steps
+               INNER JOIN INV_motion.dim_crosswalk_members_new xref ON steps.src_member_signup_data_id = xref.membersignupdataid)
+
+SELECT steps.savvy_id, steps.Indv_Sys_Id, demog.Year_Mo
+,active_flag
+,hlth_pln_srvc_typ_lvl_1_nm
+,hlth_pln_srvc_typ_lvl_2_nm
+,hlth_pln_srvc_typ_lvl_3_nm
+,ttl_bill_amt
+,ttl_allw_amt
+,ttl_coins_amt
+,ttl_copay_amt
+,ttl_ded_amt
+,ttl_deriv_amt
+,ttl_net_pd_amt
+,ttl_oop_amt
+,cnt_claims
+
+FROM steps
+INNER JOIN MiniHPDM.Summary_Indv_Demographic demog ON steps.Indv_Sys_Id = demog.Indv_Sys_Id 
+LEFT JOIN INV_motion.GRA252_Key_Accounts_Utilization_Month claims ON steps.savvy_id = claims.savvy_id AND demog.Year_Mo = claims.year_mo
+

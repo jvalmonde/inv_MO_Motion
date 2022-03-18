@@ -1,0 +1,235 @@
+---
+title: "PCP Selection Updated Report"
+output: pdf_document
+---
+
+## Abstract
+
+Based on our findings, we see that age and gender are both important indicators. Older people and female tend to be more responsive to our experiment. In terms of the treatments, we see that the interaction or the combination of the two factors stands out, meaning that the framing is effective when mixing the two factors together. However, not all the combinations are effective, among them, Professional quality/Loss Aversion is the most effective.
+
+
+## Data Source and Descriptives
+
+Data: pdb_AllSavers_PCPSelection and pdb_PCPSelection
+
+The sample consists of 4124 members in total. Members were randomly divided into 8 treatments. In this report you will find the age and gender distribution of the sample, and some tables that describe the demograpics. A breakdown of the sample by treatments and response rates for each were also calcualted. Logistic and contrast model can be found towards the end.
+
+```{r, message=FALSE, echo=FALSE}
+library(savvy)
+library(data.table)
+library(multcomp)
+library(knitr)
+```
+
+### An age distribution by gender plot. 
+
+```{r, echo=FALSE}
+all_res=data.table(read.odbc("PCPResponse",dbQuery='select * from [pdb_PCPSelection].[dbo].[Treatment_Responses]',as.is=TRUE))
+all_res$Age=as.integer(format(Sys.time(), "%Y"))- all_res$BirthYear
+all_res$AgeCat[all_res$Age>66]<-"Elder"
+all_res$AgeCat[all_res$Age>25 & all_res$Age<=66]<-"Middle"
+all_res$AgeCat[all_res$Age<=25]<-"Young"
+AgeTable<-table(all_res$GenderCode, all_res$AgeCat)
+all_res$GenderCode<-as.factor(all_res$GenderCode)
+all_res$trt[all_res$Factor1== "IQ"& all_res$Factor2== "GS"]<-"IQ/GS"
+all_res$trt[all_res$Factor1== "IQ"& all_res$Factor2== "LA"]<-"IQ/LA" 
+all_res$trt[all_res$Factor1== "Other"& all_res$Factor2== "GS"]<-"Other/GS"
+all_res$trt[all_res$Factor1== "Other"& all_res$Factor2== "LA"]<-"Other/LA"
+all_res$trt[all_res$Factor1== "PQ"& all_res$Factor2== "GS"]<-"PQ/GS"
+all_res$trt[all_res$Factor1== "PQ"& all_res$Factor2== "LA"]<-"PQ/LA" 
+all_res$trt[all_res$Factor1== "A"& all_res$Factor2== "GS"]<-"A/GS"
+all_res$trt[all_res$Factor1== "A"& all_res$Factor2== "LA"]<-"A/LA"
+
+dat<-subset(all_res,trt!= "Other/GS" & trt!="Other/LA")#only use 6 out of 8 trt
+dat$Factor1<-as.factor(dat$Factor1)
+dat$Factor2<-as.factor(dat$Factor2)
+
+```
+
+
+```{r, echo=FALSE}
+a1<-ggplot(all_res, aes(Age, fill=GenderCode))+geom_bar(position="dodge")+theme(legend.position="top")
+a1#############
+```
+
+As we can see from the above table, the majority of the sample comes from member between 25 and 66 years old. Elder is defined to have age above 66 years old, Middle is defined to have age between 25 and 66 years old, and Young is defined to have age below 25.
+
+```{r, echo=FALSE, kable}
+kable(cbind(addmargins(AgeTable),addmargins(round(prop.table(AgeTable), digits=3)*100)))
+```
+
+### Response Rates
+
+Interpretation of the lables for each treatment.
+
+* A/GS: Accessibility/Gain Seeking
+* A/LA: Accessibility/Loss Aversion
+* IQ/GS: Interpersonal Quality/Gain Seeking
+* IQ/LA: Interpersonal Qualtiy/Loss Aversion
+* PQ/GS: Professional Quality/Gain Seeking
+* PQ/GS: Professional Qualtiy/Loss Aversion
+
+```{r, echo=FALSE}
+temp<-all_res
+temp$trt<-as.factor(temp$trt)
+Ntotal<-addmargins(table(temp$trt))
+res<-subset(temp,SurveyResponseFlag==1)
+Nreplied<-addmargins(table(res$trt))
+ResponseRate<-round((Nreplied/Ntotal)*100)
+kable(rbind(Ntotal,Nreplied,ResponseRate))################
+
+table(res$SurveyResponse)
+
+temp<-subset(all_res, Factor1!="Other")
+table(temp$SurveyResponse)
+```
+
+Among 1) I have an established relationship...")
+
+```{r, echo=FALSE}
+Established<-subset(res,SurveyResponse=="1) I have an established relationship...")
+table(Established$trt)
+```
+
+Among 2) I've visited this physician... . 
+
+```{r, echo=FALSE}
+Visited<-subset(res,SurveyResponse=="2) I've visited this physician...")
+table(Visited$trt)
+```
+
+
+Among 3) I've received care at this clinic before... 
+
+```{r, echo=FALSE}
+Received<-subset(res,SurveyResponse=="3) I've received care at this clinic before...")
+table(Received$trt)
+```
+
+Among 4) This is a totally new doctor... 
+
+```{r, echo=FALSE}
+New<-subset(res,SurveyResponse=="4) This is a totally new doctor...")
+table(New$trt)
+```
+
+
+## Analysis
+
+Tests below only used 6 treatment groups. 
+
+### Logistic Regression
+
+```{r, echo=FALSE}
+#############Logit##################
+dat$trt<-as.factor(dat$trt)
+m1<-glm(SurveyResponseFlag~trt+Age+GenderCode,data=dat, family="binomial")
+m2<-glm(SurveyResponseFlag~Age+GenderCode,data=dat, family="binomial")
+anova(m2,m1,test="Chisq")
+kable(summary(m1)$coef, digits=2)
+library(multcomp)
+summary(glht(m1, mcp(trt="Tukey")))
+```
+
+
+* _(Intercept)_:The intercept with no predictor varable is the estimated log odds of getting a response in trtA/GS and GenderCode=F when Age is 0. If We can also transform the log of the odds back to a probability : $$p=\frac{exp(-5.25+42*0.06)}{1+exp(-5.25+42*0.06)}= 0.06$$
+
+* _trtA/LA_: Fix Age and gender, the odds of getting response for A/LA is 55% higher than the odds for A/GS. Since exp(0.44)=1.55, we can also say that the odds ratio between A/LA and A/GS is 1.55.
+
+* _trtIQ/GS_: Fix Age and gender, the odds of getting response for IQ/GS is 27% higher than the odds for A/GS. The odds ratio between IQ/GS and A/GS is exp(0.24)=1.27,  
+
+* _trtIQ/LA_:Fix Age and gender, the odds of getting response for IQ/LA is 3% higher than the odds for A/GS. The odds ratio between IQ/LA and A/GS is exp(0.03)=1.03 
+
+* _trtPQ/GS_:Fix Age and gender, the odds of getting response for PQ/GS is 34% higher than the odds for A/GS. The odds ratio between PQ/GS and A/GS is exp(0.3)=1.34
+ 
+* _trtPQ/LA_:Fix Age and gender, the odds of getting response for PQ/LA is 101% higher than the odds for A/GS. The odds ratio between PQ/LA and A/GS is exp(0.7)=2.01
+
+* _Age_: For each treatment, we will see 6% increase in the odds of getting a response for one unit increase in age. A unit increase in age multiplies the odds of response by exp(0.06)=1.06
+
+* _GenderCodeM_: Holding Age at a fixed value, for each trt, the odds of getting a response for male over the odds of getting a response for female (OR) is exp(-0.43)=0.65. In terms of percent change, we can say that the odds for male are 35% less that the odds for female
+
+The 95% approximate confidence intervals for the coefficients and exponentiated coefficients are
+
+```{r, echo=FALSE}
+mod.sum=summary(m1)
+estimated.se=sqrt(diag(mod.sum$cov.unscaled))
+z.perc=qnorm(0.975)
+LB=coef(m1)-z.perc*estimated.se
+UB=coef(m1)+z.perc*estimated.se
+kable(round(cbind(LB,exp(LB),UB,exp(UB)),2))
+```
+
+### Modeling contrast between treatments
+
+```{r, echo=FALSE}
+t<-lm(SurveyResponseFlag~Factor1+Factor2+Factor1*Factor2+Age+GenderCode,data=dat)
+kable(summary(t)$coef, digits=3)
+```
+
+The coefficients listed above provide contrast between the indicated level and the ommitted reference level and have the following interpretations
+
+* (Intercept): Outcome for F, Factor1=A, Factor2=GS
+
+* Factor2=GS,GenderCode=F:
+    + _Factor1IQ_: difference in outcome between Factor1=IQ and Factor1=A
+    + _Factor1PQ_: difference in outcome between Factor1=PQ and Factor1=A 
+
+* Factor1=A,GenderCode=F 
+    + _Factor2LA_: difference in outcome between Facotr2=LA and Factor2=GS 
+
+* Factor1=A, Factor2=GS, GenderCode=F
+    + _Age_: difference in outcome per unit increase in Age 
+
+* Factor1=A, Factor2=GS
+    + _GenderCodeM_: difference in outcome between Male and Female 
+
+* Factor2=LA,GenderCode=F
+    + _Factor1IQ:Factor2LA_: additional difference between Factor1=IQ and Factor1=A 
+    + _Factor1PQ:Factor2LA_: additional difference between Factor1=PQ and Factor1=A 
+
+### Anova
+
+```{r, echo=FALSE}
+kable(anova(t))
+```
+
+If we are interseted in other comparison, we can do the following tests
+
+```{r, echo=FALSE}
+dat$Int<-with(dat, interaction(Factor1,Factor2, sep="x"))
+head(dat$Int)
+t2<-lm(SurveyResponseFlag~Age+GenderCode+Int, data=dat)
+l2<-glht(t2, linfct=mcp(Int="Tukey"))
+summary(l2)
+```
+
+## Comparing categories within each factor
+
+ 
+```{r, echo=FALSE}
+temp<-all_res
+temp$trt<-as.factor(temp$trt)
+Ntotal<-addmargins(table(temp$trt))
+res<-subset(temp,SurveyResponseFlag==1)
+Nreplied<-addmargins(table(res$trt))
+ResponseRate<-round((Nreplied/Ntotal)*100)
+#kable(rbind(Ntotal,Nreplied,ResponseRate))################
+
+LAtotal<-523+521+513
+GStotal<-515+516+516
+LAr<-53+34+61
+GSr<-32+40+45
+#prop.test(c(LAr,GSr),c(LAtotal,GStotal), correct=FALSE)
+
+PQtotal<-516+513
+IQtotal<-516+521
+Atotal<-515+523
+PQr<-45+61
+IQr<-40+34
+Ar<-32+53
+#prop.test(c(PQr,IQr,Ar),c(PQtotal,IQtotal,Atotal), correct=FALSE)
+#prop.test(c(PQr,IQr), c(PQtotal,IQtotal),correct=FALSE)
+#prop.test(c(PQr,Ar), c(PQtotal,Atotal),correct=FALSE)
+#prop.test(c(Ar,IQr), c(Atotal,IQtotal),correct=FALSE)
+```
+

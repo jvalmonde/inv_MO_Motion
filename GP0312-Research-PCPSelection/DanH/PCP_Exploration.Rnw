@@ -1,0 +1,238 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage[margin=1in]{geometry}
+\usepackage{pdflscape}
+\usepackage{colortbl}
+\usepackage[table]{xcolor}
+\definecolor{lightgray}{gray}{0.9}
+\author{}
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\title{PCP Selection: GP0312}
+\maketitle
+\clearpage
+
+\section{Details of the Data}
+\begin{itemize}
+\item Medicare FFS Claims data (MINI\_OV), supplemented with Stars data mart (provides Assigned and Associated MPIN)\\
+\item Claims are from the year 2014\\ 
+\end{itemize}
+
+
+\section{Terminology/Definitions}
+\begin{itemize}
+\item Match=1 : The Assigned MPIN (chosen by the member or assigned to the member) and Associated MPIN (where the member actually had primary care services) are the same\\
+\item Match=0 : Either there is not an Assigned MPIN, or the Assigned MPIN and the Associated MPIN did not match\\
+\item Assigned : The member had a MPIN assigned to them either by choice or give to them\\ 
+\item Sticker : The member only had 1 PCP\\
+\item Switcher : The member had more than 1 PCP, but "switched" from one to the other\\
+\item Splitter : Had more than 1 PCP, but "split" visits between them (e.g. had 2 PCPs at the same time)\\
+\end{itemize}
+
+\section{Proportion Match and Assigned / Switcher, Splitter, Sticker}
+<<results=hide,echo=FALSE>>=
+library(data.table)
+library(savvy)
+library(xtable)
+
+all_dat=data.table(read.odbc("Devsql10pdb_PCPSelection",dbQuery='select * from [pdb_PCPSelection].[dbo].[MbrProv_10]'))
+all_dat=all_dat[!is.na(SavvyHICN) & !is.na(Provider_MPIN)]
+member_dat=data.table(read.odbc("Devsql10pdb_PCPSelection",dbQuery='select * from [pdb_PCPSelection].[dbo].[MbrClass_10]'))
+member_dat[,Group:=list(paste(Match,'|',Switcher,'|',Splitter,'|',Sticker,sep=""))]
+member_dat[,Assigned:=ifelse(!is.na(Assigned_MPIN),1,0)]
+member_dat[,"Group":=ifelse(Sticker==1,'Sticker',ifelse(Switcher==1,'Switcher',ifelse(Splitter==1,'Splitter','Unknown')))]
+member_dat[,Group:=factor(Group,levels=c('Unknown','Sticker','Splitter','Switcher'))]
+@
+
+<<results=hide,echo=FALSE>>=
+match_tab=member_dat[,list(mean(Match[Assigned==1]),mean(Assigned)),keyby=c('Group')]
+setnames(match_tab,c('V1','V2'),c('Proportion Match | Assigned','Proportion Assigned'))
+xtab_match=xtable(match_tab,caption='Proportion of Individuals with Match and Assigned, by Group',digits=c(0,0,3,3))
+align(xtab_match)="lc|cc"
+
+type_tab=member_dat[,list(mean(Switcher),mean(Splitter),mean(Sticker)),by=c('Match','Assigned')]
+setnames(type_tab,c('V1','V2','V3'),c('Proportion Switcher','Proportion Splitter','Proportion Sticker'))
+type_tab[,'Proportion Unknown':=list(1-sum(.SD)),by=c('Match','Assigned'),.SDcols=c(3:5)]
+xtab_type=xtable(type_tab,caption='Proportion of Individuals that are Switcher, Splitter, Sticker by Match',digits=c(0,0,0,3,3,3,3))
+align(xtab_type)="lcc|cccc"
+
+mean_tab1=member_dat[,list(.N,mean(Total_IP_Spend,na.rm=TRUE),mean(Total_OP_Spend,na.rm=TRUE),mean(Total_DR_Spend,na.rm=TRUE),mean(Total_ER_Spend,na.rm=TRUE),mean(Total_Spend,na.rm=TRUE),mean(RAF,na.rm=TRUE)),keyby=c('Group','Match','Assigned')]
+setnames(mean_tab1,names(mean_tab1),c('Group','Match','Assigned','N','IP Spend','OP Spend','DR Spend','ER Spend','Total','Mean RAF'))
+xtab_mean1=xtable(mean_tab1,caption='Average Spend by Group, Match, and Assigned',digits=c(0,0,0,0,0,0,0,0,0,0,2))
+median_tab1=member_dat[,list(.N,quantile(Total_IP_Spend,.5,na.rm=TRUE),quantile(Total_OP_Spend,.5,na.rm=TRUE),quantile(Total_DR_Spend,.5,na.rm=TRUE),quantile(Total_ER_Spend,.5,na.rm=TRUE),quantile(Total_Spend,.5,na.rm=TRUE),quantile(RAF,.5,na.rm=TRUE)),keyby=c('Group','Match','Assigned')]
+setnames(median_tab1,names(median_tab1),c('Group','Match','Assigned','N','IP Spend','OP Spend','DR Spend','ER Spend','Total','Median RAF'))
+xtab_median1=xtable(median_tab1,caption='Median Spend by Group, Match, and Assigned',digits=c(0,0,0,0,0,0,0,0,0,0,2))
+@
+
+<<Tables_summary,results=tex,echo=FALSE>>=
+row_add=paste("\\hline Overall&",round(mean(member_dat[Assigned==1]$Match),3),'&',round(mean(member_dat$Assigned),3),"\\\\")
+print(xtab_match, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE), add.to.row=list(pos=list(4),command=row_add))
+row_add=paste("\\hline \\multicolumn{2}{r|}{Overall}&",round(mean(member_dat$Switcher),3),"&",round(mean(member_dat$Splitter),3),'&',round(mean(member_dat$Sticker),3),'&',round(nrow(member_dat[Switcher==0 & Sticker==0 & Splitter==0])/nrow(member_dat),3),"\\\\")
+print(xtab_type, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE), add.to.row=list(pos=list(3),command=row_add))
+@
+
+% \clearpage
+% <<results=hide,echo=FALSE>>=
+% match_tab=member_dat[,list(mean(Match[Assigned==1]),mean(Assigned)),keyby=c('Group')]
+% match_tab[,c('V1','V2'):=list(rep(NA,4),rep(NA,4))]
+% setnames(match_tab,c('V1','V2'),c('Proportion Match | Assigned','Proportion Assigned'))
+% xtab_match=xtable(match_tab,caption='Proportion of Individuals with Match and Assigned, by Group',digits=c(0,0,3,3))
+% align(xtab_match)="lc|cc"
+% 
+% type_tab=member_dat[,list(mean(Switcher),mean(Splitter),mean(Sticker)),by=c('Match','Assigned')]
+% type_tab[,c('V1','V2','V3'):=list(rep(NA,3),rep(NA,3),rep(NA,3))]
+% setnames(type_tab,c('V1','V2','V3'),c('Proportion Switcher','Proportion Splitter','Proportion Sticker'))
+% type_tab[,'Proportion Unknown':=list(NA),by=c('Match','Assigned'),.SDcols=c(3:5)]
+% xtab_type=xtable(type_tab,caption='Proportion of Individuals that are Switcher, Splitter, Sticker by Match',digits=c(0,0,0,3,3,3,3))
+% align(xtab_type)="lcc|cccc"
+% @
+% 
+% <<Tables_summary2,results=tex,echo=FALSE>>=
+% row_add=paste("\\hline Overall&&\\\\")
+% print(xtab_match, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE), add.to.row=list(pos=list(4),command=row_add))
+% row_add=paste("\\hline \\multicolumn{2}{r|}{Overall}&&&&\\\\")
+% print(xtab_type, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE), add.to.row=list(pos=list(3),command=row_add))
+% @
+
+\clearpage
+\begin{landscape}
+\section {Utilization Summary}
+<<Tables,results=tex,echo=FALSE>>=
+print(xtab_mean1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE),add.to.row=list(pos=list(3,4,5,9,10,11),
+                                  command=c('\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}')))
+print(xtab_median1, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE),add.to.row=list(pos=list(3,4,5,9,10,11),
+                                  command=c('\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}')))
+@
+
+\clearpage
+\section{Utilization Summary by PCP's Seen}
+<<PCPExp,results=hide,echo=FALSE>>=
+setkeyv(member_dat,'SavvyHICN') ; setkeyv(all_dat,'SavvyHICN') 
+pcp_dat=all_dat[member_dat[,list(SavvyHICN,Assigned_MPIN,Associated_MPIN,Match)],nomatch=0][PCP_Flag==1]
+pcp_dat2=pcp_dat[,.N,by=SavvyHICN]
+member_dat2=member_dat[pcp_dat2]
+member_dat2[,PCP_Seen:=ifelse(N==1,'1 PCP',ifelse(N<6,"2 -5 PCPs","6+ PCPs"))]
+setnames(member_dat2,'N','PCPs')
+member_dat2[,PCP_Seen_V2:=ifelse(PCPs==1,'1 PCP',ifelse(PCPs<4,"2 -3 PCPs",ifelse(PCPs<6,"4-5 PCPs","6+")))]
+pcp_dat3=pcp_dat[!is.na(Associated_MPIN),list(DR_SrvcCnt[Provider_MPIN==Associated_MPIN],sum(DR_SrvcCnt)),by=SavvyHICN]
+setnames(pcp_dat3,c('V1','V2'),c('Visits_Associated','Visits_Total'))
+member_dat2=member_dat2[pcp_dat3,nomatch=0]
+member_dat2[is.na(Visits_Associated),Visits_Associated:=0]
+pcp_dat4=all_dat[member_dat[,list(SavvyHICN,Assigned_MPIN,Associated_MPIN,Match)],nomatch=0]
+pcp_dat4=pcp_dat4[,.N,by=SavvyHICN]
+member_dat2=member_dat2[pcp_dat4,nomatch=0]
+setnames(member_dat2,'N','NumDRs')
+
+# member_dat2[,list(Visits_Associated/Visits_Total),by=c('SavvyHICN','Match','Switcher','Splitter','Sticker')][,mean(V1),keyby=c('Switcher','Splitter','Sticker','Match')]
+
+mean_tab2=member_dat2[,list(.N,mean(Total_IP_Spend,na.rm=TRUE),mean(Total_OP_Spend,na.rm=TRUE),mean(Total_DR_Spend,na.rm=TRUE),mean(Total_ER_Spend,na.rm=TRUE),mean(Total_Spend,na.rm=TRUE),mean(RAF,na.rm=TRUE)),keyby=c('PCP_Seen','Group','Match','Assigned')]
+setnames(mean_tab2,names(mean_tab2),c("PCPs Seen",'Group','Match','Assigned','N','IP Spend','OP Spend','DR Spend','ER Spend','Total','Mean RAF'))
+xtab_mean2=xtable(mean_tab2,caption='Average Spend by PCPs, Match, and Group',digits=c(0,0,0,0,0,0,0,0,0,0,0,2))
+median_tab2=member_dat2[,list(.N,quantile(Total_IP_Spend,.5,na.rm=TRUE),quantile(Total_OP_Spend,.5,na.rm=TRUE),quantile(Total_DR_Spend,.5,na.rm=TRUE),quantile(Total_ER_Spend,.5,na.rm=TRUE),quantile(Total_Spend,.5,na.rm=TRUE),quantile(RAF,.5,na.rm=TRUE)),keyby=c('PCP_Seen','Group','Match','Assigned')]
+setnames(median_tab2,names(median_tab2),c("PCPs Seen",'Group','Match','Assigned','N','IP Spend','OP Spend','DR Spend','ER Spend','Total','Mean RAF'))
+xtab_median2=xtable(median_tab2,caption='Median Spend by PCPs, Match, and Group',digits=c(0,0,0,0,0,0,0,0,0,0,0,2))
+@
+
+<<Tables2,results=tex,echo=FALSE>>=
+print(xtab_mean2, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE),add.to.row=list(pos=list(3,4,5,9,10,11),
+                                  command=c('\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}')))
+print(xtab_median2, caption.placement = "top",include.rownames=getOption("xtable.include.rownames", FALSE),add.to.row=list(pos=list(3,4,5,9,10,11),
+                                  command=c('\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}',
+                                            '\\rowcolor[gray]{.9}')))
+@
+\end{landscape}
+
+\clearpage
+<<SampleSize,echo=FALSE,results=hide>>=
+allM_dat=data.table(read.odbc("Devsql14pdb_abw",dbQuery='select * from [pdb_abw].[dbo].[GP0284_MemberRegistrations]'))
+tmp=allM_dat[,.N,by=LookupRuleGroupid][,list(N)]
+pcp_rate=mean(member_dat[Assigned==1]$Match)
+tmp[,treat:=rep(c('Control','Treatment'))]
+tmp[treat=='Control',guess:=rbinom(N,N,pcp_rate)] # control
+tmp[treat=='Treatment',guess:=rbinom(N,N,pcp_rate)] # treatment
+tmp[,Prop:=guess/N]
+t.test(tmp[treat=='Control']$Prop,tmp[treat=='Treatment']$Prop)
+sd_data=sd(tmp$Prop)
+sd_data
+
+
+tmp2=data.table(Power=seq(.2,.99,.01))
+tmp2[,c('Diff_.05','Diff_.1','Prop_.05','Prop_.1'):=list(power.t.test(n=NULL,delta=.05,sd=.07,power=Power,sig.level=.05,type='two.sample',alternative='one.sided')$n,
+                                    power.t.test(n=NULL,delta=.1,sd=.07,power=Power,sig.level=.05,type='two.sample',alternative='one.sided')$n,
+                                    power.prop.test(n=NULL,p1=pcp_rate,p2=pcp_rate+.05,power=Power,sig.level=.05,alternative='one.sided')$n,
+                                    power.prop.test(n=NULL,p1=pcp_rate,p2=pcp_rate+.1,power=Power,sig.level=.05,alternative='one.sided')$n),by=Power]
+
+# ggplot(tmp2,aes(x=Diff_.05,y=Power))+
+#   geom_line(aes(color='Mean Diff of 0.05'))+
+#   geom_line(aes(x=Diff_.1,color='Mean Diff of 0.1'))+
+#   xlab('Number of Companies per Treatment')+
+#   scale_color_discrete(name="")+
+#   scale_x_continuous(breaks=seq(0,110,10),labels=seq(0,110,10))+
+#   scale_y_continuous(breaks=seq(0,1,.1),labels=seq(0,1,.1))+
+#   theme(legend.position='bottom')
+# 
+# ggplot(tmp2,aes(x=Prop_.05,y=Power))+
+#   geom_line(aes(color='Mean Prop Diff of 0.05'))+
+#   geom_line(aes(x=Prop_.1,color='Mean Prop Diff of 0.1'))+
+#   xlab('Number of Members per Treatment')+
+#   scale_color_discrete(name="")+
+#   scale_x_continuous(breaks=seq(0,3000,250),labels=seq(0,3000,250))+
+#   scale_y_continuous(breaks=seq(0,1,.1),labels=seq(0,1,.1))+
+#   theme(legend.position='bottom')
+
+# pval.comp=numeric()
+# for(i in 1:10000){
+#   tmp3=data.table(N=rep(30,39*2))
+#   tmp3[,treat:=rep(c('Control','Treatment'))]
+#   tmp3[treat=='Control',guess:=rbinom(N,N,pcp_rate)] # control
+#   tmp3[treat=='Treatment',guess:=rbinom(N,N,pcp_rate+.05)] # treatment
+#   tmp3[,Prop:=guess/N]
+#   pval.comp[i]=t.test(tmp3[treat=='Control']$Prop,tmp3[treat=='Treatment']$Prop,alternative='less')$p.value
+# }
+# mean(pval.comp<.05)
+# 
+# pval.member=numeric()
+# for(i in 1:10000){
+#   pval.member[i]=prop.test(c(rbinom(1,1171,pcp_rate),rbinom(1,1171,pcp_rate+.05)),c(1171,1171),alternative='less')$p.value
+# }
+# mean(pval.member<.05)
+@
+
+\section{Power Calculation by Independent Individuals}
+<<Power_Individual,results=hide,echo=FALSE,fig=TRUE>>=
+ggplot(tmp2,aes(x=Prop_.05,y=Power))+
+  geom_line(aes(color='Mean Prop Diff of 0.05'))+
+  geom_line(aes(x=Prop_.1,color='Mean Prop Diff of 0.1'))+
+  xlab('Number of Members per Treatment')+
+  scale_color_discrete(name="")+
+  scale_x_continuous(breaks=seq(0,3000,250),labels=seq(0,3000,250))+
+  scale_y_continuous(breaks=seq(0,1,.1),labels=seq(0,1,.1))+
+  theme(legend.position='bottom')
+@
+
+<<>>=
+member_dat[,lapply(.SD,mean),by=Group,.SDcols=names(member_dat)[42:120]]
+@
+
+\end{document}

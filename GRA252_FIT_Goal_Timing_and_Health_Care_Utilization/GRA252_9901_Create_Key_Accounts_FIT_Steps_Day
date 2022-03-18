@@ -1,0 +1,39 @@
+CREATE OR REPLACE TABLE INV_motion.GRA252_Key_Accounts_FIT_Steps_Day AS
+
+SELECT  fsd.enrolled_id
+       ,fsd.active_flag
+       ,fsd.age
+       ,fsd.gender
+       ,fsd.st_cd
+       ,fsd.zip_cd
+       ,fsd.full_date
+       ,fsd.year_nbr
+       ,fsd.month_nbr
+       ,fsd.day_nbr
+       ,fsd.year_mo
+       ,fsd.month_nm
+       ,fsd.day_nm
+       ,fsd.weekend_flag
+       ,fsd.holiday_flag
+       ,fsd.rqd_tncty_steps
+       ,fsd.rqd_itnsty_steps
+       ,fsd.rqd_itnsty_minutes
+       ,fsd.rqd_frqncy_steps
+       ,fsd.rqd_frqncy_minutes
+       ,fsd.rqd_frqncy_bouts
+       ,fsd.rqd_frqncy_interval
+       ,th.ttlsteps
+       ,th.steps00,th.steps01,th.steps02,th.steps03,th.steps04,th.steps05,th.steps06,th.steps07,th.steps08,th.steps09,th.steps10,th.steps11
+       ,th.steps12,th.steps13,th.steps14,th.steps15,th.steps16,th.steps17,th.steps18,th.steps19,th.steps20,th.steps21,th.steps22,th.steps23
+       ,f.freq00,f.freq01,f.freq02,f.freq03,f.freq04,f.freq05,f.freq06,f.freq07,f.freq08,f.freq09,f.freq10,f.freq11
+       ,f.freq12,f.freq13,f.freq14,f.freq15,f.freq16,f.freq17,f.freq18,f.freq19,f.freq20,f.freq21,f.freq22,f.freq23
+       ,i.itnsty00,i.itnsty01,i.itnsty02,i.itnsty03,i.itnsty04,i.itnsty05,i.itnsty06,i.itnsty07,i.itnsty08,i.itnsty09,i.itnsty10,i.itnsty11
+       ,i.itnsty12,i.itnsty13,i.itnsty14,i.itnsty15,i.itnsty16,i.itnsty17,i.itnsty18,i.itnsty19,i.itnsty20,i.itnsty21,i.itnsty22,i.itnsty23
+       ,tenacity_met_hr,tenacity_steps_over
+       ,f.frequency_met_hr,f.frequency_bouts_over
+       ,i.intensity_met_hr,i.intensity_bouts_over
+
+FROM INV_motion.GRA252_Fact_Step_Day fsd 
+     LEFT JOIN INV_motion.GRA252_Tenacity th ON fsd.enrolled_id = th.enrolled_id AND fsd.full_date = th.steps_date 
+     LEFT JOIN INV_motion.GRA252_Frequency f ON fsd.enrolled_id = f.enrolled_id AND fsd.full_date = f.steps_date 
+     LEFT JOIN INV_motion.GRA252_Intensity i ON fsd.enrolled_id = i.enrolled_id AND fsd.full_date = i.steps_date

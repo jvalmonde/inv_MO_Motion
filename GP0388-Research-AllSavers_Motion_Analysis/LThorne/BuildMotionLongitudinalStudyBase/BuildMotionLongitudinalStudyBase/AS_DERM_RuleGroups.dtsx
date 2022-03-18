@@ -1,0 +1,941 @@
+<?xml version="1.0"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:refId="Package"
+  DTS:CreationDate="11/16/2016 8:31:23 AM"
+  DTS:CreationName="Microsoft.Package"
+  DTS:CreatorComputerName="MINDATA05"
+  DTS:CreatorName="SAVVYSHERPA\lthorne"
+  DTS:Description="SSIS Package Description"
+  DTS:DTSID="{B5A704B3-5E76-41CB-B818-0E7ABBE31C5E}"
+  DTS:ExecutableType="Microsoft.Package"
+  DTS:LastModifiedProductVersion="12.0.4100.1"
+  DTS:LocaleID="1033"
+  DTS:MaxErrorCount="0"
+  DTS:ObjectName="AS_DERM_RuleGroups"
+  DTS:VersionGUID="{DC0794B8-1E2A-4DA5-9BAD-1622BE7943C5}">
+  <DTS:Property
+    DTS:Name="PackageFormatVersion">8</DTS:Property>
+  <DTS:ConnectionManagers>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[DestinationConnectionOLEDB]"
+      DTS:CreationName="OLEDB"
+      DTS:DTSID="{2AE4F3BE-B891-493E-ACFC-E74709540716}"
+      DTS:ObjectName="DestinationConnectionOLEDB">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectionString="Data Source=devsql10;Initial Catalog=pdb_Allsavers_Research;Provider=SQLNCLI11;Integrated Security=SSPI;Auto Translate=false;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[SourceConnectionOLEDB]"
+      DTS:CreationName="OLEDB"
+      DTS:DTSID="{FEF12113-F074-416E-B1DA-B1B8945EF6B9}"
+      DTS:ObjectName="SourceConnectionOLEDB">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectionString="Data Source=dbs-derm-prd-02.derm.triomotionfit.com;User ID=lthorne;Initial Catalog=DERMSL_Prod;Provider=SQLNCLI11;Auto Translate=false;">
+          <DTS:Password
+            DTS:Name="Password"
+            Sensitive="1"
+            Encrypted="1">AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAQexbQ/zRJEGcElp+syF0SwAAAAAIAAAARABUAFMAAAADZgAAwAAAABAAAAA5URRA6g3+xsnHt+Sd9tMcAAAAAASAAACgAAAAEAAAAB3EIOCfhgH0DMvj5YcBaYgYAAAANfnq3xC35YLoXaq3Orr3VucMnaRG/JCkFAAAAPx8xMy1vdkcVH2MK06ntzZvYlqq</DTS:Password>
+        </DTS:ConnectionManager>
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+  </DTS:ConnectionManagers>
+  <DTS:Variables />
+  <DTS:Executables>
+    <DTS:Executable
+      DTS:refId="Package\Data Flow Task 1"
+      DTS:CreationName="Microsoft.Pipeline"
+      DTS:DelayValidation="True"
+      DTS:DTSID="{8AD147FF-C66B-4F11-9736-1B1EE135E695}"
+      DTS:ExecutableType="Microsoft.Pipeline"
+      DTS:FailPackageOnFailure="True"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Data Flow Task 1"
+      DTS:TaskContact="Performs high-performance data extraction, transformation and loading;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <pipeline
+          defaultBufferSize="3145728"
+          version="1">
+          <components>
+            <component
+              refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups"
+              componentClassID="Microsoft.OLEDBDestination"
+              contactInfo="OLE DB Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;4"
+              description="OLE DB Destination"
+              name="Destination - AS_DERM_RuleGroups"
+              usesDispositions="true"
+              validateExternalMetadata="False"
+              version="4">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset">[etl].[AS_DERM_RuleGroups]</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">3</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepIdentity">false</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the columns containing null will have null inserted in the destination. If false, columns containing null will have their default values inserted at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepNulls">false</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies options to be used with fast load.  Applies only if fast load is turned on."
+                  name="FastLoadOptions">TABLOCK,CHECK_CONSTRAINTS</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies when commits are issued during data insertion.  A value of 0 specifies that one commit will be issued at the end of data insertion.  Applies only if fast load is turned on."
+                  name="FastLoadMaxInsertCommitSize">2147483647</property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[DestinationConnectionOLEDB]"
+                  connectionManagerRefId="Package.ConnectionManagers[DestinationConnectionOLEDB]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <inputs>
+                <input
+                  refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input]"
+                  errorOrTruncationOperation="Insert"
+                  errorRowDisposition="FailComponent"
+                  hasSideEffects="true"
+                  name="Destination Input">
+                  <inputColumns>
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[LOOKUPRuleGroupID]"
+                      cachedDataType="i2"
+                      cachedName="LOOKUPRuleGroupID"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[LOOKUPRuleGroupID]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[LOOKUPRuleGroupID]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[LOOKUPClientID]"
+                      cachedDataType="i2"
+                      cachedName="LOOKUPClientID"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[LOOKUPClientID]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[LOOKUPClientID]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[RuleGroupName]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="50"
+                      cachedName="RuleGroupName"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[RuleGroupName]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RuleGroupName]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[RuleGroupDescription]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="50"
+                      cachedName="RuleGroupDescription"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[RuleGroupDescription]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RuleGroupDescription]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[PointsFlag]"
+                      cachedDataType="bool"
+                      cachedName="PointsFlag"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[PointsFlag]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[PointsFlag]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[DefaultGroupFlag]"
+                      cachedDataType="bool"
+                      cachedName="DefaultGroupFlag"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[DefaultGroupFlag]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[DefaultGroupFlag]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[LOOKUPIncentiveLabelID]"
+                      cachedDataType="ui1"
+                      cachedName="LOOKUPIncentiveLabelID"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[LOOKUPIncentiveLabelID]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[LOOKUPIncentiveLabelID]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[IntensityStepThreshold]"
+                      cachedDataType="ui1"
+                      cachedName="IntensityStepThreshold"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[IntensityStepThreshold]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[IntensityStepThreshold]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[IntensityRestMinute]"
+                      cachedDataType="ui1"
+                      cachedName="IntensityRestMinute"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[IntensityRestMinute]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[IntensityRestMinute]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[FrequencyCycleInterval]"
+                      cachedDataType="ui1"
+                      cachedName="FrequencyCycleInterval"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[FrequencyCycleInterval]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[FrequencyCycleInterval]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[RowCreatedSysUserID]"
+                      cachedDataType="i4"
+                      cachedName="RowCreatedSysUserID"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[RowCreatedSysUserID]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RowCreatedSysUserID]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[RowModifiedSysUserID]"
+                      cachedDataType="i4"
+                      cachedName="RowModifiedSysUserID"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[RowModifiedSysUserID]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RowModifiedSysUserID]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[RowCreatedDateTime]"
+                      cachedDataType="dbTimeStamp2"
+                      cachedName="RowCreatedDateTime"
+                      cachedScale="7"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[RowCreatedDateTime]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RowCreatedDateTime]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[RowModifiedDateTime]"
+                      cachedDataType="dbTimeStamp2"
+                      cachedName="RowModifiedDateTime"
+                      cachedScale="7"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[RowModifiedDateTime]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RowModifiedDateTime]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[OfferCode]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="15"
+                      cachedName="OfferCode"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[OfferCode]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[OfferCode]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[ScreenNameEnable]"
+                      cachedDataType="bool"
+                      cachedName="ScreenNameEnable"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[ScreenNameEnable]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[ScreenNameEnable]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[GroupStartDatetime]"
+                      cachedDataType="dbTimeStamp"
+                      cachedName="GroupStartDatetime"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[GroupStartDatetime]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[GroupStartDatetime]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[GroupEndDatetime]"
+                      cachedDataType="dbTimeStamp"
+                      cachedName="GroupEndDatetime"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[GroupEndDatetime]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[GroupEndDatetime]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[StartYearmo]"
+                      cachedDataType="i4"
+                      cachedName="StartYearmo"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[StartYearmo]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[StartYearmo]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[EndYearmo]"
+                      cachedDataType="i4"
+                      cachedName="EndYearmo"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[EndYearmo]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[EndYearmo]" />
+                    <inputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].Columns[policyid]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="8000"
+                      cachedName="policyid"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[policyid]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[policyid]" />
+                  </inputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[LOOKUPRuleGroupID]"
+                      dataType="i2"
+                      name="LOOKUPRuleGroupID" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[LOOKUPClientID]"
+                      dataType="i2"
+                      name="LOOKUPClientID" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[RuleGroupName]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      name="RuleGroupName" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[RuleGroupDescription]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      name="RuleGroupDescription" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[PointsFlag]"
+                      dataType="bool"
+                      name="PointsFlag" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[DefaultGroupFlag]"
+                      dataType="bool"
+                      name="DefaultGroupFlag" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[LOOKUPIncentiveLabelID]"
+                      dataType="ui1"
+                      name="LOOKUPIncentiveLabelID" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[IntensityStepThreshold]"
+                      dataType="ui1"
+                      name="IntensityStepThreshold" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[IntensityRestMinute]"
+                      dataType="ui1"
+                      name="IntensityRestMinute" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[FrequencyCycleInterval]"
+                      dataType="ui1"
+                      name="FrequencyCycleInterval" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[RowCreatedSysUserID]"
+                      dataType="i4"
+                      name="RowCreatedSysUserID" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[RowModifiedSysUserID]"
+                      dataType="i4"
+                      name="RowModifiedSysUserID" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[RowCreatedDateTime]"
+                      dataType="dbTimeStamp2"
+                      name="RowCreatedDateTime"
+                      scale="7" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[RowModifiedDateTime]"
+                      dataType="dbTimeStamp2"
+                      name="RowModifiedDateTime"
+                      scale="7" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[OfferCode]"
+                      codePage="1252"
+                      dataType="str"
+                      length="15"
+                      name="OfferCode" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[ScreenNameEnable]"
+                      dataType="bool"
+                      name="ScreenNameEnable" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[GroupStartDatetime]"
+                      dataType="dbTimeStamp"
+                      name="GroupStartDatetime"
+                      scale="3" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[GroupEndDatetime]"
+                      dataType="dbTimeStamp"
+                      name="GroupEndDatetime"
+                      scale="3" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[StartYearmo]"
+                      dataType="i4"
+                      name="StartYearmo" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[EndYearmo]"
+                      dataType="i4"
+                      name="EndYearmo" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input].ExternalColumns[policyid]"
+                      codePage="1252"
+                      dataType="str"
+                      length="8000"
+                      name="policyid" />
+                  </externalMetadataColumns>
+                </input>
+              </inputs>
+              <outputs>
+                <output
+                  refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Outputs[OLE DB Destination Error Output]"
+                  exclusionGroup="1"
+                  isErrorOut="true"
+                  name="OLE DB Destination Error Output"
+                  synchronousInputId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+            <component
+              refId="Package\Data Flow Task 1\Source - Query"
+              componentClassID="Microsoft.OLEDBSource"
+              contactInfo="OLE DB Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;7"
+              description="OLE DB Source"
+              name="Source - Query"
+              usesDispositions="true"
+              version="7">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset"></property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor">Select *
+     , StartYearmo = pdb_DermReporting.dbo.Yearmonth(GroupStartDatetime)
+	 , EndYearmo   = pdb_DermReporting.dbo.Yearmonth(isnull(GroupEndDateTime,getdate()))
+	 , policyid    = replace(offercode,'-','00') 
+  FROM DERMSL_Prod..LookupRuleGroup
+ Where lookupClientid = 50                   -- this is All Savers Motion ClientID for motion
+   and lookupRulegroupid not in (92,880,881) -- R/O AS Admin and (2) test groups
+;</property>
+                <property
+                  dataType="System.String"
+                  description="The variable that contains the SQL command to be executed."
+                  name="SqlCommandVariable"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">2</property>
+                <property
+                  dataType="System.String"
+                  description="The mappings between the parameters in the SQL command and variables."
+                  name="ParameterMapping"></property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\Data Flow Task 1\Source - Query.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[SourceConnectionOLEDB]"
+                  connectionManagerRefId="Package.ConnectionManagers[SourceConnectionOLEDB]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <outputs>
+                <output
+                  refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output]"
+                  name="OLE DB Source Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[LOOKUPRuleGroupID]"
+                      dataType="i2"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[LOOKUPRuleGroupID]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[LOOKUPRuleGroupID]"
+                      name="LOOKUPRuleGroupID"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[LOOKUPClientID]"
+                      dataType="i2"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[LOOKUPClientID]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[LOOKUPClientID]"
+                      name="LOOKUPClientID"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RuleGroupName]"
+                      codePage="1252"
+                      dataType="str"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[RuleGroupName]"
+                      length="50"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RuleGroupName]"
+                      name="RuleGroupName"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RuleGroupDescription]"
+                      codePage="1252"
+                      dataType="str"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[RuleGroupDescription]"
+                      length="50"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RuleGroupDescription]"
+                      name="RuleGroupDescription"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[PointsFlag]"
+                      dataType="bool"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[PointsFlag]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[PointsFlag]"
+                      name="PointsFlag"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[DefaultGroupFlag]"
+                      dataType="bool"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[DefaultGroupFlag]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[DefaultGroupFlag]"
+                      name="DefaultGroupFlag"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[LOOKUPIncentiveLabelID]"
+                      dataType="ui1"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[LOOKUPIncentiveLabelID]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[LOOKUPIncentiveLabelID]"
+                      name="LOOKUPIncentiveLabelID"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[IntensityStepThreshold]"
+                      dataType="ui1"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[IntensityStepThreshold]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[IntensityStepThreshold]"
+                      name="IntensityStepThreshold"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[IntensityRestMinute]"
+                      dataType="ui1"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[IntensityRestMinute]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[IntensityRestMinute]"
+                      name="IntensityRestMinute"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[FrequencyCycleInterval]"
+                      dataType="ui1"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[FrequencyCycleInterval]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[FrequencyCycleInterval]"
+                      name="FrequencyCycleInterval"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RowCreatedSysUserID]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[RowCreatedSysUserID]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RowCreatedSysUserID]"
+                      name="RowCreatedSysUserID"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RowModifiedSysUserID]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[RowModifiedSysUserID]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RowModifiedSysUserID]"
+                      name="RowModifiedSysUserID"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RowCreatedDateTime]"
+                      dataType="dbTimeStamp2"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[RowCreatedDateTime]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RowCreatedDateTime]"
+                      name="RowCreatedDateTime"
+                      scale="7"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RowModifiedDateTime]"
+                      dataType="dbTimeStamp2"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[RowModifiedDateTime]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[RowModifiedDateTime]"
+                      name="RowModifiedDateTime"
+                      scale="7"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[OfferCode]"
+                      codePage="1252"
+                      dataType="str"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[OfferCode]"
+                      length="15"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[OfferCode]"
+                      name="OfferCode"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[ScreenNameEnable]"
+                      dataType="bool"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[ScreenNameEnable]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[ScreenNameEnable]"
+                      name="ScreenNameEnable"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[GroupStartDatetime]"
+                      dataType="dbTimeStamp"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[GroupStartDatetime]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[GroupStartDatetime]"
+                      name="GroupStartDatetime"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[GroupEndDatetime]"
+                      dataType="dbTimeStamp"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[GroupEndDatetime]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[GroupEndDatetime]"
+                      name="GroupEndDatetime"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[StartYearmo]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[StartYearmo]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[StartYearmo]"
+                      name="StartYearmo"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[EndYearmo]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[EndYearmo]"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[EndYearmo]"
+                      name="EndYearmo"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[policyid]"
+                      codePage="1252"
+                      dataType="str"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[policyid]"
+                      length="8000"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].Columns[policyid]"
+                      name="policyid"
+                      truncationRowDisposition="FailComponent" />
+                  </outputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[LOOKUPRuleGroupID]"
+                      dataType="i2"
+                      name="LOOKUPRuleGroupID" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[LOOKUPClientID]"
+                      dataType="i2"
+                      name="LOOKUPClientID" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[RuleGroupName]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      name="RuleGroupName" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[RuleGroupDescription]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      name="RuleGroupDescription" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[PointsFlag]"
+                      dataType="bool"
+                      name="PointsFlag" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[DefaultGroupFlag]"
+                      dataType="bool"
+                      name="DefaultGroupFlag" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[LOOKUPIncentiveLabelID]"
+                      dataType="ui1"
+                      name="LOOKUPIncentiveLabelID" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[IntensityStepThreshold]"
+                      dataType="ui1"
+                      name="IntensityStepThreshold" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[IntensityRestMinute]"
+                      dataType="ui1"
+                      name="IntensityRestMinute" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[FrequencyCycleInterval]"
+                      dataType="ui1"
+                      name="FrequencyCycleInterval" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[RowCreatedSysUserID]"
+                      dataType="i4"
+                      name="RowCreatedSysUserID" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[RowModifiedSysUserID]"
+                      dataType="i4"
+                      name="RowModifiedSysUserID" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[RowCreatedDateTime]"
+                      dataType="dbTimeStamp2"
+                      name="RowCreatedDateTime"
+                      scale="7" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[RowModifiedDateTime]"
+                      dataType="dbTimeStamp2"
+                      name="RowModifiedDateTime"
+                      scale="7" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[OfferCode]"
+                      codePage="1252"
+                      dataType="str"
+                      length="15"
+                      name="OfferCode" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[ScreenNameEnable]"
+                      dataType="bool"
+                      name="ScreenNameEnable" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[GroupStartDatetime]"
+                      dataType="dbTimeStamp"
+                      name="GroupStartDatetime" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[GroupEndDatetime]"
+                      dataType="dbTimeStamp"
+                      name="GroupEndDatetime" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[StartYearmo]"
+                      dataType="i4"
+                      name="StartYearmo" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[EndYearmo]"
+                      dataType="i4"
+                      name="EndYearmo" />
+                    <externalMetadataColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output].ExternalColumns[policyid]"
+                      codePage="1252"
+                      dataType="str"
+                      length="8000"
+                      name="policyid" />
+                  </externalMetadataColumns>
+                </output>
+                <output
+                  refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output]"
+                  isErrorOut="true"
+                  name="OLE DB Source Error Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[LOOKUPRuleGroupID]"
+                      dataType="i2"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[LOOKUPRuleGroupID]"
+                      name="LOOKUPRuleGroupID" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[LOOKUPClientID]"
+                      dataType="i2"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[LOOKUPClientID]"
+                      name="LOOKUPClientID" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[RuleGroupName]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[RuleGroupName]"
+                      name="RuleGroupName" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[RuleGroupDescription]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[RuleGroupDescription]"
+                      name="RuleGroupDescription" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[PointsFlag]"
+                      dataType="bool"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[PointsFlag]"
+                      name="PointsFlag" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[DefaultGroupFlag]"
+                      dataType="bool"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[DefaultGroupFlag]"
+                      name="DefaultGroupFlag" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[LOOKUPIncentiveLabelID]"
+                      dataType="ui1"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[LOOKUPIncentiveLabelID]"
+                      name="LOOKUPIncentiveLabelID" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[IntensityStepThreshold]"
+                      dataType="ui1"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[IntensityStepThreshold]"
+                      name="IntensityStepThreshold" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[IntensityRestMinute]"
+                      dataType="ui1"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[IntensityRestMinute]"
+                      name="IntensityRestMinute" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[FrequencyCycleInterval]"
+                      dataType="ui1"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[FrequencyCycleInterval]"
+                      name="FrequencyCycleInterval" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[RowCreatedSysUserID]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[RowCreatedSysUserID]"
+                      name="RowCreatedSysUserID" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[RowModifiedSysUserID]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[RowModifiedSysUserID]"
+                      name="RowModifiedSysUserID" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[RowCreatedDateTime]"
+                      dataType="dbTimeStamp2"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[RowCreatedDateTime]"
+                      name="RowCreatedDateTime"
+                      scale="7" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[RowModifiedDateTime]"
+                      dataType="dbTimeStamp2"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[RowModifiedDateTime]"
+                      name="RowModifiedDateTime"
+                      scale="7" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[OfferCode]"
+                      codePage="1252"
+                      dataType="str"
+                      length="15"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[OfferCode]"
+                      name="OfferCode" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[ScreenNameEnable]"
+                      dataType="bool"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[ScreenNameEnable]"
+                      name="ScreenNameEnable" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[GroupStartDatetime]"
+                      dataType="dbTimeStamp"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[GroupStartDatetime]"
+                      name="GroupStartDatetime" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[GroupEndDatetime]"
+                      dataType="dbTimeStamp"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[GroupEndDatetime]"
+                      name="GroupEndDatetime" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[StartYearmo]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[StartYearmo]"
+                      name="StartYearmo" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[EndYearmo]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[EndYearmo]"
+                      name="EndYearmo" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[policyid]"
+                      codePage="1252"
+                      dataType="str"
+                      length="8000"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[policyid]"
+                      name="policyid" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+          </components>
+          <paths>
+            <path
+              refId="Package\Data Flow Task 1.Paths[OLE DB Source Output]"
+              endId="Package\Data Flow Task 1\Destination - AS_DERM_RuleGroups.Inputs[Destination Input]"
+              name="OLE DB Source Output"
+              startId="Package\Data Flow Task 1\Source - Query.Outputs[OLE DB Source Output]" />
+          </paths>
+        </pipeline>
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\Preparation SQL Task 1"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:DTSID="{B96E19FB-BB7B-4B1C-9445-F79D1F10FB98}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:FailPackageOnFailure="True"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Preparation SQL Task 1"
+      DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2014; © 2014 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{2AE4F3BE-B891-493E-ACFC-E74709540716}"
+          SQLTask:SqlStatementSource="IF NOT EXISTS(SELECT * FROM sys.schemas WHERE name = N'etl')&#xA;BEGIN&#xA;EXEC(N'CREATE SCHEMA [etl]')&#xA;END&#xA;CREATE TABLE [etl].[AS_DERM_RuleGroups] (&#xA;[LOOKUPRuleGroupID] smallint NOT NULL,&#xA;[LOOKUPClientID] smallint NOT NULL,&#xA;[RuleGroupName] varchar(50) NOT NULL,&#xA;[RuleGroupDescription] varchar(50) NOT NULL,&#xA;[PointsFlag] bit NOT NULL,&#xA;[DefaultGroupFlag] bit NOT NULL,&#xA;[LOOKUPIncentiveLabelID] tinyint NOT NULL,&#xA;[IntensityStepThreshold] tinyint NOT NULL,&#xA;[IntensityRestMinute] tinyint NOT NULL,&#xA;[FrequencyCycleInterval] tinyint NOT NULL,&#xA;[RowCreatedSysUserID] int NOT NULL,&#xA;[RowModifiedSysUserID] int NOT NULL,&#xA;[RowCreatedDateTime] datetime2(7) NOT NULL,&#xA;[RowModifiedDateTime] datetime2(7) NOT NULL,&#xA;[OfferCode] varchar(15) NOT NULL,&#xA;[ScreenNameEnable] bit,&#xA;[GroupStartDatetime] datetime2(3),&#xA;[GroupEndDatetime] datetime2(3),&#xA;[StartYearmo] int,&#xA;[EndYearmo] int,&#xA;[policyid] varchar(8000)&#xA;)&#xA;GO&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+  </DTS:Executables>
+  <DTS:PrecedenceConstraints>
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[{F4F262DA-DB6C-44B6-B34D-A50F295CFEC9\}]"
+      DTS:CreationName=""
+      DTS:DTSID="{BB4756DA-2A89-4149-B0CC-FD3CB3EAA0C0}"
+      DTS:From="Package\Preparation SQL Task 1"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="{BB4756DA-2A89-4149-B0CC-FD3CB3EAA0C0}"
+      DTS:To="Package\Data Flow Task 1" />
+  </DTS:PrecedenceConstraints>
+</DTS:Executable>

@@ -1,0 +1,15 @@
+CREATE OR REPLACE TABLE INV_motion.GRA252_Intensity_List AS
+SELECT fsm.enrolled_id
+      ,fsm.steps_date
+      ,fsm.steps_datetime steps_dt
+      ,SUM(fspm.steps) ttl_steps
+      ,fsd.rqd_itnsty_minutes
+      ,fsd.rqd_itnsty_steps
+      ,1 AS rqd_itnsty_bouts
+      ,0 AS rqd_itnsty_interval
+FROM INV_motion.GRA252_Fact_Step_Minute fsm
+     JOIN INV_motion.GRA252_Fact_Step_Day fsd ON fsm.enrolled_id = fsd.enrolled_id AND fsm.steps_date = fsd.full_date 
+     LEFT JOIN INV_motion.GRA252_Fact_Step_Minute fspm ON fsm.enrolled_id = fspm.enrolled_id AND fsm.steps_date = fspm.steps_date  
+WHERE fspm.steps_datetime BETWEEN DATETIME_SUB(fsm.steps_datetime, INTERVAL fsd.rqd_itnsty_minutes-1 MINUTE) AND fsm.steps_datetime
+GROUP BY fsm.enrolled_id,fsm.steps_date,fsm.steps_datetime,fsd.rqd_itnsty_minutes,fsd.rqd_itnsty_steps
+HAVING SUM(fspm.steps)>=fsd.rqd_itnsty_steps 

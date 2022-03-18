@@ -1,0 +1,27 @@
+INSERT INTO INV_motion.GRA252_Intensity_List_Bouts
+(enrolled_id,steps_date,rqd_itnsty_minutes,rqd_itnsty_bouts,rqd_itnsty_interval,steps_dt,seq)
+
+WITH prev AS (
+SELECT enrolled_id
+      ,steps_date
+      ,MAX(steps_dt) AS last_steps_dt 
+      ,MAX(seq) + 1 AS next_seq
+      ,DATETIME_ADD(MAX(steps_dt), INTERVAL rqd_itnsty_minutes + rqd_itnsty_interval MINUTE) AS next_steps_dt
+FROM INV_motion.GRA252_Intensity_List_Bouts
+GROUP BY enrolled_id,steps_date,rqd_itnsty_minutes,rqd_itnsty_bouts,rqd_itnsty_interval)
+
+SELECT curr.enrolled_id
+      ,curr.steps_date
+      ,curr.rqd_itnsty_minutes
+      ,curr.rqd_itnsty_bouts
+      ,curr.rqd_itnsty_interval
+      ,MIN(curr.steps_dt) steps_dt 
+      ,prev.next_seq AS seq
+
+FROM prev 
+INNER JOIN INV_motion.GRA252_Intensity_List curr 
+        ON curr.enrolled_id = prev.enrolled_id  
+       AND curr.steps_date = prev.steps_date
+       AND curr.steps_dt >= prev.next_steps_dt
+
+GROUP BY curr.enrolled_id,curr.steps_date,curr.rqd_itnsty_minutes,curr.rqd_itnsty_bouts,curr.rqd_itnsty_interval,prev.next_seq

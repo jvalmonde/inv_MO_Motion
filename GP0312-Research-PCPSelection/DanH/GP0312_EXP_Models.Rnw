@@ -1,0 +1,205 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage[margin=1in]{geometry}
+\usepackage{pdflscape}
+\usepackage{colortbl}
+\usepackage[table]{xcolor}
+\definecolor{lightgray}{gray}{0.9}
+\author{}
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\title{PCP Selection Utilization Analysis: GP0312}
+\maketitle
+\clearpage
+
+\section{Details of the Data}
+\begin{itemize}
+\item Medicare FFS Claims data (MINI\_OV)\\
+\item supplemented with Stars data mart (provides Assigned and Associated MPIN)\\
+\item Claims are from the year 2014\\ 
+\end{itemize}
+
+
+\section{Terminology/Definitions}
+\begin{itemize}
+\item Match=1 : The Assigned MPIN (chosen by the member or assigned to the member) and Associated MPIN (where the member actually had primary care services) are the same\\
+\item Match=0 : Either there is not an Assigned MPIN, or the Assigned MPIN and the Associated MPIN did not match\\
+\item Assigned : The member had a MPIN assigned to them either by choice or give to them\\ 
+\item Sticker : The member only had 1 PCP\\
+\item Switcher : The member had more than 1 PCP, but "switched" from one to the other\\
+\item Splitter : Had more than 1 PCP, but "split" visits between them (e.g. had 2 PCPs at the same time)\\
+\end{itemize}
+
+<<results=hide,echo=FALSE>>=
+library(data.table)
+library(savvy)
+library(xtable)
+
+all_dat=data.table(read.odbc("Devsql10pdb_PCPSelection",dbQuery='select * from [pdb_PCPSelection].[dbo].[MbrProv_10]'))
+all_dat=all_dat[!is.na(SavvyHICN) & !is.na(Provider_MPIN)]
+member_dat=data.table(read.odbc("Devsql10pdb_PCPSelection",dbQuery='select * from [pdb_PCPSelection].[dbo].[MbrClass_10]'))
+member_dat[,Group:=list(paste(Match,'|',Switcher,'|',Splitter,'|',Sticker,sep=""))]
+member_dat[,Total_Spend:=list(Total_IP_Spend+Total_OP_Spend+Total_DR_Spend+Total_ER_Spend),by=SavvyHICN]
+member_dat[,Assigned:=ifelse(!is.na(Assigned_MPIN),1,0)]
+member_dat[,"Group":=ifelse(Sticker==1,'Sticker',ifelse(Switcher==1,'Switcher',ifelse(Splitter==1,'Splitter','Unknown')))]
+member_dat[,Group:=factor(Group,levels=c('Unknown','Sticker','Splitter','Switcher'))]
+@
+
+<<PCPExp,results=hide,echo=FALSE>>=
+setkeyv(member_dat,'SavvyHICN') ; setkeyv(all_dat,'SavvyHICN') 
+pcp_dat=all_dat[member_dat[,list(SavvyHICN,Assigned_MPIN,Associated_MPIN,Match)],nomatch=0][PCP_Flag==1]
+pcp_dat2=pcp_dat[,.N,by=SavvyHICN]
+member_dat2=member_dat[pcp_dat2]
+member_dat2[,PCP_Seen:=ifelse(N==1,'1 PCP',ifelse(N<6,"2 -5 PCPs","6+ PCPs"))]
+setnames(member_dat2,'N','PCPs')
+member_dat2[,PCP_Seen_V2:=ifelse(PCPs==1,'1 PCP',ifelse(PCPs<4,"2 -3 PCPs",ifelse(PCPs<6,"4-5 PCPs","6+")))]
+pcp_dat3=pcp_dat[!is.na(Associated_MPIN),list(DR_SrvcCnt[Provider_MPIN==Associated_MPIN],sum(DR_SrvcCnt)),by=SavvyHICN]
+setnames(pcp_dat3,c('V1','V2'),c('Visits_Associated','Visits_Total'))
+member_dat2=member_dat2[pcp_dat3,nomatch=0]
+member_dat2[is.na(Visits_Associated),Visits_Associated:=0]
+pcp_dat4=all_dat[member_dat[,list(SavvyHICN,Assigned_MPIN,Associated_MPIN,Match)],nomatch=0]
+pcp_dat4=pcp_dat4[,.N,by=SavvyHICN]
+member_dat2=member_dat2[pcp_dat4,nomatch=0]
+setnames(member_dat2,'N','NumDRs')
+@
+
+\clearpage
+\section{Utilization Spend Analysis Summaries}
+<<results=hide,echo=FALSE>>=
+lm_total=lm(log(Total_Spend)~Match+Assigned+Group+log(RAF)+Gender,data=member_dat2[Total_Spend>0])
+xtab_total=xtable(summary(lm_total)$coef,caption='Model Summary for Log Total Spend, Given Spend>0',digits=c(0,3,3,3,3))
+hist(resid(lm_total))
+
+lm_op=lm(log(Total_OP_Spend)~Match+Assigned+Group+log(RAF)+Gender,data=member_dat2[Total_OP_Spend>0])
+xtab_op=xtable(summary(lm_op)$coef,caption='Model Summary for Log OP Spend, Given Spend>0',digits=c(0,3,3,3,3))
+hist(resid(lm_op))
+
+lm_ip=lm(log(Total_IP_Spend)~Match+Assigned+Group+log(RAF)+Gender,data=member_dat2[Total_IP_Spend>0])
+xtab_ip=xtable(summary(lm_ip)$coef,caption='Model Summary for Log IP Spend, Given Spend>0',digits=c(0,3,3,3,3))
+hist(resid(lm_ip))
+
+lm_dr=lm(log(Total_DR_Spend)~Match+Assigned+Group+log(RAF)+Gender,data=member_dat2[Total_DR_Spend>0])
+xtab_dr=xtable(summary(lm_dr)$coef,caption='Model Summary for Log DR Spend, Given Spend>0',digits=c(0,3,3,3,3))
+hist(resid(lm_dr))
+
+lm_er=lm(log(Total_ER_Spend)~Match+Assigned+Group+log(RAF)+Gender,data=member_dat2[Total_ER_Spend>.11])
+xtab_er=xtable(summary(lm_er)$coef,caption='Model Summary for Log ER Spend, Given Spend>0',digits=c(0,3,3,3,3))
+hist(resid(lm_er))
+
+lm_rx=lm(log(Total_RX_Spend)~Match+Assigned+Group+log(RAF)+Gender,data=member_dat2[Total_RX_Spend>0])
+xtab_rx=xtable(summary(lm_rx)$coef,caption='Model Summary for Log RX Spend, Given Spend>0',digits=c(0,3,3,3,3))
+hist(resid(lm_rx))
+
+lm_pcp=lm(log(Total_PCP_Spend)~Match+Assigned+Group+log(RAF)+Gender,data=member_dat2[Total_PCP_Spend>0])
+xtab_pcp=xtable(summary(lm_pcp)$coef,caption='Model Summary for Log PCP Spend, Given Spend>0',digits=c(0,3,3,3,3))
+hist(resid(lm_pcp))
+
+# tmp=member_dat2[,list(factor(c('Total','IP','OP','DR','ER','RX','PCP'),levels=c('Total','IP','OP','DR','ER','RX','PCP')),c(Total_Spend,Total_IP_Spend,Total_OP_Spend,Total_DR_Spend,Total_ER_Spend,Total_RX_Spend,Total_PCP_Spend),Age,Gender,RAF,Match,Assigned,Group),by=SavvyHICN]
+# setnames(tmp,c('V1','V2'),c('Category','Spend'))
+# tmp[Spend<=0,Spend:=NA]
+# tmp[Category=='ER' & Spend<1,Spend:=NA]
+# library(nlme)
+# lme1=lme(log(Spend)~-1+Match*Category+Assigned*Category+Group*Category+log(RAF)*Category+Age*Category+Gender*Category,random=~Category|factor(Assigned),data=tmp[!is.na(Spend)])
+# summary(lme1)$coefficients
+# coef(lme1)
+# hist(resid(lme1))
+@
+
+<<TotalSum,echo=FALSE,results=tex>>=
+print(xtab_total, caption.placement = "top")
+@
+
+<<OPSum,echo=FALSE,results=tex>>=
+print(xtab_op, caption.placement = "top")
+@
+
+<<IPSum,echo=FALSE,results=tex>>=
+print(xtab_ip, caption.placement = "top")
+@
+
+<<DRSum,echo=FALSE,results=tex>>=
+print(xtab_dr, caption.placement = "top")
+@
+
+<<ERSum,echo=FALSE,results=tex>>=
+print(xtab_er, caption.placement = "top")
+@
+
+<<RXSum,echo=FALSE,results=tex>>=
+print(xtab_rx, caption.placement = "top")
+@
+
+<<PCPSum,echo=FALSE,results=tex>>=
+print(xtab_pcp, caption.placement = "top")
+@
+
+\clearpage
+\section{Utilization Visit Analysis Summaries}
+<<results=hide,echo=FALSE>>=
+lm_op=lm(log(Total_OP_SrvcCnt)~Match+Assigned+Group+log(RAF)+Gender,data=member_dat2[Total_OP_SrvcCnt>0])
+summary(lm_op)
+xtab_op=xtable(summary(lm_op)$coef,caption='Model Summary for Log OP Visit, Given Visits>0',digits=c(0,3,3,3,3))
+hist(resid(lm_op))
+
+lm_ip=lm(log(Total_IP_SrvcCnt)~Match+Assigned+Group+log(RAF)+Gender,data=member_dat2[Total_IP_SrvcCnt>0])
+summary(lm_ip)
+xtab_ip=xtable(summary(lm_ip)$coef,caption='Model Summary for Log IP Visits, Given Visits>0',digits=c(0,3,3,3,3))
+hist(resid(lm_ip))
+
+lm_dr=lm(log(Total_DR_SrvcCnt)~Match+Assigned+Group+log(RAF)+Gender,data=member_dat2[Total_DR_SrvcCnt>0])
+summary(lm_dr)
+xtab_dr=xtable(summary(lm_dr)$coef,caption='Model Summary for Log DR Visits, Given Visits>0',digits=c(0,3,3,3,3))
+hist(resid(lm_dr))
+
+lm_er=lm(log(Total_ER_SrvcCnt)~Match+Assigned+Group+log(RAF)+Gender,data=member_dat2[Total_ER_SrvcCnt>0])
+summary(lm_er)
+xtab_er=xtable(summary(lm_er)$coef,caption='Model Summary for Log ER Visits, Given Visits>0',digits=c(0,3,3,3,3))
+hist(resid(lm_er))
+
+lm_rx=lm(log(Total_RX_Scripts)~Match+Assigned+Group+log(RAF)+Gender,data=member_dat2[Total_RX_Scripts>0])
+summary(lm_rx)
+xtab_rx=xtable(summary(lm_rx)$coef,caption='Model Summary for Log RX Scripts, Given Scripts>0',digits=c(0,3,3,3,3))
+hist(resid(lm_rx))
+
+lm_pcp=lm(log(Total_PCP_SrvcCnt)~Match+Assigned+Group+log(RAF)+Gender,data=member_dat2[Total_PCP_SrvcCnt>0])
+summary(lm_pcp)
+xtab_pcp=xtable(summary(lm_pcp)$coef,caption='Model Summary for Log PCP Visits, Given Visits>0',digits=c(0,3,3,3,3))
+hist(resid(lm_pcp))
+
+# tmp=member_dat2[,list(factor(c('Total','IP','OP','DR','ER','RX','PCP'),levels=c('Total','IP','OP','DR','ER','RX','PCP')),c(Total_Spend,Total_IP_Spend,Total_OP_Spend,Total_DR_Spend,Total_ER_Spend,Total_RX_Spend,Total_PCP_Spend),Age,Gender,RAF,Match,Assigned,Group),by=SavvyHICN]
+# setnames(tmp,c('V1','V2'),c('Category','Spend'))
+# tmp[Spend<=0,Spend:=NA]
+# tmp[Category=='ER' & Spend<1,Spend:=NA]
+# library(nlme)
+# lme1=lme(log(Spend)~-1+Match*Category+Assigned*Category+Group*Category+log(RAF)*Category+Age*Category+Gender*Category,random=~Category|factor(Assigned),data=tmp[!is.na(Spend)])
+# summary(lme1)$coefficients
+# coef(lme1)
+# hist(resid(lme1))
+@
+
+<<OPVisits,echo=FALSE,results=tex>>=
+print(xtab_op, caption.placement = "top")
+@
+
+<<IPVisits,echo=FALSE,results=tex>>=
+print(xtab_ip, caption.placement = "top")
+@
+
+<<DRVisits,echo=FALSE,results=tex>>=
+print(xtab_dr, caption.placement = "top")
+@
+
+<<ERVisits,echo=FALSE,results=tex>>=
+print(xtab_er, caption.placement = "top")
+@
+
+<<RXScripts,echo=FALSE,results=tex>>=
+print(xtab_rx, caption.placement = "top")
+@
+
+<<PCPVisits,echo=FALSE,results=tex>>=
+print(xtab_pcp, caption.placement = "top")
+@
+\end{document}

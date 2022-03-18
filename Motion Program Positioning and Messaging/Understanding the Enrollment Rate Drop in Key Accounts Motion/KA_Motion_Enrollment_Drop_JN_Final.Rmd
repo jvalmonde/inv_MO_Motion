@@ -1,0 +1,1691 @@
+---
+title: "Understanding the Enrollment Rate Drop in Key Account Motion"
+author: "__Joyvalerie Mondejar__, __Nikko Joe Ramal__"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    number_sections: no
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+geometry: margin=0cm
+editor_options:
+  chunk_output_type: console
+---
+
+_Last updated: `r format(as.Date("2019-02-06"), "%B %d, %Y")`_
+
+<!-- 
+HTML comment
+-->
+`r # Comment using R code, note that in-line R statements require use of single back-quote characters (upper-left part of keyboard)`
+
+<!-- This is a button that appears when scrolling down that returns to the top of the page -->
+<script>
+window.onscroll = function() {scrollFunction()};
+
+function scrollFunction() {
+    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        document.getElementById("myBtn").style.display = "block";
+    } else {
+        document.getElementById("myBtn").style.display = "none";
+    }
+}
+function topFunction() {
+    document.body.scrollTop = 0; // For Safari
+    document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+}
+</script>
+<button onclick="topFunction()" id="myBtn" title="Return to top" style = "display: none; position: fixed; top: 40px; left: 20px;">Return to Top</button>
+
+<!-- This style tag changes the formatting of div tags that are of class tabset -->
+<style>
+.source {
+  padding: 0;
+}
+body {
+  margin: 0px;
+  padding: 0px;
+  text-align: justify;
+}
+nav {                               <!-- <nav> tag defines a set of navigation links. --> 
+  width: 0;
+}
+div.tabset {                        <!-- <nav> tag defines a set of navigation links. --> 
+  font-size: 16px;
+}
+tabset level2 {
+  background-color: orange;
+}
+div.tabset a {
+  text.align: center;
+}
+code {
+  background-color: #EEDDFF;
+}
+</style>
+
+<script>
+$(document).ready(function(){
+    $('[data-toggle="popover"]').popover(); 
+});
+</script>
+
+ <!-- Nikko's Code for tables -->
+
+ <style type="text/css">
+  caption {
+    color: #303030;
+    font-size: 1.1em;
+    font-weight: bold;
+    text-align: left;
+  }
+  table{
+    border: 0.75px solid #303030;
+    font-size: 14px;
+  }
+  th {
+  text-align:center;
+  background-color: #d7def2;
+  }
+  p{
+  font-family: Helvetica;
+  line-height:1.5em;
+  }
+</style>
+
+
+```{r setup, include=FALSE}
+library(data.table)
+library(ggplot2)
+library(grid)
+library(gridExtra)
+library(kableExtra)
+library(htmlTable)
+library(knitr)
+library(plotly)
+library(scales)
+library(stats)
+library(qwraps2)
+library(tableone)
+library(arsenal)
+library(boot)
+library(tidyverse)
+library(outliers)
+library(effsize)
+library(pwr)
+
+## This makes the default alignment for all captions 'center'
+knitr::opts_chunk$set(fig.align = 'center')
+
+# All the files used here should be in the current working directory; use 'setwd()' before running this code
+
+# Previously member month (mm) data was stored by running the Read_data.R
+# load this data
+
+rm(list = ls())
+if(!exists("mm")) # load("Data/mm.rda")
+source("Read_data.R")
+
+# Load the necessary functions to access and preprocess the data
+source("helper_functions.R")
+source("functions.R")
+
+set.seed(87543)
+
+fig.number = 0
+fig_count = function(fig.number) {
+    fig.number <<- fig.number + 1
+}
+tab.number = 0
+tab_count = function(tab.number) {
+    tab.number <<- tab.number + 1
+}
+
+# Automatic table numbering
+tab_number <<- 0
+numtib = function(table.cap = NULL) {
+    count = 1
+    tab_number <<- tab_number + count
+    caption = paste0("Table ", tab_number, ".  ", table.cap)
+    return(caption)
+}
+
+# Automatic figure numbering
+fig_number <<- 0
+numfig = function(table.cap = NULL) {
+    count = 1
+    fig_number <<- fig_number + count
+    caption = paste0("Figure ", fig_number, ".  ", table.cap)
+    return(caption)
+}
+
+```
+
+
+# Introduction {.tabset .tabset-pills}
+
+<p> UHG has been developing a number of motion programs catered to the different segments of its members. Monthly motion reports, which provides among others current and past year month enrollment and participations statistics have been circulating within UHC. It has been noticed in these reports that although the number of enrolled members in the motion programs has increased in general (both employer and individual accounts) between 2017 and 2018, there was a substantial drop in the enrollment rate for the Key Accounts Motion from 64% in July 2017 down to 42% in July 2018. Also, there was a considerable drop in the active rate among these enrolled members from 61.9% in July 2017 down to 44.3% in July 2018. We think that this might be connected to the shift from bulk-shipping devices to employers to directly shipping devices to members' homes that happened sometime between December 2017 and January 2018.
+<p>
+
+<p> With these findings, it is important to establish and understand the characteristics that exist between the members in July 2017 and in July 2018 to better guide the future motion enrollment and engagement efforts. Through this grant, we would like to compare the member characteristics, particularly those related to health between those 1) eligible, 2) enrolled, and 3) actively walking among those enrolled in July 2017 and in July 2018.</p>
+
+# Methods {.tabset .tabset-pills}
+
+<p> This grant used the UHC pharmacy, medical claims, and motion data for Key Account motion eligible members. There are two groups that were compared, namely, those members of employers eligible for Key Account motion program in July 2017 (Group 1) and those that were eligible in July 2018 (Group 2). The monthly data going back to one year prior of the current year month were also gathered. For consistency, the researchers have used the same definitions of eligible, enrolled, and active as in the monthly motion report, i.e., had at least one day with at least 100 steps in the month, and did not have an incentive adjustment < $40 during the month. The researchers conducted several analyses to examine the differences between enrolled members in July 2018 compared to those enrolled in July 2017.</p>
+
+
+__Data cleaning done__  
+
+ * Those individuals not enrolled in UHC plan were removed.
+ * Row records which do not belong to either groups were removed.
+ * Members not associated with Key Account motion were also removed.
+ * We also suspected that members younger than 18 years old are not eligible to Key Account motion program.
+ * Duplicates were removed.
+ * Gender that were 'U' were converted to NAs.
+ * Median household income that is 0 were converted to NAs.
+ * RAF scores that were 0 were converted to NAs.
+ * Missing or negative allowed amounts were replaced with 0.  
+ 
+
+Numerical variables such as age, median household income, RAF score, and allowed amounts were compared using independent-samples t-test between the two groups. Categorical variables such as gender, subscriber indicator, area of residence, condition diagnoses were compared using chi-squared test between the two groups. If the proportions are significantly different between the two groups, the size of the difference is quantified using Cohen's h. Hedges' g was used to quantify the effect size of statistically different means between the two groups. The allowed amounts were adjusted for inflation in 2018.
+
+
+ 
+# Results {.tabset .tabset-pills}
+
+To better understand the enrollment drop in Key Accounts Motion, we examined the differences of eligible, enrolled and active among eligible and enrolled members between July 2017 and July 2018. We compared these groups with regard to patient demographics, certain disease conditions, and healthcare costs.
+
+## Eligibility and Enrollment
+
+Key Account motion enrollment rate dropped from 69.1% in July 2017 down to 45.8% in July 2018. There are discrepancies in the counts of eligible members as well as the enrolled members largely because the monthly motion report included those members who were not enrolled with any UHG plan and those that were not eligible to Key Account motion, i.e., either associated with small business or public accounts. The reason being was that some of the individual's identity from the AWS motion data did not match with the PHI of individuals from NGIS.
+
+```{r ee rate, echo=FALSE}
+# Using the member month (mm) data, I created the pop dataset to compare the two groups
+pop1 = mm[Group1_Flag == 1 & Year_Mo == 201707, ]  # 14101    
+pop1[, Group := "July 2017"]
+pop2 = mm[Group2_Flag == 1 & Year_Mo == 201807, ]  # 36438    
+pop2[, Group := "July 2018"]
+pop = rbind(pop1, pop2)
+pop[, Group := factor(Group)]
+
+ee1 = pop1[,.(Eligible = .N, Enrolled = sum(Enroll_Flag)),
+           by = .(Year_Mo)][,.(Year_Mo, Eligible, Enrolled, '%' = Enrolled/Eligible * 100)]
+ee1 = ee1[,lapply(.SD, round, digits = 1), by = .(Year_Mo)]
+
+ee2 = pop2[,.(Eligible = .N, Enrolled = sum(Enroll_Flag)), by = .(Year_Mo)][,.(Year_Mo, Eligible, Enrolled, 
+                                                                               '%' = Enrolled/Eligible * 100)]
+ee2 = ee2[,lapply(.SD, round, digits = 1), by = .(Year_Mo)]
+ee = rbind(ee1, ee2)
+
+htmlTable(ee,
+          align = "lrrr",
+          rnames = F,                                            # No numbers on rows
+          rgroup = c("Group 1", "Group 2"),                      # Labels for sets of rows
+          n.rgroup = c(1, 1),                                    # Number of rows for each group
+          col.rgroup = c("none", "#BBDDFF"),                     # Alternating colors for background
+          css.cell = "padding-right: 2em; padding-left: 2em;",   # Horizontal padding, remember units
+          css.rgroup = 'color: #AA0000; font-weight: bold;',     # Format row group headers
+          caption = numtib(" Enrollment rate"),                           # Caption
+          css.table = "margin: 3em auto;"                        # margin space above and below the table. Puttin 'auto' in the margin of the table style centers the table on the page
+          )
+```
+
+The spike in the figure below shows that more than half of the employers in July 2018 having employees did not enroll at all and less percentage of employers having most of their employees enrolled in KA motion program. The spike at zero could be addressed at the admin level of the companies while the waning middle distribution could be addressed at the employees level making sure that the corresponding addresses are updated.
+
+```{r, echo = FALSE, fig.height=3.5, fig.width=8}
+# Calculating the enrollment rate for each employer
+cee1 = pop1[, .(Eligible = .N, Enrolled = sum(Enroll_Flag)  ), 
+            keyby = .(Group, Cust_Seg_Sys_ID)][,
+                                                    .(Group, Cust_Seg_Sys_ID,  Eligible, Enrolled, 
+                                                      Rate = Enrolled/Eligible * 100)]
+cee1 = cee1[,lapply(.SD, round, digits = 1), by = .(Group, Cust_Seg_Sys_ID)]
+cee2 = pop2[, .(Eligible = .N ,Enrolled = sum(Enroll_Flag)  ), 
+            keyby = .(Group, Cust_Seg_Sys_ID)][,.(Group, Cust_Seg_Sys_ID,  Eligible, Enrolled, 
+                                                       Rate = Enrolled/Eligible * 100)]
+cee2 = cee2[,lapply(.SD, round, digits = 1), by = .(Group, Cust_Seg_Sys_ID)]
+
+cee = rbind(cee1, cee2)
+
+ggplot(cee, aes(x = Rate)) + 
+  geom_histogram(bins = 20, fill = uhg1,
+                 aes(y = stat(width*density)),
+                 position = "identity") +  
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  ggtitle("Enrollment rate by employer") + 
+  ylab("Percent of Employers") + xlab("Enrollment rate") +
+  facet_wrap( ~ Group, ncol=2) +
+  theme_joy
+
+```
+
+$\hspace{0in}$ <a name='`r paste('fig',fig_count(fig.number), sep = "")`'>`r paste('Figure ',fig.number,". ", " Enrollment rate by employer", sep = "")`</a>
+
+<br>
+
+```{r present in both, echo=FALSE}
+tmp1 = mm[Group1_Flag == 1 & Year_Mo == 201707,.N,keyby= Indv_Sys_ID]
+tmp2 = mm[Group2_Flag == 1 & Year_Mo == 201807,.N, keyby= Indv_Sys_ID]
+tmp = mm[Group2_Flag ==1 &  Year_Mo == 201807 & Indv_Sys_ID %in% tmp1$Indv_Sys_ID,.N]
+
+tmp1.enr = mm[Group1_Flag == 1 & Year_Mo == 201707 & Enroll_Flag == 1,.N,keyby= Indv_Sys_ID]
+tmp2.enr = mm[Group2_Flag == 1 & Year_Mo == 201807 & Enroll_Flag == 1,.N, keyby= Indv_Sys_ID]
+tmp.enr = mm[Group2_Flag ==1 &  Year_Mo == 201807 & Indv_Sys_ID %in% tmp1.enr$Indv_Sys_ID,.N]
+```
+
+There were `r comma(tmp)` eligible members in July 2017 that were still eligible in July 2018 and there were `r comma(tmp.enr)` members enrolled in both year months.
+
+```{r, echo=FALSE}
+# Adjusted the allowed amounts for inflation in 2018
+pop_adj = copy(pop)
+pop_adj = pop_adj[,.(Indv_Sys_ID, Group1_Flag, Group2_Flag, Cont_Enroll_Flag, ComEnrld_Yr_Mo, Year_Mo, Year_Mo_, 
+                       IP_Allw_Amt, OP_Allw_Amt, DR_Allw_Amt, Rx_Allw_Amt, ER_Allw_Amt, Total_Allw_Amt, IDyrmo,
+                       Group, Enroll_Flag)]
+
+pop_adj[Group == "July 2017", ':=' (IP_Allw_Amt = IP_Allw_Amt * 1.019,
+                                    OP_Allw_Amt = OP_Allw_Amt * 1.019,
+                                    DR_Allw_Amt = DR_Allw_Amt * 1.019,
+                                    Rx_Allw_Amt = Rx_Allw_Amt * 1.019,
+                                    ER_Allw_Amt = ER_Allw_Amt * 1.019,
+                                    Total_Allw_Amt = Total_Allw_Amt * 1.019)]
+```
+
+
+## Eligible {.tabset .tabset-pills}
+
+### Demographics
+
+```{r, results='asis', echo=FALSE}
+labels(pop)  <- c(Gdr_Cd = 'Gender', Sbscr = "Subscriber", USR_Ind = 'Area', Med_Income = 'Median Household Income')
+tab1 <- tableby(Group ~ anova(Age, "medianq1q3", "meansd", "range")  + Gdr_Cd + Sbscr + USR_Ind, 
+                chisq.correct = FALSE, total=FALSE,  cat.simplify=TRUE, data = pop)
+tab2 <- tableby(Group ~ Med_Income, data = pop,
+                control = tableby.control(numeric.stats =  c("N","Nmiss", "medianq1q3", "meansd", "range"),
+                                          total = FALSE))
+tab12 = merge(tab1, tab2)
+# summary(tab12, text = TRUE)
+```
+
+```{r, echo=FALSE}
+# Effect size 
+
+# Hedges’ g and Cohen’s d are extremely similar. Both have an upwards bias (an inflation) in results of up to about 4%. The two statistics are very similar except when sample sizes are below 20, when Hedges’ g outperforms Cohen’s d. Hedges’ g is therefore sometimes called the corrected effect size.
+
+# Income
+effectsize_income = cohen.d(pop$Med_Income, pop$Group, hedges.correction = TRUE, na.rm = T)
+effectsize_income_mag = effectsize_income$magnitude
+effectsize_income_estimate = abs(round(effectsize_income$estimate[[1]], 3))
+
+# Age
+effectsize_age = cohen.d(pop$Age, pop$Group, hedges.correction = TRUE, na.rm = T)
+effectsize_age_mag = effectsize_age$magnitude
+effectsize_age_estimate = abs(round(effectsize_age$estimate[[1]], 3))
+
+# Cohen's h 
+tab12_tmp = as.data.frame(tab12)
+tmp = tab12_tmp %>% 
+  filter(variable %in% c("Gdr_Cd", "USR_Ind", "Sbscr"), term %in% c("countpct", "Sbscr"))
+F1_prop = tmp$`July 2017`[[1]][2] /100
+F2_prop = tmp$`July 2018`[[1]][2] /100
+F_diff = round(abs(tmp$`July 2017`[[1]][2] -  tmp$`July 2018`[[1]][2]), 2)
+F_effect_size = abs(ES.h(F2_prop, F1_prop))
+
+S1_prop = tmp$`July 2017`[[5]][2] /100
+S2_prop = tmp$`July 2018`[[5]][2] /100
+S_diff = round(abs(tmp$`July 2017`[[5]][2] - tmp$`July 2018`[[5]][2] ), 2)
+S_effect_size = abs(ES.h(S2_prop, S1_prop))
+
+R1_prop = tmp$`July 2017`[[6]][2] /100
+R2_prop = tmp$`July 2018`[[6]][2] /100
+R_diff = round(abs(tmp$`July 2017`[[6]][2] - tmp$`July 2018`[[6]][2]), 2)
+R_effect_size = abs(ES.h(R2_prop, R1_prop))
+
+Eff.Size = data.table(Variable = c("Female", "Suburban", "Rural"),
+                      Observed_difference = c(F_diff, S_diff, R_diff),
+                      Estimate = c(F_effect_size, S_effect_size, R_effect_size),
+                      Magnitude = rep("negligible", 3))
+setnames(Eff.Size, "Observed_difference", "Observed difference (%)")
+```
+
+Table 2 shows that the eligible members in July 2018 aree a year younger than those eligible in July 2017. However, this is a `r effectsize_age_mag` difference. Eligible members in July 2018 have 4% more females than in July 2017. There are more who live in suburban areas and less in rural areas among the July 2018 eligible members. The household median income of eligible members in July 2018 is $1,047 more than the income of eligible members in July 2017. The effect size is `r effectsize_income_estimate`, a `r effectsize_income_mag` estimate. 
+  
+
+```{r echo=FALSE, results='asis'}
+summary(tab12, pfootnote = FALSE, digits = 2, 
+        title = numtib('Demographics profile of those who were eligible for Key Account motion program'))
+```
+
+```{r echo=FALSE, results='asis'}
+kable(Eff.Size, caption = numtib("Effect size of the difference"), digits = 3) %>% 
+  kable_styling(full_width = FALSE, bootstrap_options = "condensed")
+```
+
+
+```{r, echo=FALSE, warning=FALSE, fig.height=3, fig.width=7}
+p1 <- ggplot(data = pop, aes(Age, fill = Group)) + 
+  geom_histogram(bins = 20,
+                 aes(y = stat(width*density)),
+                 position = "identity", alpha = 0.6) +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  ylab("Percentage") +
+  scale_fill_manual(values = c(uhg1, uhg2)) +
+  theme_joy + guides(fill = guide_legend(title = NULL))
+
+p2 <- ggplot(data = pop, aes(Med_Income, fill = Group)) + 
+  geom_histogram(bins = 20,
+                 aes(y = stat(width*density)),
+                 position = "identity", alpha = 0.6) +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  ylab("Percentage") + xlab("Median Household Income") +
+  scale_fill_manual(values = c(uhg1, uhg2)) +
+  theme_joy + guides(fill = guide_legend(title = NULL))
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+$\hspace{0in}$ <a name='`r paste('fig',fig_count(fig.number), sep = "")`'>`r paste('Figure ',fig.number,". ", " Distribution of age and median household income", sep = "")`</a>
+
+
+### Health
+
+```{r health eligible, echo=FALSE, warning=FALSE, include=FALSE}
+vars <- c('RAF_Score', 'T2D_Flag', 'Hypertension_Flag', 'Dep_Anx_Flag', 'COPD_Flag','CHF_Flag','RA_Flag',
+          'ChronicPain_Flag')
+tmp_mm =  pop[,.(Indv_Sys_ID, Group, RAF_Score, T2D_Flag, Hypertension_Flag, Dep_Anx_Flag, COPD_Flag, CHF_Flag,
+                 RA_Flag, ChronicPain_Flag, Year_Mo_, Year_Mo)]
+tmp_mm[, Year_Mo_ := ifelse(Year_Mo == 201707, "Jul 2017", "Jul 2018")]
+tmp_mm[, Year_Mo_ := factor(Year_Mo_, levels = c("Jul 2017", "Jul 2018"))]
+
+tmp_mm[, c('T2D_Flag', 'Hypertension_Flag', 'Dep_Anx_Flag', 'COPD_Flag', 'CHF_Flag','RA_Flag', 'ChronicPain_Flag') :=
+         lapply(.SD, as.factor),.SDcols = c('T2D_Flag', 'Hypertension_Flag', 'Dep_Anx_Flag', 'COPD_Flag', 'CHF_Flag',
+                                            'RA_Flag', 'ChronicPain_Flag')]
+health <- CreateTableOne(vars = vars, strata = "Year_Mo_", data = tmp_mm, test = FALSE)
+
+htmlTable(kableone(print(health, smd = FALSE)),
+          rnames = F,                                            # No numbers on rows
+          cgroup = c("Year Month"),                              # Grouping columns
+          n.group = c(1),                                        # # Number of columns in each group
+          css.cell = "padding-right: 1em; padding-left: 1em;",   # Horizontal padding, remember units
+          css.rgroup = 'color: #AA0000; font-weight: bold;',     # Format row group headers
+          caption = "Eligible: RAF score and Percentage Prevalence",                                # Caption
+          css.table = "margin: 5em auto;"                        # Puttin 'auto' in the margin of the table style centers the table on the page
+          )
+```
+
+```{r Eligible health, results='asis', warning=FALSE, echo=FALSE}
+labels(pop)  <- c(RAF_Score = 'RAF Score', T2D_Flag = "Type 2 Diabetes", Hypertension_Flag = 'Hypertension',
+                  Dep_Anx_Flag = 'Depression / Anxiety', COPD_Flag = 'COPD', CHF_Flag = 'CHF', RA_Flag = 'RA',
+                  ChronicPain_Flag = 'Chronic Pain')
+tab1 <- tableby(Group ~ RAF_Score, data = pop,
+                control = tableby.control(numeric.stats = c("Nmiss", "medianq1q3", "meansd", "range"), 
+                                          numeric.simplify = TRUE, total = FALSE))
+tab2 <- tableby(Group ~ T2D_Flag + Hypertension_Flag + Dep_Anx_Flag + COPD_Flag + CHF_Flag + RA_Flag +
+                  ChronicPain_Flag, cat.simplify = TRUE, total=FALSE, data = pop)
+tab12 <- merge(tab2, tab1)
+# summary(tab12, text = TRUE)
+```
+
+```{r echo=FALSE}
+tab12_tmp = as.data.frame(tab12)
+tmp = tab12_tmp %>% 
+  filter(variable %in% c("RAF_Score"), term %in% c("meansd"))
+R1_mean = tmp$`July 2017`[[1]][1]   
+R2_mean = tmp$`July 2018`[[1]][1]   
+mean_diff = round(abs(R1_mean - R2_mean), 2)
+perc_diff = round(mean_diff/R1_mean * 100, 1)
+```
+
+```{r, echo=FALSE }
+effectsize_raf = cohen.d(pop$RAF_Score, pop$Group, hedges.correction = TRUE, 
+                         na.rm = TRUE)
+effectsize_raf_mag = effectsize_raf$magnitude
+effectsize_raf_estimate = round(abs(effectsize_raf$estimate[[1]]), 3)
+```
+
+Table 4 shows that the prevalence of disease conditions do not differ between the two groups, but the the RAF scores seems to be different. On the average, the RAF scores of July 2018 eligible members is lower by `r perc_diff` % than those of July 2017 eligible members.  The effect size is `r effectsize_raf_estimate`, a `r effectsize_raf_mag` estimate. 
+
+```{r echo= FALSE, results='asis'}
+summary(tab12, pfootnote = FALSE, digits = 2, title = numtib("RAF score and percentage prevalence between eligible members"))
+```
+
+
+```{r continuous eligible, echo=FALSE, include=FALSE}
+# Getting data for those UHC continuously enrolled
+# Group 1 enolled from July 2016 to July 2017
+# Group 2 enolled from July 2017 to July 2018
+pop1_cont = pop1[Year_Mo == 201707 & UHC_Enr_Mos1 == 13, .(Indv_Sys_ID)] # 865
+mm_pop1_cont = pop1[Group == "July 2017"][pop1_cont, nomatch = 0]
+
+pop2_cont = pop2[Year_Mo == 201807 & UHC_Enr_Mos2 == 13, .(Indv_Sys_ID)]  # 7628
+mm_pop2_cont = pop2[Group == "July 2018"][pop2_cont, nomatch = 0]
+
+mm_pop_cont = rbind(mm_pop1_cont, mm_pop2_cont) # 8493   52
+```
+
+To make more sense of the RAF scores as a measure of health status, we considered only those eligible members that were continuously enrolled with UHC plan for 13 months. Interestingly, there is no significant difference between the RAF scores of those continuously enrolled between the two groups.  
+
+```{r echo=FALSE, results='asis'}
+labels(mm_pop_cont)  <- c(RAF_Score = 'RAF Score')
+tab1 <- tableby(Group ~ RAF_Score, data = mm_pop_cont,
+                control = tableby.control(numeric.stats = c("Nmiss", "medianq1q3", "meansd", "range"),
+                                          numeric.simplify = TRUE, total = FALSE))
+# summary(tab1, text = TRUE)
+summary(tab1, pfootnote = FALSE, digits = 2, title = numtib("RAF score of UHC continuously enrolled between eligible members"))
+```
+
+```{r echo=FALSE, fig.height=4, fig.width=5.5}
+raf_ci = mm_pop_cont[,.(RAF_Score = mean_ci(RAF_Score, na_rm = TRUE), stat = c('Mean', 'Lower', 'Upper')), 
+                     keyby = Year_Mo_]
+raf_ci_wide = dcast(raf_ci, Year_Mo_ ~ stat, value.var = "RAF_Score")
+raf_ci_wide = raf_ci_wide[, .(Year_Mo = c("July 2017", "July 2018"), Year_Mo_, Lower, Mean, Upper)]
+
+# text_size_ = 14
+ggplot(raf_ci_wide, aes(x=Year_Mo, y=Mean)) + 
+  geom_bar(position = position_dodge(), stat = "identity",fill = uhg1, width = 0.6) +
+  geom_errorbar(aes(ymin=Lower, ymax=Upper),
+                width=.2,                    # Width of the error bars
+                position=position_dodge(.9)) +
+  geom_text(aes(x = Year_Mo, y = 0.8, label = round(Mean, 1))) + 
+  ylim(0, 2) +
+  labs(x = '', y = '') +
+  ggtitle("Mean RAF Score") +
+  theme_joy_single + theme(legend.position="none") +
+  theme(axis.text.x = element_text(size = text_size_, vjust = 0.9),
+        axis.text.y = element_text(size = text_size_),
+        plot.title = element_text(size = text_size_ + 3, face = 'bold'))
+```
+
+$\hspace{0in}$ <a name='`r paste('fig',fig_count(fig.number), sep = "")`'>`r paste('Figure ',fig.number,". ", " Mean (confidence interval) of RAF score", sep = "")`</a>
+
+<br>
+
+To examine the disease prevalence further, continuous UHC plan enrollment from January to July of the corresponding year was considered. The prevalence of diseases still do not significantly differ between the two groups.
+
+```{r echo= FALSE, results='asis'}
+conditions1 = data.table(create_chronic_tab(mm[Group1_Flag == 1], year_mo_included = 1, year_mo_name = "Year_Mo_"))
+conditions2 = data.table(create_chronic_tab(mm[Group2_Flag == 1], year_mo_included = 2, year_mo_name = "Year_Mo_"))
+cd1 = pop1[,-c(31:37)]
+cd2 = pop2[,-c(31:37)]
+setkeyv(conditions1, c("Indv_Sys_ID"))  ; setkeyv(conditions2, c("Indv_Sys_ID"))
+cd1 = cd1[conditions1, nomatch = 0]
+cd2 = cd2[conditions2, nomatch = 0]
+
+tmp_mm = rbind(cd1, cd2)
+
+tab_prev <- tableby(Group ~ T2D_Flag + Hypertension_Flag + Dep_Anx_Flag + COPD_Flag + CHF_Flag + RA_Flag +
+                  ChronicPain_Flag, data = tmp_mm,  total = FALSE, cat.simplify = TRUE)
+
+summary(tab_prev, pfootnote = FALSE, digits = 2, title = numtib("Jan - July percentage prevalence"))
+```
+
+```{r eligible RAF histogram, echo=FALSE, warning=FALSE, fig.height=4, fig.width=5.5}
+plot_raf(pop, enroll_flag = "N")
+```
+$\hspace{0in}$ <a name='`r paste('fig',fig_count(fig.number), sep = "")`'>`r paste('Figure ',fig.number,". ", " RAF score distribution", sep = "")`</a>
+
+### Claims
+
+```{r, results='asis', echo=FALSE}
+labels(pop)  <- c(IP_Allw_Amt = 'IP', OP_Allw_Amt = "OP", DR_Allw_Amt = 'DR', Rx_Allw_Amt = 'Rx', 
+                  ER_Allw_Amt = 'ER', Total_Allw_Amt = 'Total')
+tab_orig <- tableby(Group ~ IP_Allw_Amt + OP_Allw_Amt + DR_Allw_Amt + Rx_Allw_Amt + ER_Allw_Amt +
+                      Total_Allw_Amt, total = FALSE, data = pop)
+```
+
+On the average, table 7 shows that the eligible members in July 2018 have around $8 higher costs for doctor visits. However, the effect size in the Table 8 suggests that this difference is negligible.
+
+
+```{r echo=FALSE, results='asis'}
+summary(tab_orig, pfootnote = FALSE, digits = 2, title = numtib('Comparison of healthcare $ spending'))
+```
+
+```{r, echo=FALSE, results='asis'}
+Eff.Size = effectsize_func(pop, columns = c("DR_Allw_Amt"),
+                           strata = "Year_Mo_", 
+                           percentile = 1, remove_outlier = "N")
+setnames(Eff.Size, "Variable", "Spend")
+Eff.Size = Eff.Size[,.(Spend = c('DR'), Estimate, Magnitude)]
+
+Spend_cat_melt = pop_spend(data = pop, enroll_flag = "N")
+Spend_cat_melt = Spend_cat_melt[,.(Year_Mo_, Category, Mean)]
+Obs_diff = rbind(Spend_cat_melt[Category == "DR", 
+                                .(Diff = abs(Mean[Year_Mo_ == "Jul 2018"] - Mean[Year_Mo_ == "Jul 2017"]),
+                                  Perc_Diff = abs(Mean[Year_Mo_ == "Jul 2018"] - 
+                                                    Mean[Year_Mo_ == "Jul 2017"])/Mean[Year_Mo_ == "Jul 2017"] * 100 )])
+Obs_diff = Obs_diff[,.(Spend = c('DR'), Diff, Perc_Diff)]
+setkeyv(Eff.Size, "Spend")  ; setkeyv(Obs_diff, "Spend")
+Eff.Size = Obs_diff[Eff.Size, nomatch = 0]
+setnames(Eff.Size, c("Diff", "Perc_Diff"), c("Observed Difference", "Percentage Difference"))
+
+kable(Eff.Size, caption = numtib("Effect size of the difference"), digits = 2) %>% 
+  kable_styling(full_width = FALSE, bootstrap_options = "condensed")
+```
+
+```{r Eligible Count and Total Spend, echo=FALSE}
+Spend = pop[, .(.N, 'Mean Total Spend' = mean(Total_Allw_Amt),
+                'SD Total Spend' = sd(Total_Allw_Amt)), keyby = Year_Mo_]
+
+kable(Spend, caption = numtib("Eligible Count and Total Spend"), digits = 1, format.args = list(big.mark = ',')) %>% 
+  kable_styling(full_width = FALSE, bootstrap_options = 'condensed')
+```
+
+```{r eligible spend by group and category, echo=FALSE, fig.height=3, fig.width=7}
+Spend_cat_melt = pop_spend(data = pop, enroll_flag = "N")
+Spend_cat_melt = Spend_cat_melt[Category != "Total"]
+
+ggplot(Spend_cat_melt, aes(x = Category, y = Mean, fill = Category)) + 
+  geom_bar(position = position_dodge(), stat = "identity") +
+  geom_errorbar(aes(ymin = Lower, ymax = Upper),
+                width = .2,                    # Width of the error bars
+                position = position_dodge(.9)) +
+  scale_fill_manual(values = c(uhg1, uhg2, uhg3, uhg4, uhg5)) +
+  labs(x = '', y = 'Mean Spend $') +
+  ggtitle("Mean (CI) spend by category") +
+  theme_joy + theme(legend.position = "none") +
+  facet_grid(. ~ Year_Mo_)
+```
+
+$\hspace{0in}$ <a name='`r paste('fig',fig_count(fig.number), sep = "")`'>`r paste('Figure ',fig.number,". ", " Mean spending by service types", sep = "")`</a>
+
+The PMPM dollar amounts from the current month July of the year back to July month of the prior year were also calculated to compare the spending for the different services over the one year period.
+
+```{r  PMPM eligible, echo=FALSE}
+# Group 1
+tmp = mm[Group1_Flag == 1 & Year_Mo == 201707, .N, .(Indv_Sys_ID)][,.(Indv_Sys_ID)]
+count1 = mm[Group1_Flag == 1 & Year_Mo <= 201707 & Indv_Sys_ID %in% tmp$Indv_Sys_ID, .(Group = 'Group 1', .N), 
+            keyby = .(Indv_Sys_ID)][,.(Members =.N), keyby = Group]
+tot1 = mm[Group1_Flag == 1 & Year_Mo <= 201707 & Indv_Sys_ID %in% tmp$Indv_Sys_ID,
+          .(.N, IP = sum(IP_Allw_Amt, na.rm = TRUE), OP = sum(OP_Allw_Amt, na.rm = TRUE), 
+            DR = sum(DR_Allw_Amt, na.rm = TRUE), Rx = sum(Rx_Allw_Amt, na.rm = TRUE), 
+            ER = sum(ER_Allw_Amt, na.rm = TRUE), Total = sum(Total_Allw_Amt, na.rm = TRUE))]
+
+PMPM1 = tot1[, .(Group = 'Group 1', Months = N, IP = IP/N, OP = OP/N, DR = DR/N, Rx = Rx/N, ER = ER/N, 
+                 Total = Total/N)]
+
+# Group 2
+tmp = mm[Group2_Flag == 1 & Year_Mo == 201807, .N, .(Indv_Sys_ID)][,.(Indv_Sys_ID)]
+count2 = mm[Group2_Flag == 1 & Year_Mo >= 201707 & Indv_Sys_ID %in% tmp$Indv_Sys_ID, .(Group = 'Group 2', .N), 
+            keyby = .(Indv_Sys_ID)][,.(Members =.N), keyby = Group]
+tot2 = mm[Group2_Flag == 1 & Year_Mo >= 201707 & Indv_Sys_ID %in% tmp$Indv_Sys_ID,
+          .(.N, IP= sum(IP_Allw_Amt, na.rm = TRUE), OP = sum(OP_Allw_Amt, na.rm = TRUE), 
+            DR = sum(DR_Allw_Amt, na.rm = TRUE), Rx = sum(Rx_Allw_Amt, na.rm = TRUE), 
+            ER = sum(ER_Allw_Amt, na.rm = TRUE), Total = sum(Total_Allw_Amt, na.rm = TRUE))]
+
+PMPM2 = tot2[,.(Group = 'Group 2', Months = N, IP = IP/N, OP = OP/N, DR = DR/N, Rx = Rx/N, ER = ER/N, 
+                Total = Total/N)]
+
+PMPM = rbind(PMPM1, PMPM2)
+count = rbind(count1, count2)
+
+setkeyv(count, c("Group"))  ;  setkeyv(PMPM, c("Group"))
+PMPM = PMPM[count, nomatch = NA]
+kable(PMPM, caption = numtib("PMPM $ spending for each group"), digits = 1, 
+      format.args = list(big.mark = ',')) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = 'condensed')
+```
+
+```{r, results='asis', echo=FALSE}
+labels(pop_adj)  <- c(IP_Allw_Amt = 'IP', OP_Allw_Amt = "OP", DR_Allw_Amt = 'DR', Rx_Allw_Amt = 'Rx', 
+                  ER_Allw_Amt = 'ER', Total_Allw_Amt = 'Total')
+tab_orig <- tableby(Group ~ IP_Allw_Amt + OP_Allw_Amt + DR_Allw_Amt + Rx_Allw_Amt + ER_Allw_Amt +
+                      Total_Allw_Amt, total = FALSE, data = pop_adj)
+```
+
+
+Table 11 shows that after adjusting for inflation in 2018, the healthcare costs are not statistically different between the members eligible in July 2017 and in July 2018.
+
+```{r echo=FALSE, results='asis'}
+summary(tab_orig, pfootnote = FALSE, digits = 2, title = numtib('Comparison of healthcare $ spending (adjusted for inflation)'))
+```
+
+```{r Eligible Count and Total Spend adj, echo=FALSE}
+Spend = pop_adj[, .(.N, 'Mean Total Spend' = mean(Total_Allw_Amt),
+                'SD Total Spend' = sd(Total_Allw_Amt)), keyby = Year_Mo_]
+
+kable(Spend, caption = numtib("Eligible Count and Total Spend (adjusted for inflation)"), digits = 1, format.args = list(big.mark = ',')) %>% 
+  kable_styling(full_width = FALSE, bootstrap_options = 'condensed')
+```
+
+
+```{r eligible spend by group and category adj, echo=FALSE, fig.height=3, fig.width=7}
+Spend_cat_melt = pop_spend(data = pop_adj, enroll_flag = "N")
+Spend_cat_melt = Spend_cat_melt[Category != "Total"]
+
+ggplot(Spend_cat_melt, aes(x = Category, y = Mean, fill = Category)) + 
+  geom_bar(position = position_dodge(), stat = "identity") +
+  geom_errorbar(aes(ymin = Lower, ymax = Upper),
+                width = .2,                    # Width of the error bars
+                position = position_dodge(.9)) +
+  scale_fill_manual(values = c(uhg1, uhg2, uhg3, uhg4, uhg5)) +
+  labs(x = '', y = 'Mean Spend $') +
+  ggtitle("Mean (CI) spend by category") +
+  theme_joy + theme(legend.position="none") +
+  facet_grid(. ~ Year_Mo_)
+```
+$\hspace{0in}$ <a name='`r paste('fig',fig_count(fig.number), sep = "")`'>`r paste('Figure ',fig.number,". ", " Mean spending by service types", sep = "")`</a>
+
+## Enrolled {.tabset .tabset-pills}
+
+### Demographics
+
+```{r, results='asis', echo=FALSE}
+labels(pop)  <- c(Gdr_Cd = 'Gender', Sbscr = "Subscriber", USR_Ind = 'Area', Med_Income = 'Median Household Income')
+tab1 <- tableby(Group ~ anova(Age, "medianq1q3", "meansd", "range")  + Gdr_Cd + Sbscr + USR_Ind, 
+                chisq.correct = FALSE, total = FALSE, cat.simplify = TRUE, data = pop[Enroll_Flag == 1])
+
+tab2 <- tableby(Group ~ Med_Income, data = pop[Enroll_Flag == 1],
+                control = tableby.control(numeric.stats =  c("Nmiss", "medianq1q3", "meansd", "range"),
+                                          total = FALSE))
+tab12 = merge(tab1, tab2)
+```
+
+
+```{r, echo=FALSE}
+Eff.Size = effectsize_func(data = pop[Enroll_Flag == 1], columns = c("Age", "Med_Income"), strata = "Year_Mo_",
+                           percentile = 1, remove_outlier = "N")
+tab12_tmp = as.data.frame(tab12)
+tmp = tab12_tmp %>% 
+  filter(variable %in% c("Age", "Med_Income"), term %in% c("meansd"))
+
+A_diff = round(abs(tmp$`July 2018`[[1]][1] -  tmp$`July 2017`[[1]][1]),1)
+I_diff = round(abs(tmp$`July 2018`[[2]][1] -  tmp$`July 2017`[[2]][1]),1)
+I_perc_diff = round(I_diff / tmp$`July 2017`[[2]][1] * 100, 1)
+Eff.Size_age_income = Eff.Size[,.(Variable = c('Age', 'Median Household Income'), 
+                                  Observed_Diff = c(A_diff, I_diff),
+                                  Estimate, Magnitude)]
+setnames(Eff.Size_age_income, "Observed_Diff", "Observed Difference")
+
+# Cohen's h
+tab12_tmp = as.data.frame(tab12)
+tmp = tab12_tmp %>% 
+  filter(variable %in% c("Gdr_Cd", "USR_Ind", "Sbscr"), term %in% c("countpct", "Sbscr"))
+F1_prop = tmp$`July 2017`[[1]][2] /100
+F2_prop = tmp$`July 2018`[[1]][2] /100
+F_diff = round(abs(tmp$`July 2017`[[1]][2] - tmp$`July 2018`[[1]][2]), 2)
+F_effect_size = abs(ES.h(F2_prop, F1_prop))
+
+Su1_prop = tmp$`July 2017`[[3]][2] /100
+Su2_prop = tmp$`July 2018`[[3]][2] /100
+Su_diff = round(abs(tmp$`July 2017`[[3]][2] - tmp$`July 2018`[[3]][2] ), 2)
+Su_effect_size = abs(ES.h(Su2_prop, Su1_prop))
+
+S1_prop = tmp$`July 2017`[[5]][2] /100
+S2_prop = tmp$`July 2018`[[5]][2] /100
+S_diff = round(abs(tmp$`July 2017`[[5]][2] - tmp$`July 2018`[[5]][2] ), 2)
+S_effect_size = abs(ES.h(S2_prop, S1_prop))
+
+R1_prop = tmp$`July 2017`[[6]][2] /100
+R2_prop = tmp$`July 2018`[[6]][2] /100
+R_diff = round(abs(tmp$`July 2017`[[6]][2] - tmp$`July 2018`[[6]][2]), 2)
+R_effect_size = abs(ES.h(R2_prop, R1_prop))
+
+Eff.Size = data.table(Variable = c("Female", "Subscriber", "Suburban", "Rural"),
+                      Observed_difference = c(paste(F_diff, "%", sep = ""), 
+                                              paste(Su_diff, "%", sep = ""), 
+                                              paste(S_diff, "%", sep = ""), 
+                                              paste(R_diff, "%", sep = "")),
+                      Estimate = c(F_effect_size, Su_effect_size, S_effect_size, R_effect_size),
+                      Magnitude = c(rep("negligible", 3), "small"))
+
+setnames(Eff.Size, "Observed_difference", "Observed Difference")
+Eff.Size = rbind(Eff.Size_age_income, Eff.Size)
+Eff.Size_age = Eff.Size$`Magnitude`[[1]]
+```
+
+Table 13 shows that the enrolled members in July 2018 are a year younger than those eligible in July 2017. However, this is a `r Eff.Size_age` difference. Enrolled members in July 2018 have 4% more females than in July 2017. There are more who live in suburban areas and less in rural areas among the July 2018 eligible members. The household median income of eligible members in July 2018 is $1,223 more than the income of eligible members in July 2017. The effect sizes of these differences are all negligible (Table 14). 
+
+
+```{r echo=FALSE, results='asis'}
+summary(tab12, pfootnote = FALSE, digits = 2, 
+        title = numtib('Demographics profile of those who were enrolled for Key Account motion program'))
+```
+
+```{r echo=FALSE, results='asis'}
+kable(Eff.Size, caption = numtib("Effect size of the difference"), digits = 3) %>% 
+  kable_styling(full_width = FALSE, bootstrap_options = "condensed")
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.height=3, fig.width=7}
+p1 <- ggplot(pop[Enroll_Flag == 1], aes(x = Age, fill = Group)) + 
+  geom_histogram(bins = 20,
+                 aes(y = stat(width*density)),
+                 position = "identity", alpha = 0.6) +
+    scale_y_continuous(labels = percent_format(accuracy = 1)) + # same variance\
+  ylab("Percent") +
+  scale_fill_manual(values = c(uhg1, uhg2)) +
+  theme_joy + guides(fill = guide_legend(title = NULL))
+
+p2 <- ggplot(pop[Enroll_Flag == 1], aes(x = Med_Income, fill = Group)) + 
+  geom_histogram(bins = 20,
+                 aes(y = stat(width*density)),
+                 position = "identity", alpha = 0.6) +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) + # same var
+  ylab("Percent") +
+  scale_fill_manual(values = c(uhg1, uhg2)) +
+  theme_joy + guides(fill = guide_legend(title = NULL))
+
+grid.arrange(p1, p2, ncol = 2)
+```
+$\hspace{0in}$ <a name='`r paste('fig',fig_count(fig.number), sep = "")`'>`r paste('Figure ',fig.number,". ", " Distribution of age and median household income", sep = "")`</a>
+
+### Health
+
+```{r Enrolled health, results='asis', warning=FALSE, echo=FALSE}
+labels(pop)  <- c(RAF_Score = 'RAF Score', T2D_Flag = "Type 2 Diabetes", Hypertension_Flag = 'Hypertension', 
+                  Dep_Anx_Flag = 'Depression / Anxiety', COPD_Flag = 'COPD', CHF_Flag = 'CHF', RA_Flag = 'RA',
+                  ChronicPain_Flag = 'Chronic Pain')
+
+tab1 <- tableby(Group ~ RAF_Score, data = pop[Enroll_Flag == 1],
+                control = tableby.control(numeric.stats = c("Nmiss", "medianq1q3", "meansd", "range"), 
+                                          numeric.simplify = TRUE, total = FALSE))
+
+tab2 <- tableby(Group ~ T2D_Flag + Hypertension_Flag + Dep_Anx_Flag + COPD_Flag + CHF_Flag + RA_Flag +
+                  ChronicPain_Flag, cat.simplify = TRUE, total=FALSE, data = pop[Enroll_Flag == 1])
+
+tab12 <- merge(tab2, tab1)
+```
+
+
+```{r echo=FALSE}
+tab12_tmp = as.data.frame(tab12)
+tmp = tab12_tmp %>% 
+  filter(variable %in% c("RAF_Score"), term %in% c("meansd"))
+R1_mean = tmp$`July 2017`[[1]][1]   
+R2_mean = tmp$`July 2018`[[1]][1]   
+mean_diff = round(abs(R1_mean - R2_mean), 2)
+perc_diff = round(mean_diff/R1_mean * 100, 1)
+```
+
+```{r, echo=FALSE }
+effectsize_raf = cohen.d(pop$RAF_Score, pop$Group, hedges.correction = TRUE, 
+                         na.rm = TRUE)
+effectsize_raf_mag = effectsize_raf$magnitude
+effectsize_raf_estimate = round(abs(effectsize_raf$estimate[[1]]), 3)
+```
+
+
+Prevalence of disease conditions do not differ between the two groups of enrolled members. However, the RAF scores of enrolled members in July 2018 is `r perc_diff` percent lower than those enrolled in July 2017. The effect size is `r effectsize_raf_estimate`, a `r effectsize_raf_mag` estimate. 
+
+```{r echo= FALSE, results='asis'}
+summary(tab12, pfootnote = FALSE, digits = 2, title = numtib("RAF score and percentage prevalence"))
+```
+
+
+```{r continuous enrolled, echo=FALSE, include=FALSE}
+# Getting data for those UHC continuously enrolled
+# Group 1 enolled from July 2016 to July 2017 (13 months)
+# Group 2 enolled from July 2017 to July 2018 (13 months)
+pop1_cont = pop1[Enroll_Flag == 1 & Year_Mo == 201707 & UHC_Enr_Mos1 == 13, .(Indv_Sys_ID)] # 640
+mm_pop1_cont = pop1[Group == "July 2017"][pop1_cont, nomatch = 0]
+
+pop2_cont = pop2[Enroll_Flag == 1 & Year_Mo == 201807 & UHC_Enr_Mos2 == 13, .(Indv_Sys_ID)]  # 5983
+mm_pop2_cont = pop2[Group == "July 2018"][pop2_cont, nomatch = 0]
+
+mm_pop_cont = rbind(mm_pop1_cont, mm_pop2_cont) # 6623   52
+```
+
+
+We considered looking at the disease prevalence and RAF scores of the continuously enrolled members. Interestingly, the table below shows the RAF scores of tenured members do not differ between the two groups.
+
+```{r echo=FALSE, results='asis'}
+labels(mm_pop_cont) <- c(RAF_Score = 'RAF Score')
+tab1 <- tableby(Group ~ RAF_Score, data = mm_pop_cont,
+                control = tableby.control(numeric.stats=c("Nmiss", "medianq1q3", "meansd", "range"),
+                                          numeric.simplify = TRUE, total = FALSE))
+
+summary(tab1, pfootnote = FALSE, digits = 2, title = numtib("RAF score of continuously UHC enrolled members"))
+```
+
+```{r echo=FALSE, fig.height=4, fig.width=5.5}
+raf_ci = mm_pop_cont[,.(RAF_Score = mean_ci(RAF_Score, na_rm = TRUE), stat = c('Mean', 'Lower', 'Upper')), 
+                     keyby = Year_Mo_]
+raf_ci_wide = dcast(raf_ci, Year_Mo_ ~ stat, value.var = "RAF_Score")
+raf_ci_wide = raf_ci_wide[, .(Year_Mo = c("July 2017", "July 2018"), Year_Mo_, Lower, Mean, Upper)]
+
+# text_size_ = 14
+ggplot(raf_ci_wide, aes(x = Year_Mo, y = Mean)) + 
+  geom_bar(position = position_dodge(), stat = "identity",fill = uhg1, width = 0.6) +
+  geom_errorbar(aes(ymin = Lower, ymax = Upper),
+                width = .2,                    # Width of the error bars
+                position = position_dodge(.9)) +
+  geom_text(aes(x = Year_Mo, y = 0.8, label = round(Mean, 1))) + 
+  ylim(0, 2) +
+  labs(x = '', y = '') +
+  ggtitle("Mean RAF Score") +
+  theme_joy_single + theme(legend.position="none") +
+  theme(axis.text.x = element_text(size = text_size_, vjust = 0.9),
+        axis.text.y = element_text(size = text_size_),
+        plot.title = element_text(size = text_size_ + 3, face = 'bold'))
+```
+
+$\hspace{0in}$ <a name='`r paste('fig',fig_count(fig.number), sep = "")`'>`r paste('Figure ',fig.number,". ", " Mean (confidence interval) of RAF score", sep = "")`</a>
+
+<br>
+
+```{r echo= FALSE, results='asis'}
+conditions1 = data.table(create_chronic_tab(mm[Group1_Flag == 1 & Enroll_Flag == 1], year_mo_included = 1,  year_mo_name = "Year_Mo_"))
+conditions2 = data.table(create_chronic_tab(mm[Group2_Flag == 1 & Enroll_Flag == 1], year_mo_included = 2, year_mo_name = "Year_Mo_"))
+cd1 = pop1[Enroll_Flag == 1,-c(31:37)]
+cd2 = pop2[Enroll_Flag == 1,-c(31:37)]
+setkeyv(conditions1, c("Indv_Sys_ID"))  ; setkeyv(conditions2, c("Indv_Sys_ID"))
+cd1 = cd1[conditions1, nomatch = 0]
+cd2 = cd2[conditions2, nomatch = 0]
+
+tmp_mm = rbind(cd1, cd2)
+
+labels(tmp_mm) <- c(RAF_Score = 'RAF Score', T2D_Flag = "Type 2 Diabetes", Hypertension_Flag = 'Hypertension', 
+                  Dep_Anx_Flag = 'Depression / Anxiety', COPD_Flag = 'COPD', CHF_Flag = 'CHF', RA_Flag = 'RA',
+                  ChronicPain_Flag = 'Chronic Pain')
+tab_prev <- tableby(Group ~ T2D_Flag + Hypertension_Flag + Dep_Anx_Flag + COPD_Flag + CHF_Flag + RA_Flag +
+                  ChronicPain_Flag, data = tmp_mm,  total = FALSE, cat.simplify = TRUE)
+
+```
+
+```{r echo=FALSE, results='asis'}
+# Cohen's h 
+tab_prev_tmp = as.data.frame(tab_prev)
+tmp = tab_prev_tmp %>% 
+  filter(variable %in% c("Hypertension_Flag", "Dep_Anx_Flag", "ChronicPain_Flag"))
+
+H1_prop = tmp$`July 2017`[[1]][2] /100
+H2_prop = tmp$`July 2018`[[1]][2] /100
+H_diff = round(abs(tmp$`July 2017`[[1]][2] -  tmp$`July 2018`[[1]][2]), 1)
+H_effect_size = abs(ES.h(H2_prop, H1_prop))
+
+DA1_prop = tmp$`July 2017`[[2]][2] /100
+DA2_prop = tmp$`July 2018`[[2]][2] /100
+DA_diff = round(abs(tmp$`July 2017`[[2]][2] -  tmp$`July 2018`[[2]][2]), 1)
+DA_effect_size = abs(ES.h(DA2_prop, DA1_prop))
+
+Cp1_prop = tmp$`July 2017`[[3]][2] /100
+Cp2_prop = tmp$`July 2018`[[3]][2] /100
+Cp_diff = round(abs(tmp$`July 2017`[[3]][2] -  tmp$`July 2018`[[3]][2]), 1)
+Cp_effect_size = abs(ES.h(Cp2_prop, Cp1_prop))
+# since all effect size are less than 0.2 then they are all negligible
+
+Eff.Size = data.table(Variable = c("Hypertension", "Depression / Anxiety","Chronic pain"),
+                      Estimate = c(H_effect_size, DA_effect_size, Cp_effect_size),
+                      Magnitude = rep("negligible", 3))
+```
+
+Below table looks at the disease prevalence of motion enrolled members who were continuously enrolled in UHC plans from January to July of the year. The prevalence of hypertension, depression or anxiety, and chronic pain conditions are higher among those enrolled in July 2018 than those enrolled in July 2017 by `r H_diff`%, `r DA_diff`%, and `r Cp_diff`%, respectively (Table 17). However, cohen's h suggest that these differences are so small (Table 18).
+
+```{r echo=FALSE, results='asis'}
+summary(tab_prev, pfootnote = TRUE, digits = 2, title = numtib("Jan - July percentage prevalence"))
+```
+
+```{r, echo=FALSE, results='asis'}
+kable(Eff.Size, caption = numtib("Effect size of the difference"), digits = 3) %>% 
+  kable_styling(full_width = FALSE, bootstrap_options = "condensed")
+```
+
+```{r enrolled RAF histogram, echo=FALSE, warning=FALSE, fig.height=4, fig.width=5.5}
+plot_raf(pop, enroll_flag = "Y")
+```
+$\hspace{0in}$ <a name='`r paste('fig',fig_count(fig.number), sep = "")`'>`r paste('Figure ',fig.number,". ", " RAF score distribution", sep = "")`</a>
+
+### Claims
+
+```{r, results='asis', echo=FALSE}
+tab_orig <- tableby(Group ~ IP_Allw_Amt + OP_Allw_Amt + DR_Allw_Amt + Rx_Allw_Amt + ER_Allw_Amt +
+                      Total_Allw_Amt, test = TRUE, total = FALSE, data = pop[Enroll_Flag == 1])
+```
+
+The costs for outpatient service of enrolled members in July 2018 are significantly higher by 12 percent than those enrolled in Jly 2017. However, the overall costs are the same between the two groups.
+
+```{r echo=FALSE, results='asis'}
+summary(tab_orig, pfootnote = FALSE, digits = 2, title = numtib('Comparison of healthcare $ spending'))
+```
+
+```{r, echo=FALSE, results='asis'}
+Eff.Size = effectsize_func(pop[Enroll_Flag == 1], columns = c("DR_Allw_Amt"),
+                           strata = "Year_Mo_", 
+                           percentile = 1, remove_outlier = "N")
+setnames(Eff.Size, "Variable", "Spend")
+Eff.Size = Eff.Size[,.(Spend = c('DR'), Estimate, Magnitude)]
+
+Spend_cat_melt = pop_spend(data = pop, enroll_flag = "Y")
+Spend_cat_melt = Spend_cat_melt[,.(Year_Mo_, Category, Mean)]
+Obs_diff = rbind(Spend_cat_melt[Category == "DR", 
+                                .(Diff = abs(Mean[Year_Mo_ == "Jul 2018"] - Mean[Year_Mo_ == "Jul 2017"]),
+                                  Perc_Diff = abs(Mean[Year_Mo_ == "Jul 2018"] - Mean[Year_Mo_ == "Jul 2017"])/Mean[Year_Mo_ == "Jul 2017"] * 100 )])
+Obs_diff = Obs_diff[,.(Spend = c('DR'), Diff, Perc_Diff)]
+
+setkeyv(Eff.Size, "Spend")  ; setkeyv(Obs_diff, "Spend")
+Eff.Size = Obs_diff[Eff.Size, nomatch = 0]
+setnames(Eff.Size, c("Diff", "Perc_Diff"), c("Observed Difference", "Percentage Difference"))
+
+kable(Eff.Size, caption = numtib("Effect size of the difference"), digits = 2) %>% 
+  kable_styling(full_width = FALSE, bootstrap_options = "condensed")
+```
+
+
+```{r Enrolled Count and Total Spend, echo=FALSE}
+Spend = pop[Enroll_Flag == 1, .(.N, 'Mean Total Spend' = mean(Total_Allw_Amt),
+                'SD Total Spend' = sd(Total_Allw_Amt)), keyby = Year_Mo_]
+
+kable(Spend, caption = numtib("Enrolled Count and Total Spend"), digits = 1, format.args = list(big.mark = ',')) %>% 
+  kable_styling(full_width = FALSE, bootstrap_options = 'condensed')
+```
+
+
+```{r enrolled spend by group and category, echo=FALSE, fig.height=3, fig.width=7}
+Spend_cat_melt = pop_spend(data = pop, enroll_flag = "Y")
+Spend_cat_melt = Spend_cat_melt[Category != "Total"]
+
+ggplot(Spend_cat_melt, aes(x=Category, y=Mean, fill=Category)) + 
+  geom_bar(position = position_dodge(), stat = "identity") +
+  geom_errorbar(aes(ymin=Lower, ymax=Upper),
+                width=.2,                    # Width of the error bars
+                position=position_dodge(.9)) +
+  scale_fill_manual(values = c(uhg1, uhg2, uhg3, uhg4, uhg5)) +
+  labs(x = '', y = 'Mean Spend $') +
+  ggtitle("Mean (CI) spend by category") +
+  theme_joy + theme(legend.position="none") +
+  facet_grid(. ~ Year_Mo_)
+```
+$\hspace{0in}$ <a name='`r paste('fig',fig_count(fig.number), sep = "")`'>`r paste('Figure ',fig.number,". ", " Mean spending by service types", sep = "")`</a>
+
+The PMPM dollar amounts from the curent month July of the year back to July month of the prior year were also calculated to compare the spending for the different services over the one year period.
+
+```{r  PMPM enrolled, echo=FALSE}
+# Group 1
+tmp = mm[Enroll_Flag == 1 & Group1_Flag == 1 & Year_Mo == 201707, .N, .(Indv_Sys_ID)][,.(Indv_Sys_ID)]
+count1 = mm[Group1_Flag == 1 & Year_Mo <= 201707 & Enroll_Flag == 1 & Indv_Sys_ID %in% tmp$Indv_Sys_ID, .(Group = 'July 2017', .N), keyby = .(Indv_Sys_ID)][,.(Members =.N), keyby = Group]
+tot1 = mm[Group1_Flag == 1 & Year_Mo <= 201707 & Enroll_Flag == 1 & Indv_Sys_ID %in% tmp$Indv_Sys_ID,
+          .(.N, IP = sum(IP_Allw_Amt, na.rm = TRUE), OP = sum(OP_Allw_Amt, na.rm = TRUE), 
+                              DR = sum(DR_Allw_Amt, na.rm = TRUE), Rx = sum(Rx_Allw_Amt, na.rm = TRUE), 
+                              ER = sum(ER_Allw_Amt, na.rm = TRUE), Total = sum(Total_Allw_Amt, na.rm = TRUE))]
+PMPM1 = tot1[,.(Group = 'July 2017', Months = N, IP = IP/N, OP = OP/N, DR = DR/N, Rx = Rx/N, ER = ER/N, Total = Total/N)]
+# Group 2
+tmp = mm[Enroll_Flag == 1 & Group2_Flag == 1 & Year_Mo == 201807, .N, .(Indv_Sys_ID)][,.(Indv_Sys_ID)]
+count2 = mm[Group2_Flag == 1 & Year_Mo >= 201707 & Enroll_Flag == 1 & Indv_Sys_ID %in% tmp$Indv_Sys_ID, .(Group = 'July 2018', .N), keyby = .(Indv_Sys_ID)][,.(Members =.N), keyby = Group]
+tot2 = mm[Group2_Flag == 1 & Year_Mo >= 201707 & Enroll_Flag == 1 & Indv_Sys_ID %in% tmp$Indv_Sys_ID,.(.N, IP= sum(IP_Allw_Amt, na.rm = TRUE), OP = sum(OP_Allw_Amt, na.rm = TRUE), 
+                              DR = sum(DR_Allw_Amt, na.rm = TRUE), Rx = sum(Rx_Allw_Amt, na.rm = TRUE), 
+                              ER = sum(ER_Allw_Amt, na.rm = TRUE), Total = sum(Total_Allw_Amt, na.rm = TRUE))]
+PMPM2 = tot2[,.(Group = 'July 2018', Months = N, IP = IP/N, OP = OP/N, DR = DR/N, Rx = Rx/N, ER = ER/N, Total = Total/N)]
+
+PMPM = rbind(PMPM1, PMPM2)
+count = rbind(count1, count2)
+setkeyv(count, c("Group"))  ;  setkeyv(PMPM, c("Group"))
+PMPM = PMPM[count, nomatch = NA]
+
+kable(PMPM, caption = numtib("PMPM $ spending for each group"), digits = 1, format.args = list(big.mark = ',')) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = 'condensed')
+```
+
+
+```{r, results='asis', echo=FALSE}
+labels(pop_adj)  <- c(IP_Allw_Amt = 'IP', OP_Allw_Amt = "OP", DR_Allw_Amt = 'DR', Rx_Allw_Amt = 'Rx', 
+                  ER_Allw_Amt = 'ER', Total_Allw_Amt = 'Total')
+tab_orig <- tableby(Group ~ IP_Allw_Amt + OP_Allw_Amt + DR_Allw_Amt + Rx_Allw_Amt + ER_Allw_Amt +
+                      Total_Allw_Amt, total = FALSE, data = pop_adj[Enroll_Flag == 1])
+```
+
+
+Table 23 shows that after adjusting for inflation in 2018, the healthcare costs are not statistically different between the members enrolled in July 2017 and in July 2018.
+
+```{r echo=FALSE, results='asis'}
+summary(tab_orig, pfootnote = FALSE, digits = 2, title = numtib('Comparison of healthcare $ spending (adjusted for inflation)'))
+```
+
+```{r Enrolled Count and Total Spend adj, echo=FALSE}
+Spend = pop_adj[Enroll_Flag == 1, .(.N, 'Mean Total Spend' = mean(Total_Allw_Amt),
+                'SD Total Spend' = sd(Total_Allw_Amt)), keyby = Year_Mo_]
+
+kable(Spend, caption = numtib("Eligible Count and Total Spend (adjusted for inflation)"), digits = 1, format.args = list(big.mark = ',')) %>% 
+  kable_styling(full_width = FALSE, bootstrap_options = 'condensed')
+```
+
+
+```{r enrolled spend by group and category adj, echo=FALSE, fig.height=3, fig.width=7}
+Spend_cat_melt = pop_spend(data = pop_adj, enroll_flag = "Y")
+Spend_cat_melt = Spend_cat_melt[Category != "Total"]
+
+ggplot(Spend_cat_melt, aes(x = Category, y = Mean, fill = Category)) + 
+  geom_bar(position = position_dodge(), stat = "identity") +
+  geom_errorbar(aes(ymin = Lower, ymax = Upper),
+                width = .2,                    # Width of the error bars
+                position = position_dodge(.9)) +
+  scale_fill_manual(values = c(uhg1, uhg2, uhg3, uhg4, uhg5)) +
+  labs(x = '', y = 'Mean Spend $') +
+  ggtitle("Mean (CI) spend by category") +
+  theme_joy + theme(legend.position = "none") +
+  facet_grid(. ~ Year_Mo_)
+```
+$\hspace{0in}$ <a name='`r paste('fig',fig_count(fig.number), sep = "")`'>`r paste('Figure ',fig.number,". ", " Mean spending by service types", sep = "")`</a>
+
+
+```{r load active data, echo=FALSE, warning=FALSE, message=FALSE}
+rm(list = ls()[!ls() %in% c('mm', 'pop','theme_joy_single', 'text_size_', 'numtib', 'tab_number', 'fig_count', 'fig.number')])
+# loading the data
+# load(file = "Data/Group1_dat.rda")
+# load(file = "Data/Group2_dat.rda")
+source(file = "Data_Cleaning.R")
+source(file = "functions.R")
+```
+
+
+## Active {.tabset .tabset-pills}
+
+### Among Eligible
+```{r,echo=FALSE}
+Active_Rate_Table(Group1_dat, Group2_dat,filters = "eligible" ,
+                  Table.cap = numtib("Active Rate of Current Month and Current Month Year Ago"))
+```
+
+```{r,results='asis', echo=FALSE, warning=FALSE}
+a <- PMPM(Group1_dat, Group2_dat, filters = "eligible")
+a1 <- PMPM(Group1_dat, Group2_dat, filters = "eligible", inflation = 0.019)
+b = PMPM_bootstrap(a$boot_data, R = 1000)
+b1 = PMPM_bootstrap(a1$boot_data, R = 1000)
+
+
+dat_1 <- Group1_dat %>% 
+  filter(Year_mo_str == "July 2017") %>% 
+  mutate_at(vars(31:37, 12), as.factor) %>% 
+  mutate_at(vars(14:19, 9, 22), as.numeric) %>% 
+  filter(active_flag == "Active") %>% 
+  filter(eligible_flag == "eligible")
+
+
+dat_2 <- Group2_dat %>% 
+  filter(Year_mo_str == "July 2018") %>% 
+  mutate_at(vars(31:37, 12), as.factor) %>% 
+  mutate_at(vars(14:19, 9, 22), as.numeric) %>% 
+  filter(active_flag == "Active") %>% 
+  filter(eligible_flag == "eligible")
+
+mem1 <- Group1_dat %>% 
+  filter(eligible_flag == "eligible") %>% 
+  filter(Year_mo_str == "July 2017") %>% 
+  filter(UHC_Enr_Mos1 == 13) %>% 
+  select(Indv_Sys_ID)
+
+mem2 <- Group2_dat %>% 
+  filter(eligible_flag == "eligible") %>% 
+  filter(Year_mo_str == "July 2018") %>% 
+  filter(UHC_Enr_Mos2 == 13) %>% 
+  select(Indv_Sys_ID)
+
+cont1 = left_join(mem1, dat_1, by = "Indv_Sys_ID")
+cont2 = left_join(mem2, dat_2, by = "Indv_Sys_ID")
+
+cont_enrol = rbind(cont1, cont2)
+Active_dat <- rbind(dat_1, dat_2)
+
+dat_inf<- Group1_dat %>%
+  filter(Year_mo_str=="July 2017") %>%
+  mutate_at(vars(31:37, 12), as.factor) %>%
+  mutate_at(vars(14:19, 9, 22), as.numeric) %>% 
+  filter(active_flag=="Active") %>% 
+  filter(eligible_flag=='eligible')
+
+dat_inf$IP_Allw_Amt = dat_inf$IP_Allw_Amt * 1.019
+dat_inf$OP_Allw_Amt = dat_inf$OP_Allw_Amt * 1.019
+dat_inf$DR_Allw_Amt = dat_inf$DR_Allw_Amt * 1.019
+dat_inf$Rx_Allw_Amt = dat_inf$Rx_Allw_Amt * 1.019
+dat_inf$ER_Allw_Amt = dat_inf$ER_Allw_Amt * 1.019
+dat_inf$Total_Allw_Amt = dat_inf$Total_Allw_Amt * 1.019
+
+expen_dat = rbind(dat_inf, dat_2)
+
+## Another table for chronic conditions
+cd = dat_1[, -c(31:37)]
+cd1 = create_chronic_tab(Group1_dat, 1, year_mo_name = "Year_mo_str")
+cd = left_join(cd, cd1, by = "Indv_Sys_ID")
+cd2 = dat_2[, -c(31:37)]
+cd1 = create_chronic_tab(Group2_dat, 2, year_mo_name = "Year_mo_str")
+cd2 = left_join(cd2, cd1, by = "Indv_Sys_ID")
+cd_me = rbind(cd, cd2)
+
+amt_formula <- formula(paste("Year_mo_str ~", paste(names(Active_dat[14:19]), collapse = "+")))
+chron_formula <- formula(paste("Year_mo_str ~", paste(names(Active_dat[31:37]), collapse = "+"), "+ RAF_Score"))
+chron_formula2 <- formula(paste("Year_mo_str ~", paste(names(Active_dat[31:37]), collapse = "+")))
+
+# Tabley tables
+demogs_tabs <- tableby(Year_mo_str ~ Age + Gdr_Cd + Sbscr_Ind + USR_Ind + Med_Income, data = Active_dat, 
+                       total = FALSE)
+
+expen_tab <- tableby(amt_formula, data = Active_dat, total = FALSE, 
+                     control = tableby.control(numeric.stats = c("Nmiss","medianq1q3", "meansd", "range"), 
+                                               stats.labels = list(Nmiss = "N-Missing", medianq1q3 = "Median (Q1, Q3)",
+                                                                   meansd = "Mean (SD)", range = "Range")))
+expen_tab2 <- tableby(amt_formula, data = expen_dat, total = FALSE, 
+                      control = tableby.control(numeric.stats = c("Nmiss", "medianq1q3", "meansd", "range"), 
+                                                stats.labels = list(Nmiss = "N-Missing", medianq1q3 = "Median (Q1, Q3)",
+                                                                    meansd = "Mean (SD)", range = "Range")))
+
+chron_tab <- tableby(chron_formula, data = Active_dat, total = FALSE, cat.simplify = TRUE, 
+                     control = tableby.control(numeric.stats = c("Nmiss", "medianq1q3", "meansd", "range"), 
+                                               stats.labels = list(Nmiss = "N-Missing", medianq1q3 = "Median (Q1, Q3)",
+                                                                   meansd = "Mean (SD)", range = "Range")))
+chron_tab2 <- tableby(chron_formula2, data = cd_me, total = FALSE, cat.simplify = TRUE)
+
+demogs_labels = c(Age = "Age", Gdr_Cd = "Gender", USR_Ind = "Area", Sbscr_Ind = "Subscriber", 
+                  Med_Income = "Median Income", RAF_Score = "RAF Score")
+
+amt_labels = list(IP_Allw_Amt = "IP", OP_Allw_Amt = "OP", DR_Allw_Amt = "DR", Rx_Allw_Amt = "RX", 
+                  ER_Allw_Amt = "ER", Total_Allw_Amt = "Total Allowed Amount")
+
+chron_labels = list(T2D_Flag = "Type 2 Diabetes", Hypertension_Flag = "Hypertension", 
+                    Dep_Anx_Flag = "Depression and Anxiety", COPD_Flag = "COPD", CHF_Flag = "Congestive Heart Failure",
+                    RA_Flag = "Rheumatoid Athritis", ChronicPain_Flag = "Chronic Pain", RAF_Score = "RAF Score")
+```
+
+#### {.tabset .tabset-fade}
+##### Demographics
+
+<p>The demographics of active among eligible groups are completely different (Table 26). Compared to July 2017 active among eligible members, July 2018 active eligible members are one-year younger, more females are observed than males, more subscribers are active, the percentage active from Suburban and Urban increases, median income also increases. Although these difference of the two groups has been proven to be statistically significant, the effect size suggests that the differences are negligible (Effect Size Tables). </p>
+
+```{r, results='asis', echo=FALSE, fig.align='center', warning=FALSE, fig.height=3, fig.width=7}
+summary(demogs_tabs, labelTranslations = demogs_labels, 
+        title = numtib("Demographics profile of those active among eligible"), 
+        digits = 2, digits.p = 2, digits.pct = 1)
+
+cohens2 = COHEN_ME(Active_dat, factor = "Year_mo_str", columns = c("Age", "Med_Income"), remove_out = "N", 
+                   labelTrans = demogs_labels)
+
+
+# effect size fo categorical variables
+
+GenderF = cohen.h(Active_dat, columns = "Gdr_Cd", factor = "Year_mo_str", tofactor = "F", 
+                  labelTrans = demogs_labels)
+GenderM = cohen.h(Active_dat, columns = "Gdr_Cd", factor = "Year_mo_str", tofactor = "M", 
+                  labelTrans = demogs_labels)
+subs = cohen.h(Active_dat, columns = "Sbscr_Ind", factor = "Year_mo_str", tofactor = "1", 
+               labelTrans = demogs_labels)
+AreaR = cohen.h(Active_dat, columns = "USR_Ind", factor = "Year_mo_str", tofactor = "R", labelTrans = demogs_labels)
+AreaS = cohen.h(Active_dat, columns = "USR_Ind", factor = "Year_mo_str", tofactor = "S", labelTrans = demogs_labels)
+AreaU = cohen.h(Active_dat, columns = "USR_Ind", factor = "Year_mo_str", tofactor = "U", labelTrans = demogs_labels)
+effects_data_cat = rbind(GenderF, GenderM, subs, AreaR, AreaS, AreaU)
+effects_data_cat = rbind(effects_data_cat, cohens2)
+
+kable(effects_data_cat, caption = numtib("Effect size estimates of demographics"), align = "cc") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+  column_spec(1, width = "5cm") %>% 
+  column_spec(2, width = "5cm") %>% 
+  column_spec(3, width = "5cm") %>% 
+  column_spec(4, width = "5cm")
+
+age_fig <- plot.a(Active_dat, xs = Active_dat$Age, binwidth = 30, fill = Active_dat$Year_mo_str, 
+                  color = Active_dat$Year_mo_str, legend.position = "bottom", title = "AGE", ylab = "Percentage", 
+                  xlab = "Age", legend.title = " ")
+med_fig <- plot.a(Active_dat, xs = Active_dat$Med_Income, binwidth = 30, fill = Active_dat$Year_mo_str, 
+                  color = Active_dat$Year_mo_str, legend.position = "bottom", title = "MEDIAN HOUSHOLD INCOME", 
+                  ylab = "Percentage", xlab = "Median Household Income", legend.title = " ")
+grid.arrange(age_fig, med_fig, ncol = 2)
+```
+
+##### Health
+<p>It seems that there is no difference between the two groups in terms of disease conditions but theres is a difference in RAF score. RAF score decreased from 1.22 of current month year ago to 1.06 in current month however, this difference is negligible according to Hedges'g test. Also, conditions of July 2018 members is the same with July 2017 members. In addition to the condition comparison, we suspected that conditions might be recorded from the previous months (Jan-Jul of either year)  since the members from the current month might never had any claims update. Once the member is flag in the months between January to July, he or she have that certain condition. In result, __hypertension__, __depression or anxiety__, and __chronic pain__ are the conditions that the two groups differs. The percentage of active eligible members who have these conditions increased in the current month group however, these differences from current month year ago is negligible.</p>
+```{r, results='asis', echo=FALSE, warning=FALSE}
+summary(chron_tab, labelTranslations = chron_labels, 
+        title = numtib("RAF score and percentage prevalence comparisons"), 
+        digits = 2, digits.p = 2, digits.pct = 1)
+
+cohens1 = COHEN_ME(Active_dat, factor = "Year_mo_str", columns = "RAF_Score", labelTrans = demogs_labels, 
+                   remove_out = "N")
+kable(cohens1, caption = numtib("Effect size estimate of RAF score"), align = "cc") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+  column_spec(1, width = "5cm") %>% column_spec(2, width = "5cm") %>% 
+  column_spec(3, width = "5cm") %>% column_spec(4, width = "5cm")
+summary(chron_tab2, labelTranslations = chron_labels, 
+        title = numtib("Jan - July percentage prevalence comparisons"), 
+        digits = 2, digits.p = 2, digits.pct = 1)
+cohensH1 = cohen.h(cd_me, columns = c("Hypertension_Flag", "Dep_Anx_Flag", "ChronicPain_Flag"), 
+                   factor = "Year_mo_str", labelTrans = chron_labels)
+kable(cohensH1, caption = numtib("Effect size estimate of conditions"), align = "cc") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+  column_spec(1, width = "5cm") %>% 
+  column_spec(2, width = "5cm") %>% 
+  column_spec(3, width = "5cm") %>% 
+  column_spec(4, width = "5cm")
+
+# rafnoextrem = data_without_extreme(Group1_dat, Group2_dat,filter = 'eligible',prob =
+# 0.999, var = 'RAF_Score')
+p1 <- plot.a(Active_dat, xs = Active_dat$RAF_Score, binwidth = 30, fill = Active_dat$Year_mo_str, 
+             color = Active_dat$Year_mo_str, legend.position = "bottom", title = "RAF SCORE", ylab = "Percentage", 
+             xlab = "RAF Score", legend.title = " ", alpha = 0.6)
+p1
+  
+```
+
+<p> For people who are continuously enrolled in UHC, there is no difference in RAF Score between the two groups. </p>
+```{r, echo=FALSE, warning=FALSE, results='asis'}
+raf_tab2 <- tableby(Year_mo_str ~ RAF_Score, data = cont_enrol, total = FALSE,
+                    control = tableby.control(numeric.stats = c("Nmiss","medianq1q3",  "meansd", "range"),
+                                              stats.labels = list(Nmiss="N-Missing", medianq1q3 = "Median (Q1, Q3)",
+                                                                  meansd="Mean (SD)", range="Range")))
+summary(raf_tab2, labelTranslations = chron_labels,
+        title = numtib("RAF score comparisons among continuously enrolled in UHC"))
+
+
+raf_tab2 <- tableby(Year_mo_str ~ RAF_Score, data = cont_enrol, total = FALSE, 
+                    control = tableby.control(numeric.stats = c("Nmiss", "medianq1q3", "meansd", "range"), 
+                                              stats.labels = list(Nmiss = "N-Missing", medianq1q3 = "Median (Q1, Q3)",
+                                                                  meansd = "Mean (SD)", range = "Range")))
+summary(raf_tab2, labelTranslations = chron_labels, 
+        title = numtib("RAF score comparisons among continuously enrolled in UHC"))
+
+```
+
+
+##### Claims
+<p>Comparing the two groups in terms of healthcare spending, OP and DR show significant differences however, the differences are negligible. Total per member per month (PMPM) spending was also reviewed. Base on bootstrap test, members in July 2018 has the same monthly spending as to members in July 2017.(Table 40).</p>
+```{r, results='asis', echo=FALSE, fig.align='center'}
+summary(expen_tab, labelTranslations = amt_labels, title = numtib("Claims spending comparison"), 
+        digits = 2, digits.p = 2, digits.pct = 1)
+summary(expen_tab2, labelTranslations = amt_labels, 
+        title = numtib("Claims spending comparison (adjusted by 2018 inflation)"), 
+        digits = 2, digits.p = 2, digits.pct = 1)
+cohens_tab = COHEN_ME(expen_dat, factor = "Year_mo_str", columns = c("OP_Allw_Amt", "DR_Allw_Amt"), labelTrans = amt_labels, remove_out = "N")
+kable(cohens_tab, caption = numtib("Effect size estimates of claims spending"), align = "cc") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+  column_spec(1, width = "5cm") %>% 
+  column_spec(2, width = "5cm") %>% 
+  column_spec(3, width = "5cm") %>% 
+  column_spec(4, width = "5cm")
+
+kable(a$PMPM_tab, caption = numtib("Per member per month claims spending"), align = "cc") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+  column_spec(1, width = "6.5cm") %>% column_spec(2, width = "4cm")
+
+kable(a1$PMPM_tab, caption = numtib("Per member per month claims spending (adjusted by 2018 inflation)"), 
+      align = "cc") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+  column_spec(1, width = "6.5cm") %>% 
+  column_spec(2, width = "4cm")
+
+kable(b, caption = numtib("Bootstrap on the difference in total PMPM costs"), align = "cc") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+  column_spec(1, width = "6.5cm") %>% column_spec(2, width = "4cm")
+
+kable(b1, caption = numtib("Bootstrap on the difference in total PMPM costs (adjusted by 2018 inflation)"),
+      align = "cc") %>% 
+      kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+      column_spec(1, width = "6.5cm") %>%
+      column_spec(2, width = "4cm")
+
+spend_table = data.frame()
+spend = names(Active_dat[14:18])
+for (i in 1:length(spend)) {
+  # noextrem = data_without_extreme(Group1_dat, Group2_dat,filter = 'eligible',prob =
+  # 0.99999, var = spend[i])
+  colnum = grep(spend[i], colnames(expen_dat))
+  cnt = grep(spend[i], names(amt_labels))
+  
+  a1 = paste0("mean_ci(", spend[i], ")[[1]]")
+  a2 = paste0("mean_ci(", spend[i], ")[[2]]")
+  a3 = paste0("mean_ci(", spend[i], ")[[3]]")
+  noex = expen_dat %>% 
+    select(Year_mo_str, spend[i]) %>% 
+    group_by(Year_mo_str) %>% 
+    summarise(Mean = eval(parse(text = a1)), Lower = eval(parse(text = a2)), Upper = eval(parse(text = a3)))
+  
+  spend[i] = amt_labels[[cnt]]
+  noex = noex %>% mutate(Category = spend[i]) %>% select(Year_mo_str, Category, everything()) %>% 
+    data.frame()
+  spend_table = rbind(spend_table, noex)
+}
+
+
+spend_table$Category <- factor(spend_table$Category, levels = c("IP", "OP", "DR", "RX", "ER"))
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.width=7}
+ggplot(spend_table, aes(x = Category, y = Mean, fill = Category)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  geom_errorbar(aes(ymin = Lower, ymax = Upper), width = 0.2, position = position_dodge(0.9)) + 
+  scale_fill_manual(values = c(uhg1, uhg2, uhg3, uhg4, uhg5)) + 
+  facet_grid(. ~ Year_mo_str) + 
+  guides(fill = FALSE) + 
+  ggtitle("Mean (CI) spend by category") + 
+  ylab("Mean Spend $") + xlab("") + 
+  theme_joy
+```
+
+$\hspace{0in}$ <a name='`r paste('fig',fig_count(fig.number), sep = "")`'>`r paste('Figure ',fig.number,". ", " Mean spending by service types", sep = "")`</a>
+
+### Among Enrolled
+```{r,echo=FALSE}
+Active_Rate_Table(Group1_dat, Group2_dat,filters = "enrolled" ,
+                  Table.cap = numtib("Active rate of current month and current month year ago"))
+```
+
+```{r,results='asis', echo=FALSE, warning=FALSE}
+c = PMPM(Group1_dat, Group2_dat, filters = "enrolled")
+c1 = PMPM(Group1_dat, Group2_dat, filters = "enrolled", inflation = 0.019)
+d = PMPM_bootstrap(c$boot_data, R = 1000)
+d1 = PMPM_bootstrap(c1$boot_data, R = 1000)
+
+dat_3 <- Group1_dat %>% 
+  filter(Year_mo_str == "July 2017") %>% 
+  mutate_at(vars(31:37, 12), as.factor) %>% 
+  mutate_at(vars(14:19, 9, 22), as.numeric) %>% 
+  filter(active_flag == "Active") %>% 
+  filter(enroll_flag == "enrolled")
+
+dat_4 <- Group2_dat %>% 
+  filter(Year_mo_str == "July 2018") %>% 
+  mutate_at(vars(31:37, 12), as.factor) %>% 
+  mutate_at(vars(14:19, 9, 22), as.numeric) %>% 
+  filter(active_flag == "Active") %>% 
+  filter(enroll_flag == "enrolled")
+
+mem1 <- Group1_dat %>% 
+  filter(enroll_flag == "enrolled") %>% 
+  filter(Year_mo_str == "July 2017") %>% 
+  filter(UHC_Enr_Mos1 == 13) %>% 
+  select(Indv_Sys_ID)
+
+mem2 <- Group2_dat %>% 
+  filter(enroll_flag == "enrolled") %>% 
+  filter(Year_mo_str == "July 2018") %>% 
+  filter(UHC_Enr_Mos2 == 13) %>% 
+  select(Indv_Sys_ID)
+
+cont1 = left_join(mem1, dat_3, by = "Indv_Sys_ID")
+cont2 = left_join(mem2, dat_4, by = "Indv_Sys_ID")
+
+cont_enrol = rbind(cont1, cont2)
+Active_dat1 <- rbind(dat_3, dat_4)
+
+dat_inf<- Group1_dat %>%
+  filter(Year_mo_str == "July 2017") %>%
+  mutate_at(vars(31:37, 12), as.factor) %>%
+  mutate_at(vars(14:19, 9, 22), as.numeric) %>% 
+  filter(active_flag == "Active") %>% 
+  filter(enroll_flag == "enrolled")
+
+dat_inf$IP_Allw_Amt = dat_inf$IP_Allw_Amt * 1.019
+dat_inf$OP_Allw_Amt = dat_inf$OP_Allw_Amt * 1.019
+dat_inf$DR_Allw_Amt = dat_inf$DR_Allw_Amt * 1.019
+dat_inf$Rx_Allw_Amt = dat_inf$Rx_Allw_Amt * 1.019
+dat_inf$ER_Allw_Amt = dat_inf$ER_Allw_Amt * 1.019
+dat_inf$Total_Allw_Amt = dat_inf$Total_Allw_Amt * 1.019
+
+expen_dat1 = rbind(dat_inf, dat_4)
+## Another table for chronic conditions
+cd = dat_3[, -c(31:37)]
+cd1 = create_chronic_tab(Group1_dat,1, year_mo_name = "Year_mo_str")
+cd = left_join(cd, cd1 , by = "Indv_Sys_ID")
+
+cd2 = dat_4[, -c(31:37)]
+cd1 = create_chronic_tab(Group2_dat,2, year_mo_name = "Year_mo_str")
+cd2 = left_join(cd2, cd1 , by="Indv_Sys_ID")
+
+cd_me = rbind(cd, cd2)
+
+amt_formula <- formula(paste("Year_mo_str ~", paste(names(Active_dat1[14:19]), collapse = "+")))
+chron_formula <- formula(paste("Year_mo_str ~", paste(names(Active_dat1[31:37]), collapse = "+"), "+ RAF_Score"))
+chron_formula2 <- formula(paste("Year_mo_str ~", paste(names(Active_dat1[31:37]), collapse = "+")))
+
+# Tabley tables
+demogs_tabs <- tableby(Year_mo_str ~ Age + Gdr_Cd + Sbscr_Ind + USR_Ind +  Med_Income, data = Active_dat1, total=FALSE)
+
+expen_tab <- tableby(amt_formula, data = Active_dat1, total=FALSE,
+                     control = tableby.control(numeric.stats = c("Nmiss","medianq1q3",  "meansd", "range"),
+                                                stats.labels = list(Nmiss="N-Missing", medianq1q3 = "Median (Q1, Q3)",
+                                                                    meansd="Mean (SD)", range="Range")))
+expen_tab2 <- tableby(amt_formula, data = expen_dat1, total=FALSE, 
+                      control = tableby.control(numeric.stats = c("Nmiss","medianq1q3",  "meansd", "range"),
+                                                stats.labels = list(Nmiss="N-Missing", medianq1q3 = "Median (Q1, Q3)",
+                                                                    meansd="Mean (SD)", range="Range")))
+
+chron_tab <- tableby(chron_formula, data = Active_dat1, total=FALSE, cat.simplify=TRUE,
+                     control = tableby.control(numeric.stats = c("Nmiss","medianq1q3",  "meansd", "range"),
+                                                stats.labels = list(Nmiss="N-Missing", medianq1q3 = "Median (Q1, Q3)",
+                                                                    meansd="Mean (SD)", range="Range")))
+chron_tab2 <- tableby(chron_formula2, data = cd_me, total=FALSE, cat.simplify=TRUE)
+
+```
+
+#### {.tabset .tabset-fade}
+
+##### Demographics
+
+<p>There is also differences in the demographics between the two groups of members who are active among enrolled however, the differences are negligible base in Hedges' g and cohen's H tests.</p>
+
+```{r, results='asis', echo=FALSE, fig.align='center', warning=FALSE, fig.height=3, fig.width=7}
+summary(demogs_tabs, labelTranslations = demogs_labels, 
+        title = numtib("Demographics profile of those active among enrolled"),  
+        digits=2, digits.p=2, digits.pct=1)
+cohens2 = COHEN_ME(Active_dat1, factor = "Year_mo_str", columns =  c("Age","Med_Income"), remove_out = "N", 
+                   labelTrans = demogs_labels)
+
+# effect size fo categorical variables
+
+GenderF = cohen.h(Active_dat1, columns = "Gdr_Cd", factor = "Year_mo_str", tofactor = "F", labelTrans = demogs_labels)
+GenderM = cohen.h(Active_dat1, columns = "Gdr_Cd", factor = "Year_mo_str", tofactor = "M", labelTrans = demogs_labels)
+subs = cohen.h(Active_dat1, columns = "Sbscr_Ind", factor = "Year_mo_str", tofactor = "1", labelTrans = demogs_labels)
+AreaR = cohen.h(Active_dat1, columns = "USR_Ind", factor = "Year_mo_str", tofactor = "R", labelTrans = demogs_labels)
+AreaS = cohen.h(Active_dat1, columns = "USR_Ind", factor = "Year_mo_str", tofactor = "S", labelTrans = demogs_labels)
+AreaU = cohen.h(Active_dat1, columns = "USR_Ind", factor = "Year_mo_str", tofactor = "U", labelTrans = demogs_labels)
+effects_data_cat = rbind(GenderF, GenderM, subs, AreaR, AreaS, AreaU)
+effects_data_cat = rbind(effects_data_cat, cohens2)
+kable(effects_data_cat, caption = numtib("Effect size estimates of demographics"), align = "cc") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+  column_spec(1, width = "5cm") %>% 
+  column_spec(2, width = "5cm") %>% 
+  column_spec(3, width = "5cm") %>% 
+  column_spec(4, width = "5cm")
+age_fig <- plot.a(Active_dat1, xs = Active_dat1$Age, binwidth = 30, fill = Active_dat1$Year_mo_str, 
+                  color = Active_dat1$Year_mo_str, 
+                  legend.position = "bottom", title = "AGE", ylab = "Percentage", xlab = "Age")
+med_fig <- plot.a(Active_dat1, xs = Active_dat1$Med_Income, binwidth = 30, fill = Active_dat1$Year_mo_str, 
+                  color = Active_dat1$Year_mo_str, 
+                  legend.position = "bottom", title = "MEDIAN HOUSEHOLD INCOME", 
+                  ylab = "Percentage", xlab = "Median Household Income")
+
+grid.arrange(age_fig, med_fig, ncol = 2)
+```
+
+##### Health
+
+<p> Prevalence of disease conditions hypertension, depression or anxiety, and chronic pain are different in both groups, however the difference is negligible. RAF score is also different between the two groups. RAF score for members in July 2018 is smaller than RAF score in July 2017.</p>
+
+```{r, results='asis', echo=FALSE,  warning=FALSE}
+summary(chron_tab, labelTranslations = chron_labels, 
+        title = numtib("RAF score and percentage prevalence comparisons"),  
+        digits=2, digits.p=2, digits.pct=1)
+
+cohens1 = COHEN_ME(Active_dat1, factor = "Year_mo_str", columns = "RAF_Score", 
+                    labelTrans = demogs_labels, remove_out = "N")
+kable(cohens1, 
+      caption = numtib("Effect size estimate of RAF score"), align = "cc") %>%
+      kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+      column_spec(1, width = "5cm") %>%
+      column_spec(2, width = "5cm") %>% 
+      column_spec(3, width = "5cm") %>% 
+      column_spec(4, width = "5cm") 
+summary(chron_tab2, labelTranslations = chron_labels, 
+        title = numtib("Jan-Jul percentage prevalence comparisons"),  
+        digits=2, digits.p=2, digits.pct=1)
+
+
+cohensH1 = cohen.h(cd_me,columns = c("Hypertension_Flag","Dep_Anx_Flag","ChronicPain_Flag" ), factor = "Year_mo_str", labelTrans = chron_labels)
+kable(cohensH1, 
+      caption = numtib("Effect size estimates of conditions"), align = "cc") %>%
+      kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+      column_spec(1, width = "5cm") %>%
+      column_spec(2, width = "5cm") %>% 
+      column_spec(3, width = "5cm") %>% 
+      column_spec(4, width = "5cm") 
+
+# rafnoextrem = data_without_extreme(Group1_dat, Group2_dat,filter = "enrolled",prob = 0.999, var = "RAF_Score")
+p1 <- plot.a(Active_dat1, xs = Active_dat1$RAF_Score, binwidth = 30, fill = Active_dat1$Year_mo_str, 
+        color = Active_dat1$Year_mo_str, legend.position = "bottom",
+       title = "RAF SCORE",
+       ylab = "Percentage", xlab = "RAF Score", legend.title = " ", alpha = 0.6)
+p1
+```
+
+<p> For people who are continuously enrolled in UHC, there is no difference in RAF Score between the two groups.  </p>
+```{r, echo=FALSE, warning=FALSE, results='asis'}
+raf_tab2 <- tableby(Year_mo_str ~ RAF_Score, data = cont_enrol, total = FALSE, 
+                    control = tableby.control(numeric.stats = c("Nmiss", "medianq1q3", "meansd", "range"), 
+                                              stats.labels = list(Nmiss = "N-Missing", medianq1q3 = "Median (Q1, Q3)", 
+                                                                  meansd = "Mean (SD)", range = "Range")))
+summary(raf_tab2, labelTranslations = chron_labels, 
+        title = numtib("RAF score comparisons among continuously enrolled in UHC"))
+```
+
+
+```{r echo=FALSE, fig.height=4, fig.width=5.5}
+cont_enrol_ = data.table(cont_enrol)
+cont_enrol_ = cont_enrol_[Year_mo_str %in% c("July 2017", "July 2018")]
+raf_ci = cont_enrol_[,.(RAF_Score = mean_ci(RAF_Score, na_rm = TRUE), stat = c('Mean', 'Lower', 'Upper')), 
+                     keyby = Year_mo_str]
+raf_ci_wide = dcast(raf_ci, Year_mo_str ~ stat, value.var = "RAF_Score")
+raf_ci_wide = raf_ci_wide[, .(Year_Mo = c("July 2017", "July 2018"),  Lower, Mean, Upper)]
+
+# text_size_ = 16
+ggplot(raf_ci_wide, aes(x = Year_Mo, y = Mean)) + 
+  geom_bar(position = position_dodge(), stat = "identity",fill = uhg1, width = 0.6) +
+  geom_errorbar(aes(ymin = Lower, ymax = Upper),
+                width=.2,                    # Width of the error bars
+                position=position_dodge(.9)) +
+  geom_text(aes(x = Year_Mo, y = 0.8, label = round(Mean, 2))) + 
+  ylim(0, 2) +
+  labs(x = '', y = '') +
+  ggtitle("Mean RAF Score") +
+  theme_joy_single + theme(legend.position="none") +
+  theme(axis.text.x = element_text(size = text_size_, vjust = 0.9),
+        axis.text.y = element_text(size = text_size_),
+        plot.title = element_text(size = text_size_ + 3, face = 'bold'))
+```
+
+$\hspace{0in}$ <a name='`r paste('fig',fig_count(fig.number), sep = "")`'>`r paste('Figure ',fig.number,". ", " Mean (confidence interval) of RAF score", sep = "")`</a>
+
+##### Claims
+<p>Costs for OP and DR services are significantly different between the two groups, but the differences are negligible. Also, the costs for overall healthcare are the same in both groups. In total PMPM, members in July 2018 and July 2017 has the same monthly costs.</p>
+```{r, results='asis', echo=FALSE, fig.align='center', fig.height=3, fig.width=7}
+summary(expen_tab, labelTranslations = amt_labels, 
+    title = numtib("Claims spending comparison"), digits = 2, 
+    digits.p = 2, digits.pct = 1)
+
+summary(expen_tab2, labelTranslations = amt_labels, 
+    title = numtib("Claims spending comparison (adjusted by 2018 inflation)"), 
+    digits = 2, digits.p = 2, digits.pct = 1)
+
+cohens_tab = COHEN_ME(expen_dat1, factor = "Year_mo_str", 
+    columns = c("OP_Allw_Amt", "DR_Allw_Amt"), remove_out = "N", 
+    labelTrans = amt_labels)
+
+kable(cohens_tab, caption = numtib("Effect size estimates of claims spending"), 
+    align = "cc") %>% kable_styling(bootstrap_options = c("striped", 
+    "hover"), full_width = F) %>% column_spec(1, width = "5cm") %>% 
+    column_spec(2, width = "5cm") %>% column_spec(3, 
+    width = "5cm") %>% column_spec(4, width = "5cm")
+
+
+kable(c$PMPM_tab, caption = numtib("Per member per month claims spending"), align = "cc") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+  column_spec(1, width = "6.5cm") %>% 
+  column_spec(2, width = "4cm")
+
+kable(c1$PMPM_tab, 
+      caption = numtib("Per member per month claims spending (adjusted by 2018 inflation)"), align = "cc") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+  column_spec(1, width = "6.5cm") %>% 
+  column_spec(2, width = "4cm")
+
+kable(d, caption = numtib("Bootstrap on the difference in total PMPM costs"), align = "cc") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+  column_spec(1, width = "6.5cm") %>% 
+  column_spec(2, width = "4cm")
+
+kable(d1, caption = numtib("Bootstrap on the difference in total PMPM costs(adjusted by 2018 inflation)"), align = "cc") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>% 
+  column_spec(1, width = "6.5cm") %>% 
+  column_spec(2, width = "4cm")
+
+spend_table = data.frame()
+spend = names(Active_dat1[14:18])
+for (i in 1:length(spend)) {
+  colnum = grep(spend[i], colnames(expen_dat1))
+  cnt = grep(spend[i], names(amt_labels))
+  a1 = paste0("mean_ci(", spend[i], ")[[1]]")
+  a2 = paste0("mean_ci(", spend[i], ")[[2]]")
+  a3 = paste0("mean_ci(", spend[i], ")[[3]]")
+  noex = expen_dat1 %>% 
+    select(Year_mo_str, spend[i]) %>% 
+    group_by(Year_mo_str) %>% 
+    summarise(Mean = eval(parse(text = a1)), Lower = eval(parse(text = a2)), Upper = eval(parse(text = a3)))
+  
+  spend[i] = amt_labels[[cnt]]
+  noex = noex %>% 
+    mutate(Category = spend[i]) %>% 
+    select(Year_mo_str, Category, everything()) %>% 
+    data.frame()
+  spend_table = rbind(spend_table, noex)
+}
+
+
+spend_table$Category <- factor(spend_table$Category, levels = c("IP", "OP", "DR", "RX", "ER"))
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.width=7}
+
+ggplot(spend_table, aes(x = Category, y = Mean, fill = Category)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  geom_errorbar(aes(ymin = Lower, ymax = Upper), width = 0.2, position = position_dodge(0.9)) + 
+  scale_fill_manual(values = c(uhg1, uhg2, uhg3, uhg4, uhg5)) + 
+  facet_grid(. ~ Year_mo_str) + 
+  guides(fill = FALSE) + 
+  ggtitle("Mean (CI) spend by category") + ylab("Mean Spend $") + xlab("") + 
+  theme_joy
+```
+
+$\hspace{0in}$ <a name='`r paste('fig',fig_count(fig.number), sep = "")`'>`r paste('Figure ',fig.number,". ", " Mean spending by service types", sep = "")`</a>
+
+# Discussion
+
+This grant tried to understand the enrollment rate drop in Key Accounts Motion program by comparing the characteristics that exist between the members in July 2017 and in July 2018. It specifically focuses on the comparisons of characteristics, particularly those related to health between those 1) eligible, 2) enrolled and 3) actively walking among those enrolled in July 2017 and in July 2018.
+
+Eligible members in July 2018 have 4% more females, a year younger, located more in suburban areas and less in rural areas than those eligible members in July 2017. They cost more on doctor visits by about $8 or 10% higher, but the overall costs are the same between the two groups. The effect sizes suggest that the differences are negligible. Examining the health characteristics further, the RAF scores and prevalene of disease conditions of those having continuous enrollment with UHC do not differ between the two groups. 
+
+On the average, enrolled members in July 2018 have 4% more females, about a year younger, more suburbanites, have median household income $1,223 more than those enrolled in July 2017. July 2018 enrolled members have higher costs for doctor visits, but have the same costs for overall healthcare. RAF scores between the two groups do not differ when we considered one year continuous enrollment with UHC. Looking at January to July motion enrollment the prevalence of hypertension, depression or anxiety, and chronic pain conditions are higher among those enrolled in July 2018 than those in July 2017 by 1%, 1%, and 1.2%, respectively. The effect sizes suggest that the aforementioned differences are negligible. Health status comparison entails that we are not loosing the sick people in the motion program which supposed to be the ones engaged and active.
+
+Results show that the demographic characteristics of members who are enrolled and at the same time active in July 2017 are statistically different from members who are enrolled and active in July 2018, but practically the same using the Hedges' g  and cohen’s h tests. For the health characteristics, hypertension, depression or anxiety, and chronic pain are the most prevalent conditions in both groups. These disease conditions also show statistical difference but pratically identical in both groups. In addition, the RAF scores were also different in the two groups but not different for those members who are continuously enrolled in UHC. In terms of healthcare costs, while th mixed of expenses show differences in OP and DR year-to-year, the oveall costs are the same between the two groups compared. Also, the total PMPM spending was found similar between the two groups.
+
+Generally speaking, there are no major differences in the types of people who are enrolling and engaging in the Key Accounts motion program. 
+
+The drop in motion program enrollment rate is really meaningful and needs to be addressed at the program level. The additional drop in people who are active also needs to be adresssed at the program level. It was observed that majority of the employers in July 2018 have zero enrollment rate in KA motion program and less percentage of the employers have their employees enrolled in the program. The spike at zero could be addressed more at the admin level of the companies while the waning middle distribution could be addressed at the employees level making sure that the corresponding addresses are updated. Better promotion and enrollment strategies could be utilized to bring back increase in enrollment and engagement rates of members.
+
+
+
+
+# Appendix
+
+```{r echo=FALSE, results='asis'}
+# Number of individuals enrolled in UHC per Group and year month
+monthly_count_func <- function(data = data, group_num = NULL) {
+  if (group_num == 1) {
+    data  = data[Group1_Flag == 1]
+    tmp = data[, .N, .(Indv_Sys_ID, Year_Mo)][,.N, keyby = Year_Mo][Year_Mo <= 201707]
+    caption = "Group 1 counts of eligible per year month"
+  
+    }
+  
+  else if(group_num == 2) {
+    data = data[Group2_Flag == 1]
+    tmp = data[, .N, .(Indv_Sys_ID, Year_Mo)][,.N, keyby = Year_Mo][Year_Mo >= 201707]
+    caption = "Group 2 counts of eligible per year month"
+  }
+  
+  htmlTable(tmp,
+            rnames = F,
+            css.cell = "padding-right: 1em; padding-left: 1em;",   # Horizontal padding, remember units
+            caption = caption,                                     # Caption
+            css.table = "margin: 2em auto;"                        # margin space above and below the tbale. Puttin 'auto' in the margin of the table style centers the table on the page
+            )
+
+}
+
+monthly_count_func(data = mm, group_num = 1)
+monthly_count_func(data = mm, group_num = 2)
+```
